@@ -11,6 +11,8 @@ class Framework {
   hydrate(el: Element) {
     const scope = el || document.body;
     scope.querySelectorAll('[x-data]').forEach((el: Element) => {
+      if (el.closest('template')) return;
+
       const dataAttr = el.getAttribute('x-data');
       if (dataAttr && this.comp[dataAttr]) {
         const componentData = this.createReactiveData(this.comp[dataAttr]);
@@ -20,23 +22,15 @@ class Framework {
     });
   }
 
-  data(id: string, initial: any) {
-    this.comp[id] = initial;
+  data(id: string, setup: any) {
+    this.comp[id] = setup();
   }
 
   private createReactiveData(data: any): any {
     const reactive: any = {};
 
     Object.keys(data).forEach((key) => {
-      const descriptor = Object.getOwnPropertyDescriptor(data, key);
-
-      if (descriptor && descriptor.get) {
-        // Handle getter properties (computed values)
-        Object.defineProperty(reactive, key, {
-          get: descriptor.get.bind(reactive),
-          enumerable: true,
-        });
-      } else if (typeof data[key] === 'function') {
+      if (typeof data[key] === 'function') {
         reactive[key] = data[key].bind(reactive);
       } else {
         reactive[key] = signal(data[key]);
@@ -47,6 +41,9 @@ class Framework {
   }
 
   private bindDirectives(el: Element, data: any) {
+    if (el.closest('template')) {
+      return;
+    }
     this.bindText(el, data);
     this.bindClick(el, data);
   }
@@ -59,7 +56,8 @@ class Framework {
         effect(() => {
           try {
             const value = new Function('data', `with(data) { return ${expr} }`)(data);
-            textEl.textContent = value;
+            // Handle signal objects - access their .value property
+            textEl.textContent = value && typeof value === 'object' && 'value' in value ? value.value : value;
           } catch (e) {
             console.error('Error evaluating x-text:', e);
           }
@@ -84,7 +82,8 @@ class Framework {
     });
   }
 
-  component(tag) {
+  component(tag, setup) {
+    this.comp[tag] = setup;
     const template = document.getElementById(tag);
     if (template) {
       createWebcomponent(tag, template);
@@ -105,24 +104,55 @@ class Component extends HTMLElement {
     const content = this.template.content.cloneNode(true);
     this.appendChild(content);
 
-    const counterData = { ...ff.comp.counter };
+    setTimeout(() => {
+      this.initializeComponent();
+    }, 0);
+  }
 
-    // Find parent x-data scope and evaluate props
-    const parentEl = this.closest('[x-data]');
-    if (parentEl && (parentEl as any)._data) {
-      const parentData = (parentEl as any)._data;
-      const propsAttr = this.getAttribute('x-props');
-      if (propsAttr) {
+  private initializeComponent() {
+    // Get component setup data
+    const componentName = this.tagName.toLowerCase();
+    const componentSetup = ff.comp[componentName];
+    let componentData = {};
+    let props = {};
+
+    // Evaluate props if x-props attribute exists
+    const propsAttr = this.getAttribute('x-props');
+
+    if (propsAttr) {
+      const parentEl = this.closest('[x-data]');
+      if (parentEl && (parentEl as any)._data) {
+        const parentData = (parentEl as any)._data;
         try {
-          const props = new Function('parent', `with(parent) { return ${propsAttr} }`)(parentData);
-          Object.assign(counterData, props);
+          props = new Function('parent', `with(parent) { return ${propsAttr} }`)(parentData);
         } catch (e) {
-          console.error('Error evaluating props:', e);
+          console.error('Error evaluating props with parent:', e);
+        }
+      } else {
+        try {
+          props = new Function(`return (${propsAttr})`)();
+        } catch (e) {
+          console.error('Error evaluating props without parent context. Props must be static values:', e);
+          props = {};
         }
       }
     }
 
-    this._data = (ff as any).createReactiveData(counterData);
+    if (componentSetup) {
+      componentData = componentSetup(props);
+    }
+
+    this._data = (ff as any).createReactiveData(componentData);
+
+    // Make component data available on the component instance for template binding
+    Object.assign(this, this._data);
+
+    // Hydrate the component's own content after data is ready
+    this.hydrateComponent();
+  }
+
+  private hydrateComponent() {
+    // Bind directives to the component's content using the component's data
     (ff as any).bindDirectives(this, this._data);
   }
 }
@@ -139,25 +169,32 @@ function createWebcomponent(tag: string, template: HTMLElement) {
 
 const ff = new Framework();
 
-ff.data('counter', {
-  x: 1,
-  // double: computed(() => this.x.value * 2),
-  get double() {
-    return this.x.value * 2;
-  },
-  increment() {
-    this.x.value++;
-  },
-  decrement() {
-    this.x.value--;
-  },
-  incr() {
-    this.x.value++;
-  },
+ff.data('counter', () => {
+  const count = signal(8);
+  const double = computed(() => count.value * 2);
+
+  const increment = () => {
+    count.value++;
+  };
+  const decrement = () => {
+    count.value--;
+  };
+
+  return { count, double, increment, decrement };
 });
 
-ff.component('my-counter');
+ff.component('my-counter', (props: any) => {
+  console.log(props);
+
+  const x = signal(props.x.value ?? 0);
+  const incr = () => {
+    x.value++;
+  };
+
+  return { x, incr, title: props.title };
+});
 
 document.addEventListener('DOMContentLoaded', () => {
-  ff.hydrate(document.body);
+  const el = document.getElementById('app');
+  if (el) ff.hydrate(el);
 });

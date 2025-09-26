@@ -14,7 +14,7 @@
 
     <h2>A</h2>
     <div x-data="counter">
-      x:<span x-text="x"></span>
+      count:<span x-text="count"></span>
       d:<span x-text="double"></span>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
@@ -22,11 +22,11 @@
 
     <h2>B</h2>
     <div x-data="counter">
-      x:<span x-text="x"></span>
+      count:<span x-text="count"></span>
       d:<span x-text="double"></span>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
-      <my-counter x-props="{y: 2*x }">
+      <my-counter x-props="{x: count, title: 'cool' }">
       </my-counter>
     </div>
 
@@ -35,6 +35,7 @@
 
   <template id="my-counter">
     <div>
+      <h3 x-text="title"></h3>
       c= <span x-text="x"></span>
       <button @click="incr()">++</button>
     </div>
