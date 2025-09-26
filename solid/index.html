@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alpine-like Framework with Signals</title>
+</head>
+
+<body>
+  <div id="app">
+    <h1>Alpine-like Framework with SolidJS Signals</h1>
+
+    <h2>Counter Component</h2>
+    <div x-data="counter">
+      <p>Count: <span x-text="count()"></span></p>
+      <p>Double: <span x-text="double()"></span></p>
+      <button @click="increment()">Increment</button>
+      <button @click="decrement()">Decrement</button>
+    </div>
+
+    <div x-data="counter">
+      <p>Count: <span x-text="count()"></span></p>
+      <p>Double: <span x-text="double()"></span></p>
+      <button @click="increment()">Increment</button>
+      <button @click="decrement()">Decrement</button>
+    </div>
+
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
