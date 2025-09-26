@@ -41,10 +41,11 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
 function bindDirectives(el: Element, data: any) {
   if (el.closest('template')) return;
   Object.keys(directives).forEach((dir) => {
-    const selector = `[${dir}]`;
+    const selector = `[${dir.replace('@', '\\@')}]`;
     el.querySelectorAll(selector).forEach((childEl) => {
       const expression = childEl.getAttribute(dir);
       if (expression) {
+
         directives[dir](childEl, expression, data);
       }
     });
@@ -109,7 +110,7 @@ class Component extends HTMLElement {
     if (!componentSetup) return;
 
     const parentEl = this.closest('[x-data]');
-    const parentData = parentEl ? (parentEl as any)._data : {};
+    const parentData = (parentEl ? (parentEl as any)._data : {}) || {};
     const props = parseProps(this.getAttribute('x-props') || '', parentData);
 
     const componentData = componentSetup(props);
