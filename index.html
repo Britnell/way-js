@@ -11,10 +11,21 @@
 <body>
   <div id="app">
     <h1>Counter Example</h1>
+
+    <h2>A</h2>
     <div x-data="counter">
-      <span x-text="x"></span>
-      <button x-click="increment()">+</button>
-      <button x-click="decrement()">-</button>
+      x:<span x-text="x"></span>
+      d:<span x-text="double"></span>
+      <button @click="increment()">+</button>
+      <button @click="decrement()">-</button>
+    </div>
+
+    <h2>B</h2>
+    <div x-data="counter">
+      x:<span x-text="x"></span>
+      d:<span x-text="double"></span>
+      <button @click="increment()">+</button>
+      <button @click="decrement()">-</button>
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>

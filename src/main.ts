@@ -1,5 +1,5 @@
 import './style.css';
-import { signal, effect } from '@preact/signals-core';
+import { signal, effect, computed } from '@preact/signals-core';
 
 class Framework {
   comp: Record<string, any>;
@@ -15,7 +15,6 @@ class Framework {
       if (dataAttr && this.comp[dataAttr]) {
         const componentData = this.createReactiveData(this.comp[dataAttr]);
         (el as any)._data = componentData;
-        
         this.bindDirectives(el, componentData);
       }
     });
@@ -27,15 +26,23 @@ class Framework {
 
   private createReactiveData(data: any): any {
     const reactive: any = {};
-    
-    Object.keys(data).forEach(key => {
-      if (typeof data[key] === 'function') {
+
+    Object.keys(data).forEach((key) => {
+      const descriptor = Object.getOwnPropertyDescriptor(data, key);
+
+      if (descriptor && descriptor.get) {
+        // Handle getter properties (computed values)
+        Object.defineProperty(reactive, key, {
+          get: descriptor.get.bind(reactive),
+          enumerable: true,
+        });
+      } else if (typeof data[key] === 'function') {
         reactive[key] = data[key].bind(reactive);
       } else {
         reactive[key] = signal(data[key]);
       }
     });
-    
+
     return reactive;
   }
 
@@ -62,29 +69,36 @@ class Framework {
   }
 
   private bindClick(el: Element, data: any) {
-    const clickEls = el.querySelectorAll('[x-click]');
+    const clickEls = el.querySelectorAll('[\\@click]');
     clickEls.forEach((clickEl: Element) => {
-      const expr = clickEl.getAttribute('x-click');
+      const expr = clickEl.getAttribute('@click');
       if (expr) {
         clickEl.addEventListener('click', () => {
           try {
             new Function('data', `with(data) { ${expr} }`)(data);
           } catch (e) {
-            console.error('Error evaluating x-click:', e);
+            console.error('Error evaluating @click:', e);
           }
         });
       }
     });
   }
-
-  }
+}
 
 const ff = new Framework();
 
-ff.data('counter', { 
+ff.data('counter', {
   x: 1,
-  increment() { this.x.value++ },
-  decrement() { this.x.value-- }
+  // double: computed(() => this.x.value * 2),
+  get double() {
+    return this.x.value * 2;
+  },
+  increment() {
+    this.x.value++;
+  },
+  decrement() {
+    this.x.value--;
+  },
 });
 
 document.addEventListener('DOMContentLoaded', () => {
