@@ -26,8 +26,19 @@
       d:<span x-text="double"></span>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
+      <my-counter x-props="{y: 2*x }">
+      </my-counter>
     </div>
+
+
   </div>
+
+  <template id="my-counter">
+    <div>
+      c= <span x-text="x"></span>
+      <button @click="incr()">++</button>
+    </div>
+  </template>
   <script type="module" src="/src/main.ts"></script>
 </body>
 
