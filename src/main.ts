@@ -1,6 +1,7 @@
 import './style.css';
 import { signal, computed } from '@preact/signals-core';
 import { data, component, hydrate } from './framework';
+import { effect } from 'solid-js/web';
 
 data('counter', () => {
   const count = signal(0);
@@ -19,6 +20,8 @@ data('counter', () => {
 
 component('my-counter', ({ emit, ...props }: any) => {
   const x = signal(props.x?.value ?? 0);
+  // const x = props.x;
+
   const incr = () => {
     x.value++;
   };
@@ -29,6 +32,11 @@ component('my-counter', ({ emit, ...props }: any) => {
   function onDisconnected() {
     //
   }
+
+  effect(() => {
+    console.log(props.x);
+    // x.value = props.x.value;
+  });
 
   const val = signal('abc');
   const uppercase = computed(() => val.value.toUpperCase());

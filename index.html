@@ -41,10 +41,11 @@
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
 
-      <div x-data="{open: true}">
-        <button x-text="open.value ?'a':'x'" @click="open.value=!open.value"></button>
-        <my-counter x-props="{x: count, title: 'cool' }" @close="console.log('close',$event.detail)">
+      <div class=" my-10 " x-data="{open: true}">
+        <button x-if="!open.value" @click="open.value=!open.value">open</button>
+        <my-counter x-else x-props="{x: count, title: 'cool' }" @close="open.value=false">
         </my-counter>
+
       </div>
     </div>
 

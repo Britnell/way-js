@@ -4,7 +4,7 @@ declare global {
   }
 }
 
-import { effect } from '@preact/signals-core';
+import { signal, effect } from '@preact/signals-core';
 
 const components: Record<string, any> = {};
 
@@ -383,8 +383,20 @@ function hydrate(el: Element) {
     if (el.closest('template')) return;
 
     const dataAttr = el.getAttribute('x-data');
-    if (dataAttr && components[dataAttr]) {
-      (el as any)._data = components[dataAttr]();
+    if (dataAttr) {
+      // Check if it's a registered component or an inline object
+      if (components[dataAttr]) {
+        (el as any)._data = components[dataAttr]();
+      } else {
+        // Try to evaluate as inline object and make properties reactive
+        try {
+          const rawObject = evaluate(dataAttr, {});
+          const reactiveObject = makeObjectReactive(rawObject);
+          (el as any)._data = reactiveObject;
+        } catch (e) {
+          console.warn(`Failed to evaluate x-data "${dataAttr}" as inline object`, e);
+        }
+      }
     }
   });
 
@@ -418,10 +430,9 @@ function hydrateWebComponent(component: Component) {
   if (!componentSetup) return;
 
   // Collect parent context for props parsing
-  const parentEl = component.closest('[x-data]');
-  const parentData = parentEl ? (parentEl as any)._data : {};
+  const parentContext = collectContext(component.parentElement as Element);
 
-  const props = parseProps(component.getAttribute('x-props') || '', parentData);
+  const props = parseProps(component.getAttribute('x-props') || '', parentContext);
 
   // Add emit function to props
   const emit = createEmit(component);
@@ -439,6 +450,30 @@ function component(tag: string, setup: any) {
   if (template) {
     createWebComponent(tag, template);
   }
+}
+
+function makeObjectReactive(obj: any): any {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+
+  const reactive: any = {};
+
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+
+    if (typeof value === 'function') {
+      reactive[key] = value.bind(reactive);
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      // Recursively make nested objects reactive
+      reactive[key] = makeObjectReactive(value);
+    } else {
+      // Wrap primitive values in signals
+      reactive[key] = signal(value);
+    }
+  });
+
+  return reactive;
 }
 
 function parseProps(propsAttr: string, parentData: any) {
