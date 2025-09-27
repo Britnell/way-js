@@ -22,14 +22,13 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
   'x-text': (el, expression, data) => {
     effect(() => {
       const value = evaluate(expression, data);
-      el.textContent = value && typeof value === 'object' && 'value' in value ? value.value : value;
+      el.textContent = value;
     });
   },
   'x-if': (el, expression, data) => {
     effect(() => {
       const value = evaluate(expression, data);
-      const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
-      const shouldShow = Boolean(actualValue);
+      const shouldShow = value;
 
       // x-if
       (el as HTMLElement).style.display = shouldShow ? '' : 'none';
@@ -47,41 +46,12 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
 
     effect(() => {
       const value = evaluate(expression, data);
-      const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
-
-      // Handle different input types
-      if (inputEl instanceof HTMLInputElement) {
-        if (inputEl.type === 'checkbox') {
-          inputEl.checked = Boolean(actualValue);
-        } else if (inputEl.type === 'radio') {
-          inputEl.checked = inputEl.value === String(actualValue);
-        } else {
-          inputEl.value = String(actualValue ?? '');
-        }
-      } else {
-        inputEl.value = String(actualValue ?? '');
-      }
+      setInputValue(inputEl, value);
     });
 
-    // Listen for input changes
     inputEl.addEventListener('input', () => {
-      let newValue: any;
+      const newValue = getInputValue(inputEl);
 
-      if (inputEl instanceof HTMLInputElement) {
-        if (inputEl.type === 'checkbox') {
-          newValue = inputEl.checked;
-        } else if (inputEl.type === 'number') {
-          newValue = inputEl.value === '' ? null : Number(inputEl.value);
-        } else if (inputEl.type === 'radio') {
-          newValue = inputEl.checked ? inputEl.value : undefined;
-        } else {
-          newValue = inputEl.value;
-        }
-      } else {
-        newValue = inputEl.value;
-      }
-
-      // Update the signal by finding and setting it in the data
       const setSignalValue = (obj: any, path: string, value: any) => {
         const parts = path.split('.');
         let current = obj;
@@ -99,6 +69,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
         }
       };
 
+      console.log(data, expression, newValue);
       setSignalValue(data, expression, newValue);
     });
   },
@@ -164,9 +135,8 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
 
     effect(() => {
       const array = evaluate(arrayExpr, data);
-      const actualArray = array && typeof array === 'object' && 'value' in array ? array.value : array;
 
-      if (!Array.isArray(actualArray)) {
+      if (!Array.isArray(array)) {
         console.warn(`x-for expression "${arrayExpr}" did not evaluate to an array`);
         renderedItems.forEach(({ nodes }) => {
           nodes.forEach((node) => container.removeChild(node));
@@ -178,8 +148,8 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       const newRenderedItems = new Map<string, { nodes: Node[]; scope: any }>();
       const newNodesOrdered: Node[] = [];
 
-      for (let index = 0; index < actualArray.length; index++) {
-        const item = actualArray[index];
+      for (let index = 0; index < array.length; index++) {
+        const item = array[index];
         const itemScope = createItemContext(data, itemVar, indexVar, item, index);
 
         let key: string;
@@ -274,17 +244,16 @@ function parseForExpression(expression: string): [string, string | null, string]
 function bindProperty(element: Element, propName: string, expression: string, context: any) {
   effect(() => {
     const value = evaluate(expression, context);
-    const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
 
     if (propName === 'class') {
       // Handle class binding specially
-      if (typeof actualValue === 'string') {
-        (element as HTMLElement).className = actualValue;
-      } else if (Array.isArray(actualValue)) {
-        (element as HTMLElement).className = actualValue.join(' ');
-      } else if (typeof actualValue === 'object') {
+      if (typeof value === 'string') {
+        (element as HTMLElement).className = value;
+      } else if (Array.isArray(value)) {
+        (element as HTMLElement).className = value.join(' ');
+      } else if (typeof value === 'object') {
         // Handle object format { active: true, disabled: false }
-        const classes = Object.entries(actualValue)
+        const classes = Object.entries(value)
           .filter(([_, active]) => active)
           .map(([className]) => className)
           .join(' ');
@@ -292,20 +261,20 @@ function bindProperty(element: Element, propName: string, expression: string, co
       }
     } else if (propName === 'style') {
       // Handle style binding
-      if (typeof actualValue === 'string') {
-        (element as HTMLElement).style.cssText = actualValue;
-      } else if (typeof actualValue === 'object') {
+      if (typeof value === 'string') {
+        (element as HTMLElement).style.cssText = value;
+      } else if (typeof value === 'object') {
         // Handle object format { color: 'red', fontSize: '14px' }
-        Object.entries(actualValue).forEach(([key, val]) => {
+        Object.entries(value).forEach(([key, val]) => {
           (element as HTMLElement).style.setProperty(key, String(val));
         });
       }
     } else {
       // Handle all other properties
-      if (actualValue === false || actualValue === null || actualValue === undefined) {
+      if (value === false || value === null || value === undefined) {
         element.removeAttribute(propName);
       } else {
-        element.setAttribute(propName, String(actualValue));
+        element.setAttribute(propName, String(value));
       }
     }
   });
@@ -542,6 +511,35 @@ function parseProps(propsAttr: string, parentData: any) {
     console.warn('Error parsing props:', e);
     return {};
   }
+}
+
+function getInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): any {
+  if (inputEl instanceof HTMLInputElement) {
+    if (inputEl.type === 'checkbox') {
+      return inputEl.checked;
+    } else if (inputEl.type === 'radio') {
+      return inputEl.checked ? inputEl.value : null;
+    } else if (inputEl.type === 'number') {
+      return inputEl.value === '' ? null : Number(inputEl.value);
+    } else {
+      return inputEl.value;
+    }
+  } else {
+    return inputEl.value;
+  }
+}
+
+function setInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: any): void {
+  if (inputEl instanceof HTMLInputElement) {
+    if (inputEl.type === 'checkbox') {
+      inputEl.checked = Boolean(value);
+      return;
+    } else if (inputEl.type === 'radio') {
+      inputEl.checked = inputEl.value === String(value);
+      return;
+    }
+  }
+  inputEl.value = String(value ?? '');
 }
 
 function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, formConfig: any): void {
