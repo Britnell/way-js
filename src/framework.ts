@@ -50,10 +50,14 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
 
       // Handle different input types
-      if (inputEl.type === 'checkbox') {
-        inputEl.checked = Boolean(actualValue);
-      } else if (inputEl.type === 'radio') {
-        inputEl.checked = inputEl.value === String(actualValue);
+      if (inputEl instanceof HTMLInputElement) {
+        if (inputEl.type === 'checkbox') {
+          inputEl.checked = Boolean(actualValue);
+        } else if (inputEl.type === 'radio') {
+          inputEl.checked = inputEl.value === String(actualValue);
+        } else {
+          inputEl.value = String(actualValue ?? '');
+        }
       } else {
         inputEl.value = String(actualValue ?? '');
       }
@@ -63,12 +67,16 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     inputEl.addEventListener('input', () => {
       let newValue: any;
 
-      if (inputEl.type === 'checkbox') {
-        newValue = inputEl.checked;
-      } else if (inputEl.type === 'number') {
-        newValue = inputEl.value === '' ? null : Number(inputEl.value);
-      } else if (inputEl.type === 'radio') {
-        newValue = inputEl.checked ? inputEl.value : undefined;
+      if (inputEl instanceof HTMLInputElement) {
+        if (inputEl.type === 'checkbox') {
+          newValue = inputEl.checked;
+        } else if (inputEl.type === 'number') {
+          newValue = inputEl.value === '' ? null : Number(inputEl.value);
+        } else if (inputEl.type === 'radio') {
+          newValue = inputEl.checked ? inputEl.value : undefined;
+        } else {
+          newValue = inputEl.value;
+        }
       } else {
         newValue = inputEl.value;
       }
