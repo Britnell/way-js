@@ -50,6 +50,58 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       }
     });
   },
+  'x-model': (el, expression, data) => {
+    const inputEl = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+    effect(() => {
+      const value = evaluate(expression, data);
+      const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
+
+      // Handle different input types
+      if (inputEl.type === 'checkbox') {
+        inputEl.checked = Boolean(actualValue);
+      } else if (inputEl.type === 'radio') {
+        inputEl.checked = inputEl.value === String(actualValue);
+      } else {
+        inputEl.value = String(actualValue ?? '');
+      }
+    });
+
+    // Listen for input changes
+    inputEl.addEventListener('input', () => {
+      let newValue: any;
+
+      if (inputEl.type === 'checkbox') {
+        newValue = inputEl.checked;
+      } else if (inputEl.type === 'number') {
+        newValue = inputEl.value === '' ? null : Number(inputEl.value);
+      } else if (inputEl.type === 'radio') {
+        newValue = inputEl.checked ? inputEl.value : undefined;
+      } else {
+        newValue = inputEl.value;
+      }
+
+      // Update the signal by finding and setting it in the data
+      const setSignalValue = (obj: any, path: string, value: any) => {
+        const parts = path.split('.');
+        let current = obj;
+
+        for (let i = 0; i < parts.length - 1; i++) {
+          if (current[parts[i]] === undefined) return;
+          current = current[parts[i]];
+        }
+
+        const lastPart = parts[parts.length - 1];
+        if (current[lastPart] && typeof current[lastPart] === 'object' && 'value' in current[lastPart]) {
+          current[lastPart].value = value;
+        } else {
+          current[lastPart] = value;
+        }
+      };
+
+      setSignalValue(data, expression, newValue);
+    });
+  },
     'x-for': (el: Element, expression: string, data: any) => {
     if (!(el instanceof HTMLTemplateElement)) {
       console.warn('x-for directive must be used on a <template> element.');

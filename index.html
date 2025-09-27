@@ -17,7 +17,7 @@
       <p>
 
         count:<span x-text="count"></span>
-        d:<span x-text="double"></span>
+        x 2 = <span x-text="double"></span>
       </p>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
@@ -36,12 +36,16 @@
     <div x-data="counter">
       <p>
         count:<span x-text="count" :class="count%2?'a':'b'"></span>
-        d:<span x-text="double"></span>
+        x 2 = <span x-text="double"></span>
       </p>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
-      <my-counter x-props="{x: count, title: 'cool' }" @close="console.log('close',$event.detail)">
-      </my-counter>
+
+      <div x-data="{open: true}">
+        <button x-text="open.value ?'a':'x'" @click="open.value=!open.value"></button>
+        <my-counter x-props="{x: count, title: 'cool' }" @close="console.log('close',$event.detail)">
+        </my-counter>
+      </div>
     </div>
 
 
@@ -54,6 +58,13 @@
       count= <span x-text="count"></span>
       <button @click="incr()">++</button>
       <button @click="close()">close</button>
+
+      <div>
+        <p>val =
+          <span x-text="uppercase"></span>
+        </p>
+        <input x-model="val" />
+      </div>
     </div>
   </template>
   <script type="module" src="/src/main.ts"></script>

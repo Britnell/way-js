@@ -18,6 +18,7 @@ so for fun i built my own alpine, with signals for reactivity, because signals a
 
 ## todo
 - [ ] input x-model
+- [ ] stores
 
 ## future
 some current thoughts

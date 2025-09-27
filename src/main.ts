@@ -26,9 +26,14 @@ component('my-counter', ({ emit, ...props }: any) => {
   const close = () => {
     emit('close', x.value);
   };
-  function onDisconnected() {}
+  function onDisconnected() {
+    //
+  }
 
-  return { x, incr, title: props.title, onDisconnected, count: 33, close };
+  const val = signal('abc');
+  const uppercase = computed(() => val.value.toUpperCase());
+
+  return { x, incr, title: props.title, onDisconnected, count: 33, close, val, uppercase };
 });
 
 document.addEventListener('DOMContentLoaded', () => {
