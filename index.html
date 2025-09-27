@@ -14,8 +14,11 @@
 
     <h2>A</h2>
     <div x-data="counter">
-      count:<span x-text="count"></span>
-      d:<span x-text="double"></span>
+      <p>
+
+        count:<span x-text="count"></span>
+        d:<span x-text="double"></span>
+      </p>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
       <p x-if="count%2==0">even</p>
@@ -23,7 +26,7 @@
       <ul>
 
         <template x-for="(i,j) in Array(count.value).fill(0)">
-          <li x-text="j+1">
+          <li x-text="j+1" key="j">
           </li>
         </template>
       </ul>
@@ -31,8 +34,10 @@
 
     <h2>B</h2>
     <div x-data="counter">
-      count:<span x-text="count" :class="count%2?'a':'b'"></span>
-      d:<span x-text="double"></span>
+      <p>
+        count:<span x-text="count" :class="count%2?'a':'b'"></span>
+        d:<span x-text="double"></span>
+      </p>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
       <my-counter x-props="{x: count, title: 'cool' }" @close="console.log('close',$event.detail)">
