@@ -52,25 +52,11 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     inputEl.addEventListener('input', () => {
       const newValue = getInputValue(inputEl);
 
-      const setSignalValue = (obj: any, path: string, value: any) => {
-        const parts = path.split('.');
-        let current = obj;
-
-        for (let i = 0; i < parts.length - 1; i++) {
-          if (current[parts[i]] === undefined) return;
-          current = current[parts[i]];
-        }
-
-        const lastPart = parts[parts.length - 1];
-        if (current[lastPart] && typeof current[lastPart] === 'object' && 'value' in current[lastPart]) {
-          current[lastPart].value = value;
-        } else {
-          current[lastPart] = value;
-        }
-      };
-
-      console.log(data, expression, newValue);
-      setSignalValue(data, expression, newValue);
+      if (data[expression]?.value !== undefined) {
+        data[expression].value = newValue;
+      } else {
+        data[expression] = newValue;
+      }
     });
   },
   'x-form': (el, expression, _data) => {
@@ -91,14 +77,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     // Listen to form events (input, submit)
     formEl.addEventListener('input', (event) => {
       const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
-      if (
-        target &&
-        (target instanceof HTMLInputElement ||
-          target instanceof HTMLTextAreaElement ||
-          target instanceof HTMLSelectElement)
-      ) {
-        validateField(target, formConfig);
-      }
+      validateField(target, formConfig);
     });
 
     formEl.addEventListener('submit', (event) => {
