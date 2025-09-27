@@ -28,17 +28,29 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     effect(() => {
       const value = evaluate(expression, data);
       const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
-      (el as HTMLElement).style.display = actualValue ? '' : 'none';
+      const shouldShow = Boolean(actualValue);
+
+      // Handle x-if element
+      (el as HTMLElement).style.display = shouldShow ? '' : 'none';
+
+      // Handle x-else element if it exists
+      const nextElement = el.nextElementSibling;
+      if (nextElement && nextElement.hasAttribute('x-else')) {
+        const elseExpression = nextElement.getAttribute('x-else');
+        let shouldShowElse = !shouldShow;
+
+        // If x-else has an expression, evaluate it too
+        if (elseExpression) {
+          const elseValue = evaluate(elseExpression, data);
+          const actualElseValue = elseValue && typeof elseValue === 'object' && 'value' in elseValue ? elseValue.value : elseValue;
+          shouldShowElse = shouldShowElse && Boolean(actualElseValue);
+        }
+
+        (nextElement as HTMLElement).style.display = shouldShowElse ? '' : 'none';
+      }
     });
   },
-  'x-else': (el, expression, data) => {
-    effect(() => {
-      const value = evaluate(expression, data);
-      const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
-      (el as HTMLElement).style.display = actualValue ? '' : 'none';
-    });
-  },
-  'x-for': (el: Element, expression: string, data: any) => {
+    'x-for': (el: Element, expression: string, data: any) => {
     if (!(el instanceof HTMLTemplateElement)) {
       console.warn('x-for directive must be used on a <template> element.');
       return;
