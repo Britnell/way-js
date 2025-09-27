@@ -18,6 +18,20 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       el.textContent = value && typeof value === 'object' && 'value' in value ? value.value : value;
     });
   },
+  'x-if': (el, expression, data) => {
+    effect(() => {
+      const value = evaluate(expression, data);
+      const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
+      (el as HTMLElement).style.display = actualValue ? '' : 'none';
+    });
+  },
+  'x-else': (el, expression, data) => {
+    effect(() => {
+      const value = evaluate(expression, data);
+      const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
+      (el as HTMLElement).style.display = actualValue ? '' : 'none';
+    });
+  },
 };
 
 function collectContext(el: Element): any {
