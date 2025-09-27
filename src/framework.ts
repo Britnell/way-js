@@ -131,14 +131,8 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
         const item = array[index];
         const itemScope = createItemContext(data, itemVar, indexVar, item, index);
 
-        let key: string;
-        if (keyAttr) {
-          key = String(evaluate(keyAttr, itemScope));
-        } else {
-          key = String(index);
-        }
-
-        let currentItem = renderedItems.get(key);
+        const key = keyAttr ? String(evaluate(keyAttr, itemScope)) : String(index);
+        const currentItem = renderedItems.get(key);
 
         if (currentItem) {
           Object.assign(currentItem.scope, itemScope);
@@ -147,56 +141,65 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
           renderedItems.delete(key);
         } else {
           const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
-          const newScope = createItemContext(data, itemVar, indexVar, item, index);
           const tempWrapper = document.createElement('div');
           tempWrapper.appendChild(fragment);
 
+          // Process directives with proper item context (original working approach)
           Object.keys(directives).forEach((dir) => {
-            if (dir === 'x-for') return;
             tempWrapper.querySelectorAll(`[${dir}]`).forEach((childEl) => {
               const expr = childEl.getAttribute(dir);
               if (expr) {
-                directives[dir](childEl, expr, newScope);
+                directives[dir](childEl, expr, itemScope);
               }
             });
           });
 
+          // Process special attributes (@events, :bindings)
           tempWrapper.querySelectorAll('*').forEach((childEl) => {
             Array.from(childEl.attributes).forEach((attr) => {
-              if (!attr.name.startsWith('@')) return;
-              const eventName = attr.name.substring(1);
-              const eventExpr = attr.value;
-              bindEvent(childEl, eventName, eventExpr, newScope);
+              if (!attr.name.startsWith('@') && !attr.name.startsWith(':')) return;
+
+              const expression = attr.value;
+              if (!expression) return;
+
+              if (attr.name.startsWith('@')) {
+                const eventName = attr.name.substring(1);
+                bindEvent(childEl, eventName, expression, itemScope);
+              } else if (attr.name.startsWith(':')) {
+                const propName = attr.name.substring(1);
+                bindProperty(childEl, propName, expression, itemScope);
+              }
             });
           });
 
           const newNodes = Array.from(tempWrapper.childNodes);
           newNodesOrdered.push(...newNodes);
-          newRenderedItems.set(key, { nodes: newNodes, scope: newScope });
+          newRenderedItems.set(key, { nodes: newNodes, scope: itemScope });
         }
       }
 
+      // Remove old items
       renderedItems.forEach(({ nodes }) => {
         nodes.forEach((node) => container.removeChild(node));
       });
 
-      let currentNode = anchor.nextSibling;
-      let i = 0;
-      while (i < newNodesOrdered.length) {
-        const newNode = newNodesOrdered[i];
-        if (currentNode === newNode) {
-          currentNode = currentNode.nextSibling;
-          i++;
-        } else {
-          container.insertBefore(newNode, currentNode);
-          i++;
+      // Reorder existing nodes and insert new ones
+      const referenceNode = anchor.nextSibling;
+      let currentInsertPosition = referenceNode;
+
+      for (const node of newNodesOrdered) {
+        if (node.parentNode !== container) {
+          container.insertBefore(node, currentInsertPosition);
         }
+        currentInsertPosition = node.nextSibling;
       }
 
-      while (currentNode && currentNode !== templateEl) {
-        const nodeToRemove = currentNode;
-        currentNode = currentNode.nextSibling;
-        container.removeChild(nodeToRemove);
+      // Remove any remaining nodes that weren't in the new list
+      let nextNode = currentInsertPosition;
+      while (nextNode && nextNode !== templateEl) {
+        const toRemove = nextNode;
+        nextNode = nextNode.nextSibling;
+        container.removeChild(toRemove);
       }
 
       renderedItems = newRenderedItems;
