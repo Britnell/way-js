@@ -134,16 +134,18 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
 
     formEl.addEventListener('submit', (event) => {
       const isValid = validateForm(formEl, formConfig);
-      if (isValid && formConfig.onSubmit) {
+      if (!isValid) {
+        event.preventDefault();
+        return;
+      }
+
+      if (formConfig.onSubmit) {
         const formData = new FormData(formEl);
         const formDataObj: Record<string, string> = {};
         formData.forEach((value, key) => {
           formDataObj[key] = value.toString();
         });
         formConfig.onSubmit(event, formDataObj);
-      }
-      if (!isValid) {
-        event.preventDefault();
       }
     });
   },

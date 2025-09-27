@@ -54,8 +54,8 @@ form(
   {
     password: z
       .string()
-      .min(8, 'Password is too short')
-      .max(20, 'Password is too long')
+      .min(4, 'Password is too short')
+      .max(10, 'Password is too long')
       .regex(/\d/, 'Password must include at least one digit'),
   },
   (ev, values) => {
