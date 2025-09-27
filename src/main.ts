@@ -1,7 +1,6 @@
 import './style.css';
-import { signal, computed } from '@preact/signals-core';
+import { signal, computed, effect } from '@preact/signals-core';
 import { data, component, hydrate } from './framework';
-import { effect } from 'solid-js/web';
 
 data('counter', () => {
   const count = signal(0);
@@ -34,8 +33,7 @@ component('my-counter', ({ emit, ...props }: any) => {
   }
 
   effect(() => {
-    console.log(props.x);
-    // x.value = props.x.value;
+    x.value = props.x.value;
   });
 
   const val = signal('abc');

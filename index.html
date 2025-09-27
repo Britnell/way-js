@@ -55,10 +55,15 @@
   <template id="my-counter">
     <div>
       <h3 x-text="title"></h3>
-      x= <span x-text="x"></span>
-      count= <span x-text="count"></span>
+      <p>
+        x= <span x-text="x"></span>
+      </p>
       <button @click="incr()">++</button>
       <button @click="close()">close</button>
+
+      <p>
+        B= <span x-text="count"></span>
+      </p>
 
       <div>
         <p>val =
