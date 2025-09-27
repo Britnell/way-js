@@ -1,3 +1,9 @@
+declare global {
+  interface Element {
+    _data?: any;
+  }
+}
+
 import { effect } from '@preact/signals-core';
 
 const components: Record<string, any> = {};
@@ -32,13 +38,20 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       (el as HTMLElement).style.display = actualValue ? '' : 'none';
     });
   },
-  'x-for': (templateEl: HTMLTemplateElement, expression, data) => {
+  'x-for': (el: Element, expression: string, data: any) => {
+    if (!(el instanceof HTMLTemplateElement)) {
+      console.warn('x-for directive must be used on a <template> element.');
+      return;
+    }
+    const templateEl = el;
     const [itemVar, indexVar, arrayExpr] = parseForExpression(expression);
-
-    // Track rendered items by key
-    const renderedItems = new Map<string, { element: HTMLElement, context: any }>();
     const container = templateEl.parentNode as HTMLElement;
     const keyAttr = templateEl.getAttribute(':key') || templateEl.getAttribute('x-key');
+
+    const anchor = document.createComment(`x-for: ${expression}`);
+    container.insertBefore(anchor, templateEl);
+
+    let renderedItems = new Map<string, { nodes: Node[]; scope: any }>();
 
     effect(() => {
       const array = evaluate(arrayExpr, data);
@@ -46,135 +59,99 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
 
       if (!Array.isArray(actualArray)) {
         console.warn(`x-for expression "${arrayExpr}" did not evaluate to an array`);
+        renderedItems.forEach(({ nodes }) => {
+          nodes.forEach(node => container.removeChild(node));
+        });
+        renderedItems.clear();
         return;
       }
 
-      const currentKeys = new Set<string>();
+      const newRenderedItems = new Map<string, { nodes: Node[]; scope: any }>();
+      const newNodesOrdered: Node[] = [];
 
-      // Process each item in the array
-      actualArray.forEach((item, index) => {
-        const itemData = createItemContext(data, itemVar, indexVar, item, index);
+      for (let index = 0; index < actualArray.length; index++) {
+        const item = actualArray[index];
+        const itemScope = createItemContext(data, itemVar, indexVar, item, index);
 
-        // Get key for tracking
         let key: string;
         if (keyAttr) {
-          key = String(evaluate(keyAttr, itemData));
+          key = String(evaluate(keyAttr, itemScope));
         } else {
-          key = `item-${index}`;
+          key = String(index);
         }
 
-        currentKeys.add(key);
+        let currentItem = renderedItems.get(key);
 
-        // Check if we already have this item rendered
-        if (!renderedItems.has(key)) {
-          // Clone template content
-          const content = templateEl.content.cloneNode(true) as DocumentFragment;
-          const wrapper = document.createElement('div');
-          wrapper.appendChild(content);
+        if (currentItem) {
+          Object.assign(currentItem.scope, itemScope);
+          newNodesOrdered.push(...currentItem.nodes);
+          newRenderedItems.set(key, currentItem);
+          renderedItems.delete(key);
+        } else {
+          const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
+          const newScope = createItemContext(data, itemVar, indexVar, item, index);
+          const tempWrapper = document.createElement('div');
+          tempWrapper.appendChild(fragment);
 
-          // Find and bind all directives within the cloned content
-          const bindDirectivesWithContext = (element: Element, context: any) => {
-            // Handle built-in directives
-            Object.keys(directives).forEach((dir) => {
-              const selector = `[${dir}]`;
-              element.querySelectorAll(selector).forEach((childEl) => {
-                const expression = childEl.getAttribute(dir);
-                if (expression) {
-                  directives[dir](childEl, expression, context);
-                }
-              });
+          Object.keys(directives).forEach((dir) => {
+            if (dir === 'x-for') return;
+            tempWrapper.querySelectorAll(`[${dir}]`).forEach((childEl) => {
+              const expr = childEl.getAttribute(dir);
+              if (expr) {
+                directives[dir](childEl, expr, newScope);
+              }
             });
-
-            // Handle custom @event directives
-            element.querySelectorAll('*').forEach((childEl) => {
-              Array.from(childEl.attributes).forEach((attr) => {
-                if (!attr.name.startsWith('@')) {
-                  return;
-                }
-
-                const eventName = attr.name.substring(1);
-                const expression = attr.value;
-                if (expression) {
-                  const contextForEvent = collectContext(childEl);
-
-                  // Find emit function from nearest web component parent
-                  const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
-                    if (el instanceof Component && el._data) {
-                      return createEmit(el);
-                    }
-                    return el.parentElement ? findEmit(el.parentElement) : null;
-                  };
-
-                  const emit = findEmit(childEl);
-
-                  childEl.addEventListener(eventName, (event: Event) => {
-                    const eventContext = {
-                      ...contextForEvent,
-                      $event: event,
-                      emit,
-                    };
-                    evaluate(expression, eventContext);
-                  });
-                }
-              });
-            });
-          };
-
-          // Bind directives with item-specific context
-          bindDirectivesWithContext(wrapper, itemData);
-
-          // Extract the actual elements (skip the wrapper div)
-          const fragment = document.createDocumentFragment();
-          while (wrapper.firstChild) {
-            fragment.appendChild(wrapper.firstChild);
-          }
-
-          renderedItems.set(key, {
-            element: fragment.cloneNode(true) as HTMLElement,
-            context: itemData
           });
-        } else {
-          // Update existing item's context
-          renderedItems.get(key)!.context = itemData;
-        }
-      });
 
-      // Clear existing content
-      while (container.firstChild && container.firstChild !== templateEl) {
-        container.removeChild(container.firstChild);
+          tempWrapper.querySelectorAll('*').forEach((childEl) => {
+            Array.from(childEl.attributes).forEach((attr) => {
+              if (!attr.name.startsWith('@')) return;
+              const eventName = attr.name.substring(1);
+              const eventExpr = attr.value;
+              childEl.addEventListener(eventName, (event: Event) => {
+                const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
+                  if (el instanceof Component && el._data) return createEmit(el);
+                  return el.parentElement ? findEmit(el.parentElement) : null;
+                };
+                evaluate(eventExpr, {
+                  ...newScope,
+                  $event: event,
+                  emit: findEmit(childEl),
+                });
+              });
+            });
+          });
+
+          const newNodes = Array.from(tempWrapper.childNodes);
+          newNodesOrdered.push(...newNodes);
+          newRenderedItems.set(key, { nodes: newNodes, scope: newScope });
+        }
       }
 
-      // Insert new content before the template
-      currentKeys.forEach(key => {
-        const itemData = renderedItems.get(key);
-        if (itemData) {
-          const clonedItem = itemData.element.cloneNode(true);
-
-          // Re-bind directives with updated context
-          const bindDirectivesWithContext = (element: Element, context: any) => {
-            // Handle built-in directives
-            Object.keys(directives).forEach((dir) => {
-              const selector = `[${dir}]`;
-              element.querySelectorAll(selector).forEach((childEl) => {
-                const expression = childEl.getAttribute(dir);
-                if (expression) {
-                  directives[dir](childEl, expression, context);
-                }
-              });
-            });
-          };
-
-          bindDirectivesWithContext(clonedItem, itemData.context);
-          container.insertBefore(clonedItem, templateEl);
-        }
+      renderedItems.forEach(({ nodes }) => {
+        nodes.forEach(node => container.removeChild(node));
       });
 
-      // Clean up unused items
-      renderedItems.forEach((_, key) => {
-        if (!currentKeys.has(key)) {
-          renderedItems.delete(key);
+      let currentNode = anchor.nextSibling;
+      let i = 0;
+      while (i < newNodesOrdered.length) {
+        const newNode = newNodesOrdered[i];
+        if (currentNode === newNode) {
+          currentNode = currentNode.nextSibling;
+          i++;
+        } else {
+          container.insertBefore(newNode, currentNode);
+          i++;
         }
-      });
+      }
+
+      while (currentNode && currentNode !== templateEl) {
+        const nodeToRemove = currentNode;
+        currentNode = currentNode.nextSibling;
+        container.removeChild(nodeToRemove);
+      }
+
+      renderedItems = newRenderedItems;
     });
   },
 };

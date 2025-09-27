@@ -19,10 +19,11 @@
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
       <p x-if="count%2==0">even</p>
+      <p x-else>uneven</p>
       <ul>
 
-        <template x-for="(i,j) in [2,3,4,5]">
-          <li x-text="i+j">
+        <template x-for="(i,j) in Array(count.value).fill(0)">
+          <li x-text="j+1">
           </li>
         </template>
       </ul>
