@@ -1,19 +1,6 @@
-import { signal, effect, computed } from '@preact/signals-core';
+import { effect } from '@preact/signals-core';
 
 const components: Record<string, any> = {};
-
-function createReactiveData(data: any): any {
-  const reactive: any = {};
-  Object.keys(data).forEach((key) => {
-    const value = data[key];
-    if (typeof value === 'function') {
-      reactive[key] = value.bind(reactive);
-    } else {
-      reactive[key] = signal(value);
-    }
-  });
-  return reactive;
-}
 
 function evaluate(expression: string, data: any) {
   try {
@@ -88,8 +75,7 @@ function hydrate(el: Element) {
 
     const dataAttr = el.getAttribute('x-data');
     if (dataAttr && components[dataAttr]) {
-      const componentData = createReactiveData(components[dataAttr]());
-      (el as any)._data = componentData;
+      (el as any)._data = components[dataAttr]();
     }
   });
 
@@ -121,12 +107,7 @@ function hydrateWebComponent(component: Component) {
 
   const props = parseProps(component.getAttribute('x-props') || '', parentData);
 
-  const componentData = componentSetup(props);
-  component._data = createReactiveData(componentData);
-
-  // if (component._data.onConnected) {
-  //   component._data.onConnected();
-  // }
+  component._data = componentSetup(props);
 }
 
 function data(id: string, setup: any) {
@@ -166,7 +147,7 @@ class Component extends HTMLElement {
   }
 
   disconnectedCallback() {
-    if (this._data && this._data.onDisconnected) {
+    if (this._data.onDisconnected) {
       this._data.onDisconnected();
     }
   }
