@@ -107,9 +107,6 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     const container = templateEl.parentNode as HTMLElement;
     const keyAttr = templateEl.getAttribute(':key') || templateEl.getAttribute('x-key');
 
-    const anchor = document.createComment(`x-for: ${expression}`);
-    container.insertBefore(anchor, templateEl);
-
     let renderedItems = new Map<string, { nodes: Node[]; scope: any }>();
 
     effect(() => {
@@ -159,8 +156,8 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       });
 
       // Reorder existing nodes and insert new ones
-      const referenceNode = anchor.nextSibling;
-      let currentInsertPosition = referenceNode;
+      const referenceNode = templateEl;
+      let currentInsertPosition: ChildNode | null = referenceNode;
 
       for (const node of newNodesOrdered) {
         if (node.parentNode !== container) {
@@ -170,7 +167,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       }
 
       // Remove any remaining nodes that weren't in the new list
-      let nextNode = currentInsertPosition;
+      let nextNode: ChildNode | null = currentInsertPosition;
       while (nextNode && nextNode !== templateEl) {
         const toRemove = nextNode;
         nextNode = nextNode.nextSibling;
@@ -183,19 +180,17 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
 };
 
 function parseForExpression(expression: string): [string, string | null, string] {
-  // Match "(item, index) in array" or "item in array"
-  const match = expression.match(/\((\w+),\s*(\w+)\)\s+in\s+(.+)/) || expression.match(/(\w+)\s+in\s+(.+)/);
-  if (!match) {
+  const withIndex = expression.match(/^\((\w+),\s*(\w+)\)\s+in\s+(.+)$/);
+  if (withIndex) {
+    return [withIndex[1], withIndex[2], withIndex[3].trim()];
+  }
+
+  const withoutIndex = expression.match(/^(\w+)\s+in\s+(.+)$/);
+  if (!withoutIndex) {
     throw new Error(`Invalid x-for expression: "${expression}"`);
   }
 
-  if (match.length === 4) {
-    // Format: (item, index) in array
-    return [match[1], match[2], match[3].trim()];
-  } else {
-    // Format: item in array
-    return [match[1], null, match[2].trim()];
-  }
+  return [withoutIndex[1], null, withoutIndex[2].trim()];
 }
 
 function bindProperty(element: Element, propName: string, expression: string, context: any) {
