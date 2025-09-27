@@ -67,9 +67,31 @@ function hydrate(el: Element) {
   // Hydrate web components with x-props
   scope.querySelectorAll('[x-props]').forEach((el: Element) => {
     if (el instanceof Component && !el._data) {
-      (el as Component).hydrateComponent();
+      hydrateWebComponent(el as Component);
     }
   });
+}
+
+function hydrateWebComponent(component: Component) {
+  if (component._data) return; // Already hydrated
+
+  const componentName = component.tagName.toLowerCase();
+  const componentSetup = components[componentName];
+  if (!componentSetup) return;
+
+  const parentEl = component.closest('[x-data]');
+  const parentData = parentEl ? (parentEl as any)._data : {};
+
+  const props = parseProps(component.getAttribute('x-props') || '', parentData);
+
+  const componentData = componentSetup(props);
+  component._data = createReactiveData(componentData);
+
+  if (component._data.onConnected) {
+    component._data.onConnected();
+  }
+
+  bindDirectives(component, component._data);
 }
 
 function data(id: string, setup: any) {
@@ -106,35 +128,12 @@ class Component extends HTMLElement {
   connectedCallback() {
     const content = this.template.content.cloneNode(true);
     this.appendChild(content);
-    // Don't initialize immediately - wait for main hydration
   }
 
   disconnectedCallback() {
     if (this._data && this._data.onDisconnected) {
       this._data.onDisconnected();
     }
-  }
-
-  hydrateComponent() {
-    if (this._data) return; // Already hydrated
-
-    const componentName = this.tagName.toLowerCase();
-    const componentSetup = components[componentName];
-    if (!componentSetup) return;
-
-    const parentEl = this.closest('[x-data]');
-    const parentData = parentEl ? (parentEl as any)._data : {};
-
-    const props = parseProps(this.getAttribute('x-props') || '', parentData);
-
-    const componentData = componentSetup(props);
-    this._data = createReactiveData(componentData);
-
-    if (this._data.onConnected) {
-      this._data.onConnected();
-    }
-
-    bindDirectives(this, this._data);
   }
 }
 
