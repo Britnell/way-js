@@ -60,7 +60,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       if (!Array.isArray(actualArray)) {
         console.warn(`x-for expression "${arrayExpr}" did not evaluate to an array`);
         renderedItems.forEach(({ nodes }) => {
-          nodes.forEach(node => container.removeChild(node));
+          nodes.forEach((node) => container.removeChild(node));
         });
         renderedItems.clear();
         return;
@@ -108,17 +108,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
               if (!attr.name.startsWith('@')) return;
               const eventName = attr.name.substring(1);
               const eventExpr = attr.value;
-              childEl.addEventListener(eventName, (event: Event) => {
-                const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
-                  if (el instanceof Component && el._data) return createEmit(el);
-                  return el.parentElement ? findEmit(el.parentElement) : null;
-                };
-                evaluate(eventExpr, {
-                  ...newScope,
-                  $event: event,
-                  emit: findEmit(childEl),
-                });
-              });
+              bindEvent(childEl, eventName, eventExpr, newScope);
             });
           });
 
@@ -129,7 +119,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       }
 
       renderedItems.forEach(({ nodes }) => {
-        nodes.forEach(node => container.removeChild(node));
+        nodes.forEach((node) => container.removeChild(node));
       });
 
       let currentNode = anchor.nextSibling;
@@ -172,7 +162,74 @@ function parseForExpression(expression: string): [string, string | null, string]
   }
 }
 
-function createItemContext(baseContext: any, itemVar: string, indexVar: string | null, itemValue: any, index: number): any {
+function bindProperty(element: Element, propName: string, expression: string, context: any) {
+  effect(() => {
+    const value = evaluate(expression, context);
+    const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
+
+    if (propName === 'class') {
+      // Handle class binding specially
+      if (typeof actualValue === 'string') {
+        (element as HTMLElement).className = actualValue;
+      } else if (Array.isArray(actualValue)) {
+        (element as HTMLElement).className = actualValue.join(' ');
+      } else if (typeof actualValue === 'object') {
+        // Handle object format { active: true, disabled: false }
+        const classes = Object.entries(actualValue)
+          .filter(([_, active]) => active)
+          .map(([className]) => className)
+          .join(' ');
+        (element as HTMLElement).className = classes;
+      }
+    } else if (propName === 'style') {
+      // Handle style binding
+      if (typeof actualValue === 'string') {
+        (element as HTMLElement).style.cssText = actualValue;
+      } else if (typeof actualValue === 'object') {
+        // Handle object format { color: 'red', fontSize: '14px' }
+        Object.entries(actualValue).forEach(([key, val]) => {
+          (element as HTMLElement).style[key as any] = val;
+        });
+      }
+    } else {
+      // Handle all other properties
+      if (actualValue === false || actualValue === null || actualValue === undefined) {
+        element.removeAttribute(propName);
+      } else {
+        element.setAttribute(propName, String(actualValue));
+      }
+    }
+  });
+}
+
+function bindEvent(element: Element, eventName: string, expression: string, context: any) {
+  // Find emit function from nearest web component parent
+  const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
+    if (el instanceof Component && el._data) {
+      return createEmit(el);
+    }
+    return el.parentElement ? findEmit(el.parentElement) : null;
+  };
+
+  const emit = findEmit(element);
+
+  element.addEventListener(eventName, (event: Event) => {
+    const eventContext = {
+      ...context,
+      $event: event,
+      emit,
+    };
+    evaluate(expression, eventContext);
+  });
+}
+
+function createItemContext(
+  baseContext: any,
+  itemVar: string,
+  indexVar: string | null,
+  itemValue: any,
+  index: number,
+): any {
   const context: any = {
     ...baseContext,
     [itemVar]: itemValue,
@@ -229,36 +286,20 @@ function bindDirectives(el: Element) {
     });
   });
 
-  // Handle custom @event directives
+  // Handle custom @event and :property directives
   el.querySelectorAll('*').forEach((childEl) => {
     Array.from(childEl.attributes).forEach((attr) => {
-      if (!attr.name.startsWith('@')) {
-        return;
-      }
-
-      const eventName = attr.name.substring(1);
       const expression = attr.value;
-      if (expression) {
-        const context = collectContext(childEl);
+      if (!expression) return;
 
-        // Find emit function from nearest web component parent
-        const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
-          if (el instanceof Component && el._data) {
-            return createEmit(el);
-          }
-          return el.parentElement ? findEmit(el.parentElement) : null;
-        };
+      const context = collectContext(childEl);
 
-        const emit = findEmit(childEl);
-
-        childEl.addEventListener(eventName, (event: Event) => {
-          const eventContext = {
-            ...context,
-            $event: event,
-            emit,
-          };
-          evaluate(expression, eventContext);
-        });
+      if (attr.name.startsWith('@')) {
+        const eventName = attr.name.substring(1);
+        bindEvent(childEl, eventName, expression, context);
+      } else if (attr.name.startsWith(':')) {
+        const propName = attr.name.substring(1);
+        bindProperty(childEl, propName, expression, context);
       }
     });
   });

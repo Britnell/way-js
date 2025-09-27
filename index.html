@@ -31,7 +31,7 @@
 
     <h2>B</h2>
     <div x-data="counter">
-      count:<span x-text="count"></span>
+      count:<span x-text="count" :class="count%2?'a':'b'"></span>
       d:<span x-text="double"></span>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
