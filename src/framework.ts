@@ -18,11 +18,6 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       el.textContent = value && typeof value === 'object' && 'value' in value ? value.value : value;
     });
   },
-  '@click': (el, expression, data) => {
-    el.addEventListener('click', () => {
-      evaluate(expression, data);
-    });
-  },
 };
 
 function collectContext(el: Element): any {
@@ -54,8 +49,10 @@ function collectContext(el: Element): any {
 
 function bindDirectives(el: Element) {
   if (el.closest('template')) return;
+
+  // Handle built-in directives
   Object.keys(directives).forEach((dir) => {
-    const selector = `[${dir.replace('@', '\\@')}]`;
+    const selector = `[${dir}]`;
     el.querySelectorAll(selector).forEach((childEl) => {
       const expression = childEl.getAttribute(dir);
       if (expression) {
@@ -64,12 +61,46 @@ function bindDirectives(el: Element) {
       }
     });
   });
+
+  // Handle custom @event directives
+  el.querySelectorAll('*').forEach((childEl) => {
+    Array.from(childEl.attributes).forEach((attr) => {
+      if (!attr.name.startsWith('@')) {
+        return;
+      }
+
+      const eventName = attr.name.substring(1);
+      const expression = attr.value;
+      if (expression) {
+        const context = collectContext(childEl);
+
+        // Find emit function from nearest web component parent
+        const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
+          if (el instanceof Component && el._data) {
+            return createEmit(el);
+          }
+          return el.parentElement ? findEmit(el.parentElement) : null;
+        };
+
+        const emit = findEmit(childEl);
+
+        childEl.addEventListener(eventName, (event: Event) => {
+          const eventContext = {
+            ...context,
+            $event: event,
+            emit,
+          };
+          evaluate(expression, eventContext);
+        });
+      }
+    });
+  });
 }
 
 function hydrate(el: Element) {
   const scope = el || document.body;
 
-  // First pass: hydrate all x-data elements
+  // 1. x-data
   scope.querySelectorAll('[x-data]').forEach((el: Element) => {
     if (el.closest('template')) return;
 
@@ -79,19 +110,26 @@ function hydrate(el: Element) {
     }
   });
 
-  // Second pass: hydrate web components with x-props
+  // 2. x-props
   scope.querySelectorAll('[x-props]').forEach((el: Element) => {
     if (el instanceof Component && !el._data) {
       hydrateWebComponent(el as Component);
     }
   });
 
-  // Final pass: bind all directives with full context
+  // 3. bind
   bindDirectives(document.body);
-  // scope.querySelectorAll('[x-data], [x-props]').forEach((el: Element) => {
-  //   if (el.closest('template')) return;
-  //   bindDirectives(el);
-  // });
+}
+
+function createEmit(component: Component) {
+  return (eventName: string, arg: any) => {
+    component.dispatchEvent(
+      new CustomEvent(eventName, {
+        detail: arg,
+        bubbles: true,
+      }),
+    );
+  };
 }
 
 function hydrateWebComponent(component: Component) {
@@ -107,7 +145,10 @@ function hydrateWebComponent(component: Component) {
 
   const props = parseProps(component.getAttribute('x-props') || '', parentData);
 
-  component._data = componentSetup(props);
+  // Add emit function to props
+  const emit = createEmit(component);
+
+  component._data = componentSetup({ ...props, emit });
 }
 
 function data(id: string, setup: any) {

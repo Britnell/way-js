@@ -26,7 +26,7 @@
       d:<span x-text="double"></span>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
-      <my-counter x-props="{x: count, title: 'cool' }">
+      <my-counter x-props="{x: count, title: 'cool' }" @close="console.log('close',$event.detail)">
       </my-counter>
     </div>
 
@@ -39,6 +39,7 @@
       x= <span x-text="x"></span>
       count= <span x-text="count"></span>
       <button @click="incr()">++</button>
+      <button @click="close()">close</button>
     </div>
   </template>
   <script type="module" src="/src/main.ts"></script>
