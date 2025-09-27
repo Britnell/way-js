@@ -572,7 +572,7 @@ function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSel
   if (result.success) {
     inputEl.setCustomValidity('');
   } else {
-    const firstError = result.error?.errors?.[0]?.message || 'Invalid value';
+    const firstError = result.error.issues[0]?.message || 'Invalid value';
     inputEl.setCustomValidity(firstError);
   }
 
