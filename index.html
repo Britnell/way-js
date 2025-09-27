@@ -69,7 +69,8 @@
         <p>val =
           <span x-text="uppercase"></span>
         </p>
-        <input x-model="val" />
+        <input id="password" x-validate="password" x-model="val" aria-describedby="pwerror" />
+        <p id="pwerror"></p>
       </div>
     </div>
   </template>

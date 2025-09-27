@@ -14,6 +14,9 @@ importers:
       solid-js:
         specifier: ^1.9.9
         version: 1.9.9
+      zod:
+        specifier: ^4.1.11
+        version: 4.1.11
     devDependencies:
       typescript:
         specifier: ~5.8.3
@@ -405,6 +408,9 @@ packages:
       yaml:
         optional: true
 
+  zod@4.1.11:
+    resolution: {integrity: sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==}
+
 snapshots:
 
   '@esbuild/aix-ppc64@0.25.10':
@@ -664,3 +670,5 @@ snapshots:
       tinyglobby: 0.2.15
     optionalDependencies:
       fsevents: 2.3.3
+
+  zod@4.1.11: {}

@@ -6,7 +6,9 @@ declare global {
 
 import { signal, effect } from '@preact/signals-core';
 
+
 const components: Record<string, any> = {};
+const validationSchemas: Record<string, any> = {};
 
 function evaluate(expression: string, data: any) {
   try {
@@ -100,6 +102,43 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       };
 
       setSignalValue(data, expression, newValue);
+    });
+  },
+  'x-validate': (el, expression, _data) => {
+    const schema = validationSchemas[expression];
+    if (!schema) {
+        console.warn(`Validation schema not found: "${expression}"`);
+        return;
+    }
+
+    if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)) {
+        console.warn('x-validate directive can only be used on input, textarea, or select elements.');
+        return;
+    }
+    const inputEl = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+    const errorId = inputEl.getAttribute('aria-describedby');
+    let errorEl: HTMLElement | null = null;
+
+    if (errorId) {
+        errorEl = document.getElementById(errorId);
+    }
+
+    inputEl.addEventListener('input', () => {
+        const value = inputEl.value;
+        const result = schema.safeParse(value);
+
+        if (result.success) {
+            inputEl.setCustomValidity('');
+        } else {
+            const fieldErrors = result.error.flatten().fieldErrors;
+            const firstError = Object.values(fieldErrors)[0] as string;
+            inputEl.setCustomValidity(firstError);
+        }
+        
+        if (errorEl) {
+            errorEl.textContent = inputEl.validationMessage;
+        }
     });
   },
     'x-for': (el: Element, expression: string, data: any) => {
@@ -444,6 +483,10 @@ function data(id: string, setup: any) {
   components[id] = setup;
 }
 
+function input(name: string, schema: any) {
+  validationSchemas[name] = schema;
+}
+
 function component(tag: string, setup: any) {
   components[tag] = setup;
   const template = document.getElementById(tag) as HTMLTemplateElement;
@@ -516,4 +559,4 @@ function createWebComponent(tag: string, template: HTMLTemplateElement) {
   customElements.define(tag, WebComponent);
 }
 
-export { data, component, hydrate };
+export { data, component, hydrate, input };
