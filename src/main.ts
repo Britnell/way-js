@@ -25,7 +25,7 @@ component('my-counter', (props: any) => {
 
   function onDisconnected() {}
 
-  return { x, incr, title: props.title, onDisconnected };
+  return { x, incr, title: props.title, onDisconnected, count: 33 };
 });
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -41,14 +41,20 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
 function collectContext(el: Element): any {
   const context: any = {};
 
-  // Collect from all parents with _data (closest first)
+  // Collect all parents with _data (closest last for proper precedence)
+  const parents = [];
   let current = el.closest('[x-data], [x-props]');
   while (current) {
     if (current._data) {
-      Object.assign(context, current._data);
+      parents.push(current);
     }
     // Move to next parent up the tree
     current = current.parentElement?.closest('[x-data], [x-props]') || null;
+  }
+
+  // Merge parents (closest overwrites furthest)
+  for (let i = parents.length - 1; i >= 0; i--) {
+    Object.assign(context, parents[i]._data);
   }
 
   // Add current element's data if it's a web component (highest precedence)
