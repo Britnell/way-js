@@ -65,13 +65,15 @@
         B= <span x-text="count"></span>
       </p>
 
-      <div>
-        <p>val =
-          <span x-text="uppercase"></span>
-        </p>
-        <input id="password" x-validate="password" x-model="val" aria-describedby="pwerror" />
-        <p id="pwerror"></p>
-      </div>
+      <form x-form="userForm">
+        <div>
+          <p>val =
+            <span x-text="uppercase"></span>
+          </p>
+          <input name="password" x-model="val" aria-describedby="pwerror" />
+          <p id="pwerror"></p>
+        </div>
+      </form>
     </div>
   </template>
   <script type="module" src="/src/main.ts"></script>

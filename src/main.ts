@@ -1,57 +1,6 @@
 import './style.css';
 import { signal, computed, effect } from '@preact/signals-core';
-import { data, component, hydrate, input } from './framework';
-
-// A simple mock of Zod for demonstration
-const z = {
-  string: () => ({
-    _rules: [] as any[],
-    min(length: number, message?: string) {
-      this._rules.push({ type: 'too_short', length, message: message || `String must contain at least ${length} character(s)` });
-      return this;
-    },
-    max(length: number, message?: string) {
-      this._rules.push({ type: 'too_long', length, message: message || `String must contain at most ${length} character(s)` });
-      return this;
-    },
-    email(message?: string) {
-      this._rules.push({ type: 'invalid_email', message: message || 'Invalid email' });
-      return this;
-    },
-    hasDigit(message?: string) {
-      this._rules.push({ type: 'no_digit', message: message || 'String must contain at least one digit' });
-      return this;
-    },
-    safeParse(value: string) {
-      const errors: Record<string, string> = {};
-      let hasErrors = false;
-
-      for (const rule of this._rules) {
-        if (rule.type === 'too_short' && value.length < rule.length) {
-          errors[rule.type] = rule.message;
-          hasErrors = true;
-        }
-        if (rule.type === 'too_long' && value.length > rule.length) {
-          errors[rule.type] = rule.message;
-          hasErrors = true;
-        }
-        if (rule.type === 'invalid_email' && !/^\S+@\S+\.\S+$/.test(value)) {
-            errors[rule.type] = rule.message;
-            hasErrors = true;
-        }
-        if (rule.type === 'no_digit' && !/\d/.test(value)) {
-            errors[rule.type] = rule.message;
-            hasErrors = true;
-        }
-      }
-
-      if (hasErrors) {
-        return { success: false, error: { flatten: () => ({ fieldErrors: errors }) } };
-      }
-      return { success: true, data: value };
-    }
-  })
-};
+import { data, component, hydrate, form } from './framework';
 
 data('counter', () => {
   const count = signal(0);
@@ -98,4 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (el) hydrate(el);
 });
 
-input('password', z.string().min(8, 'Password is too short').max(20, 'Password is too long').hasDigit('Password must include at least one digit'));
+import { z } from 'zod';
+
+form(
+  'userForm',
+  {
+    password: z
+      .string()
+      .min(8, 'Password is too short')
+      .max(20, 'Password is too long')
+      .regex(/\d/, 'Password must include at least one digit'),
+  },
+  (ev, values) => {
+    ev.preventDefault();
+    console.log('submit', values);
+  },
+);

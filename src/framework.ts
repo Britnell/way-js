@@ -6,7 +6,6 @@ declare global {
 
 import { signal, effect } from '@preact/signals-core';
 
-
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
 
@@ -44,7 +43,8 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
         // If x-else has an expression, evaluate it too
         if (elseExpression) {
           const elseValue = evaluate(elseExpression, data);
-          const actualElseValue = elseValue && typeof elseValue === 'object' && 'value' in elseValue ? elseValue.value : elseValue;
+          const actualElseValue =
+            elseValue && typeof elseValue === 'object' && 'value' in elseValue ? elseValue.value : elseValue;
           shouldShowElse = shouldShowElse && Boolean(actualElseValue);
         }
 
@@ -104,44 +104,50 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       setSignalValue(data, expression, newValue);
     });
   },
-  'x-validate': (el, expression, _data) => {
-    const schema = validationSchemas[expression];
-    if (!schema) {
-        console.warn(`Validation schema not found: "${expression}"`);
-        return;
+  'x-form': (el, expression, _data) => {
+    if (!(el instanceof HTMLFormElement)) {
+      console.warn('x-form directive can only be used on form elements.');
+      return;
     }
 
-    if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)) {
-        console.warn('x-validate directive can only be used on input, textarea, or select elements.');
-        return;
-    }
-    const inputEl = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+    const formEl = el as HTMLFormElement;
+    const formName = expression;
+    const formConfig = validationSchemas[formName];
 
-    const errorId = inputEl.getAttribute('aria-describedby');
-    let errorEl: HTMLElement | null = null;
-
-    if (errorId) {
-        errorEl = document.getElementById(errorId);
+    if (!formConfig) {
+      console.warn(`Form validation schema not found: "${formName}"`);
+      return;
     }
 
-    inputEl.addEventListener('input', () => {
-        const value = inputEl.value;
-        const result = schema.safeParse(value);
+    // Listen to form events (input, submit)
+    formEl.addEventListener('input', (event) => {
+      const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+      if (
+        target &&
+        (target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement)
+      ) {
+        validateField(target, formConfig);
+      }
+    });
 
-        if (result.success) {
-            inputEl.setCustomValidity('');
-        } else {
-            const fieldErrors = result.error.flatten().fieldErrors;
-            const firstError = Object.values(fieldErrors)[0] as string;
-            inputEl.setCustomValidity(firstError);
-        }
-        
-        if (errorEl) {
-            errorEl.textContent = inputEl.validationMessage;
-        }
+    formEl.addEventListener('submit', (event) => {
+      const isValid = validateForm(formEl, formConfig);
+      if (isValid && formConfig.onSubmit) {
+        const formData = new FormData(formEl);
+        const formDataObj: Record<string, string> = {};
+        formData.forEach((value, key) => {
+          formDataObj[key] = value.toString();
+        });
+        formConfig.onSubmit(event, formDataObj);
+      }
+      if (!isValid) {
+        event.preventDefault();
+      }
     });
   },
-    'x-for': (el: Element, expression: string, data: any) => {
+  'x-for': (el: Element, expression: string, data: any) => {
     if (!(el instanceof HTMLTemplateElement)) {
       console.warn('x-for directive must be used on a <template> element.');
       return;
@@ -391,8 +397,8 @@ function bindDirectives(el: Element) {
 
   // Handle custom @event and :property directives
   el.querySelectorAll('*').forEach((childEl) => {
-    const specialAttrs = Array.from(childEl.attributes).filter(attr =>
-      attr.name.startsWith('@') || attr.name.startsWith(':')
+    const specialAttrs = Array.from(childEl.attributes).filter(
+      (attr) => attr.name.startsWith('@') || attr.name.startsWith(':'),
     );
 
     if (specialAttrs.length === 0) return;
@@ -483,8 +489,12 @@ function data(id: string, setup: any) {
   components[id] = setup;
 }
 
-function input(name: string, schema: any) {
-  validationSchemas[name] = schema;
+function form(name: string, fields: any, onSubmit?: (event: Event, values: Record<string, string>) => void) {
+  // Store the fields and onSubmit handler separately
+  validationSchemas[name] = {
+    fields,
+    onSubmit,
+  };
 }
 
 function component(tag: string, setup: any) {
@@ -529,6 +539,72 @@ function parseProps(propsAttr: string, parentData: any) {
   }
 }
 
+function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, formConfig: any): void {
+  const inputName = inputEl.name;
+  if (!inputName) return;
+
+  // Check if this field has a validation schema
+  const { fields } = formConfig;
+  if (!fields || !fields[inputName]) {
+    // No validation schema for this field - clear any existing validation
+    inputEl.setCustomValidity('');
+    const errorId = inputEl.getAttribute('aria-describedby');
+    if (errorId) {
+      const errorEl = document.getElementById(errorId);
+      if (errorEl) {
+        errorEl.textContent = '';
+      }
+    }
+    return;
+  }
+
+  // Validate just this field using Zod directly
+  const result = fields[inputName].safeParse(inputEl.value);
+
+  // Update the input element with validation state
+  const errorId = inputEl.getAttribute('aria-describedby');
+  let errorEl: HTMLElement | null = null;
+
+  if (errorId) {
+    errorEl = document.getElementById(errorId);
+  }
+
+  if (result.success) {
+    inputEl.setCustomValidity('');
+  } else {
+    const firstError = result.error?.errors?.[0]?.message || 'Invalid value';
+    inputEl.setCustomValidity(firstError);
+  }
+
+  if (errorEl) {
+    errorEl.textContent = inputEl.validationMessage;
+  }
+}
+
+function validateForm(formEl: HTMLFormElement, formConfig: any): boolean {
+  const formData = new FormData(formEl);
+  const formDataObj: Record<string, string> = {};
+  let allValid = true;
+
+  // Convert FormData to object using input names
+  formData.forEach((value, key) => {
+    formDataObj[key] = value.toString();
+  });
+
+  // Validate each field individually
+  formEl.querySelectorAll('input, textarea, select').forEach((input) => {
+    const inputEl = input as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+    validateField(inputEl, formConfig);
+
+    // Check if this field is valid
+    if (!inputEl.checkValidity()) {
+      allValid = false;
+    }
+  });
+
+  return allValid;
+}
+
 class Component extends HTMLElement {
   template: HTMLTemplateElement;
   _data: any;
@@ -559,4 +635,4 @@ function createWebComponent(tag: string, template: HTMLTemplateElement) {
   customElements.define(tag, WebComponent);
 }
 
-export { data, component, hydrate, input };
+export { data, component, hydrate, form };
