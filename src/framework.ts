@@ -380,30 +380,28 @@ function collectContext(el: Element): any {
   return context;
 }
 
-function bindDirectives(el: Element) {
-  if (el.closest('template')) return;
-
-  // Handle built-in directives
+function processBuiltInDirectives(root: Element) {
   Object.keys(directives).forEach((dir) => {
     const selector = `[${dir}]`;
-    el.querySelectorAll(selector).forEach((childEl) => {
-      const expression = childEl.getAttribute(dir);
+    root.querySelectorAll(selector).forEach((element) => {
+      const expression = element.getAttribute(dir);
       if (expression) {
-        const context = collectContext(childEl);
-        directives[dir](childEl, expression, context);
+        const context = collectContext(element);
+        directives[dir](element, expression, context);
       }
     });
   });
+}
 
-  // Handle custom @event and :property directives
-  el.querySelectorAll('*').forEach((childEl) => {
-    const specialAttrs = Array.from(childEl.attributes).filter(
+function processSpecialAttributes(root: Element) {
+  root.querySelectorAll('*').forEach((element) => {
+    const specialAttrs = Array.from(element.attributes).filter(
       (attr) => attr.name.startsWith('@') || attr.name.startsWith(':'),
     );
 
     if (specialAttrs.length === 0) return;
 
-    const context = collectContext(childEl);
+    const context = collectContext(element);
 
     specialAttrs.forEach((attr) => {
       const expression = attr.value;
@@ -411,13 +409,20 @@ function bindDirectives(el: Element) {
 
       if (attr.name.startsWith('@')) {
         const eventName = attr.name.substring(1);
-        bindEvent(childEl, eventName, expression, context);
+        bindEvent(element, eventName, expression, context);
       } else if (attr.name.startsWith(':')) {
         const propName = attr.name.substring(1);
-        bindProperty(childEl, propName, expression, context);
+        bindProperty(element, propName, expression, context);
       }
     });
   });
+}
+
+function bindDirectives(el: Element) {
+  if (el.closest('template')) return;
+
+  processBuiltInDirectives(el);
+  processSpecialAttributes(el);
 }
 
 function hydrate(el: Element) {
