@@ -288,11 +288,17 @@ function bindDirectives(el: Element) {
 
   // Handle custom @event and :property directives
   el.querySelectorAll('*').forEach((childEl) => {
-    Array.from(childEl.attributes).forEach((attr) => {
+    const specialAttrs = Array.from(childEl.attributes).filter(attr =>
+      attr.name.startsWith('@') || attr.name.startsWith(':')
+    );
+
+    if (specialAttrs.length === 0) return;
+
+    const context = collectContext(childEl);
+
+    specialAttrs.forEach((attr) => {
       const expression = attr.value;
       if (!expression) return;
-
-      const context = collectContext(childEl);
 
       if (attr.name.startsWith('@')) {
         const eventName = attr.name.substring(1);
