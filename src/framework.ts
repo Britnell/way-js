@@ -144,33 +144,8 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
           const tempWrapper = document.createElement('div');
           tempWrapper.appendChild(fragment);
 
-          // Process directives with proper item context (original working approach)
-          Object.keys(directives).forEach((dir) => {
-            tempWrapper.querySelectorAll(`[${dir}]`).forEach((childEl) => {
-              const expr = childEl.getAttribute(dir);
-              if (expr) {
-                directives[dir](childEl, expr, itemScope);
-              }
-            });
-          });
-
-          // Process special attributes (@events, :bindings)
-          tempWrapper.querySelectorAll('*').forEach((childEl) => {
-            Array.from(childEl.attributes).forEach((attr) => {
-              if (!attr.name.startsWith('@') && !attr.name.startsWith(':')) return;
-
-              const expression = attr.value;
-              if (!expression) return;
-
-              if (attr.name.startsWith('@')) {
-                const eventName = attr.name.substring(1);
-                bindEvent(childEl, eventName, expression, itemScope);
-              } else if (attr.name.startsWith(':')) {
-                const propName = attr.name.substring(1);
-                bindProperty(childEl, propName, expression, itemScope);
-              }
-            });
-          });
+          // Apply all directives with item scope as additional context
+          bindDirectives(tempWrapper, itemScope);
 
           const newNodes = Array.from(tempWrapper.childNodes);
           newNodesOrdered.push(...newNodes);
@@ -331,20 +306,21 @@ function collectContext(el: Element): any {
   return context;
 }
 
-function processBuiltInDirectives(root: Element) {
+function processBuiltInDirectives(root: Element, additionalContext?: any) {
   Object.keys(directives).forEach((dir) => {
     const selector = `[${dir}]`;
     root.querySelectorAll(selector).forEach((element) => {
       const expression = element.getAttribute(dir);
       if (expression) {
         const context = collectContext(element);
-        directives[dir](element, expression, context);
+        const finalContext = additionalContext ?? context;
+        directives[dir](element, expression, finalContext);
       }
     });
   });
 }
 
-function processSpecialAttributes(root: Element) {
+function processSpecialAttributes(root: Element, additionalContext?: any) {
   root.querySelectorAll('*').forEach((element) => {
     const specialAttrs = Array.from(element.attributes).filter(
       (attr) => attr.name.startsWith('@') || attr.name.startsWith(':'),
@@ -353,6 +329,7 @@ function processSpecialAttributes(root: Element) {
     if (specialAttrs.length === 0) return;
 
     const context = collectContext(element);
+    const finalContext = additionalContext ?? context;
 
     specialAttrs.forEach((attr) => {
       const expression = attr.value;
@@ -360,20 +337,20 @@ function processSpecialAttributes(root: Element) {
 
       if (attr.name.startsWith('@')) {
         const eventName = attr.name.substring(1);
-        bindEvent(element, eventName, expression, context);
+        bindEvent(element, eventName, expression, finalContext);
       } else if (attr.name.startsWith(':')) {
         const propName = attr.name.substring(1);
-        bindProperty(element, propName, expression, context);
+        bindProperty(element, propName, expression, finalContext);
       }
     });
   });
 }
 
-function bindDirectives(el: Element) {
+function bindDirectives(el: Element, additionalContext?: any) {
   if (el.closest('template')) return;
 
-  processBuiltInDirectives(el);
-  processSpecialAttributes(el);
+  processBuiltInDirectives(el, additionalContext);
+  processSpecialAttributes(el, additionalContext);
 }
 
 function hydrate(el: Element) {
@@ -385,11 +362,9 @@ function hydrate(el: Element) {
 
     const dataAttr = el.getAttribute('x-data');
     if (dataAttr) {
-      // Check if it's a registered component or an inline object
       if (components[dataAttr]) {
         (el as any)._data = components[dataAttr]();
       } else {
-        // Try to evaluate as inline object and make properties reactive
         try {
           const rawObject = evaluate(dataAttr, {});
           const reactiveObject = makeObjectReactive(rawObject);
