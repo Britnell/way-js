@@ -45,7 +45,6 @@ function bindDirectives(el: Element, data: any) {
     el.querySelectorAll(selector).forEach((childEl) => {
       const expression = childEl.getAttribute(dir);
       if (expression) {
-
         directives[dir](childEl, expression, data);
       }
     });
@@ -64,6 +63,13 @@ function hydrate(el: Element) {
       bindDirectives(el, componentData);
     }
   });
+
+  // Hydrate web components with x-props
+  scope.querySelectorAll('[x-props]').forEach((el: Element) => {
+    if (el instanceof Component && !el._data) {
+      (el as Component).hydrateComponent();
+    }
+  });
 }
 
 function data(id: string, setup: any) {
@@ -80,7 +86,12 @@ function component(tag: string, setup: any) {
 
 function parseProps(propsAttr: string, parentData: any) {
   if (!propsAttr) return {};
-  return evaluate(propsAttr, parentData);
+  try {
+    return evaluate(propsAttr, parentData);
+  } catch (e) {
+    console.warn('Error parsing props:', e);
+    return {};
+  }
 }
 
 class Component extends HTMLElement {
@@ -95,7 +106,7 @@ class Component extends HTMLElement {
   connectedCallback() {
     const content = this.template.content.cloneNode(true);
     this.appendChild(content);
-    queueMicrotask(() => this.initializeComponent());
+    // Don't initialize immediately - wait for main hydration
   }
 
   disconnectedCallback() {
@@ -104,13 +115,16 @@ class Component extends HTMLElement {
     }
   }
 
-  private initializeComponent() {
+  hydrateComponent() {
+    if (this._data) return; // Already hydrated
+
     const componentName = this.tagName.toLowerCase();
     const componentSetup = components[componentName];
     if (!componentSetup) return;
 
     const parentEl = this.closest('[x-data]');
-    const parentData = (parentEl ? (parentEl as any)._data : {}) || {};
+    const parentData = parentEl ? (parentEl as any)._data : {};
+
     const props = parseProps(this.getAttribute('x-props') || '', parentData);
 
     const componentData = componentSetup(props);

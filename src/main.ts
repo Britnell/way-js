@@ -20,7 +20,7 @@ data('counter', () => {
 component('my-counter', (props: any) => {
   console.log(props);
 
-  const x = signal(props.x.value ?? 0);
+  const x = signal(props.x?.value ?? 0);
   const incr = () => {
     x.value++;
   };
