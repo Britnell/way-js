@@ -38,14 +38,42 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
   },
 };
 
-function bindDirectives(el: Element, data: any) {
+function collectContext(el: Element): any {
+  const context: any = {};
+
+  // Collect from x-data parents (closest first)
+  const parents = [];
+  let current = el.parentElement;
+  while (current) {
+    if (current._data) {
+      // Add to end - closest parent last
+      parents.push(current);
+    }
+    current = current.parentElement;
+  }
+
+  // Merge parent data (closest parent overwrites distant ones)
+  parents.forEach((parent) => {
+    Object.assign(context, parent._data);
+  });
+
+  // Add current element's data if it's a web component (highest precedence)
+  if (el instanceof Component && el._data) {
+    Object.assign(context, el._data);
+  }
+
+  return context;
+}
+
+function bindDirectives(el: Element) {
   if (el.closest('template')) return;
   Object.keys(directives).forEach((dir) => {
     const selector = `[${dir.replace('@', '\\@')}]`;
     el.querySelectorAll(selector).forEach((childEl) => {
       const expression = childEl.getAttribute(dir);
       if (expression) {
-        directives[dir](childEl, expression, data);
+        const context = collectContext(childEl);
+        directives[dir](childEl, expression, context);
       }
     });
   });
@@ -53,6 +81,8 @@ function bindDirectives(el: Element, data: any) {
 
 function hydrate(el: Element) {
   const scope = el || document.body;
+
+  // First pass: hydrate all x-data elements
   scope.querySelectorAll('[x-data]').forEach((el: Element) => {
     if (el.closest('template')) return;
 
@@ -60,16 +90,22 @@ function hydrate(el: Element) {
     if (dataAttr && components[dataAttr]) {
       const componentData = createReactiveData(components[dataAttr]());
       (el as any)._data = componentData;
-      bindDirectives(el, componentData);
     }
   });
 
-  // Hydrate web components with x-props
+  // Second pass: hydrate web components with x-props
   scope.querySelectorAll('[x-props]').forEach((el: Element) => {
     if (el instanceof Component && !el._data) {
       hydrateWebComponent(el as Component);
     }
   });
+
+  // Final pass: bind all directives with full context
+  bindDirectives(document.body);
+  // scope.querySelectorAll('[x-data], [x-props]').forEach((el: Element) => {
+  //   if (el.closest('template')) return;
+  //   bindDirectives(el);
+  // });
 }
 
 function hydrateWebComponent(component: Component) {
@@ -79,6 +115,7 @@ function hydrateWebComponent(component: Component) {
   const componentSetup = components[componentName];
   if (!componentSetup) return;
 
+  // Collect parent context for props parsing
   const parentEl = component.closest('[x-data]');
   const parentData = parentEl ? (parentEl as any)._data : {};
 
@@ -87,11 +124,9 @@ function hydrateWebComponent(component: Component) {
   const componentData = componentSetup(props);
   component._data = createReactiveData(componentData);
 
-  if (component._data.onConnected) {
-    component._data.onConnected();
-  }
-
-  bindDirectives(component, component._data);
+  // if (component._data.onConnected) {
+  //   component._data.onConnected();
+  // }
 }
 
 function data(id: string, setup: any) {
