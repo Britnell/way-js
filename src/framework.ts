@@ -31,23 +31,13 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       const actualValue = value && typeof value === 'object' && 'value' in value ? value.value : value;
       const shouldShow = Boolean(actualValue);
 
-      // Handle x-if element
+      // x-if
       (el as HTMLElement).style.display = shouldShow ? '' : 'none';
 
-      // Handle x-else element if it exists
+      // x-else
       const nextElement = el.nextElementSibling;
       if (nextElement && nextElement.hasAttribute('x-else')) {
-        const elseExpression = nextElement.getAttribute('x-else');
-        let shouldShowElse = !shouldShow;
-
-        // If x-else has an expression, evaluate it too
-        if (elseExpression) {
-          const elseValue = evaluate(elseExpression, data);
-          const actualElseValue =
-            elseValue && typeof elseValue === 'object' && 'value' in elseValue ? elseValue.value : elseValue;
-          shouldShowElse = shouldShowElse && Boolean(actualElseValue);
-        }
-
+        const shouldShowElse = !shouldShow;
         (nextElement as HTMLElement).style.display = shouldShowElse ? '' : 'none';
       }
     });
@@ -299,7 +289,7 @@ function bindProperty(element: Element, propName: string, expression: string, co
       } else if (typeof actualValue === 'object') {
         // Handle object format { color: 'red', fontSize: '14px' }
         Object.entries(actualValue).forEach(([key, val]) => {
-          (element as HTMLElement).style[key as any] = val;
+          (element as HTMLElement).style.setProperty(key, String(val));
         });
       }
     } else {

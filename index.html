@@ -14,8 +14,7 @@
 
     <h2>A</h2>
     <div x-data="counter">
-      <p>
-
+      <p :style="{'--x': count.value}">
         count:<span x-text="count"></span>
         x 2 = <span x-text="double"></span>
       </p>
@@ -23,8 +22,7 @@
       <button @click="decrement()">-</button>
       <p x-if="count%2==0">even</p>
       <p x-else>uneven</p>
-      <ul>
-
+      <ul :style="{'font-size': `${24-count.value*0.5}px`}">
         <template x-for="(i,j) in Array(count.value).fill(0)">
           <li x-text="j+1" key="j">
           </li>

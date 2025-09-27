@@ -17,8 +17,9 @@ i love alpine, but not having components is such a limiting factor. this framewo
 so for fun i built my own alpine, with signals for reactivity, because signals are perfect for this
 
 ## todo
-- [ ] input x-model
+- [x] input x-model
 - [ ] stores
+- [ ] write comp in `<script>` beside `<template>`
 
 ## future
 some current thoughts
