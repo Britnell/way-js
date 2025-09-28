@@ -5,7 +5,7 @@ declare global {
 }
 
 import { signal, effect } from '@preact/signals-core';
-import { evaluateExpression } from './helper';
+import { evaluateExpression, getInputValue, setInputValue } from './helper';
 
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
@@ -293,6 +293,31 @@ function collectContext(el: Element): any {
   return context;
 }
 
+//  * Hydration
+
+async function hydrate() {
+  await waitForWebComponents();
+
+  traverseDOM(document.body, {}, (el, ctx) => {
+    let newContext = { ...ctx };
+
+    // x-data - hydrate and add new data to context
+    newContext = hydrateData(el, newContext);
+
+    // web-component - hydrate (with or without x-props)
+    const componentContext = hydrateWebComponentInTraversal(el, newContext);
+    if (componentContext !== newContext) {
+      newContext = componentContext;
+    }
+    console.log(el.tagName, newContext);
+
+    // hydrating bindings
+    hydrateBindings(el, newContext);
+
+    return newContext;
+  });
+}
+
 function processBuiltInDirectives(root: Element, additionalContext?: any) {
   Object.keys(directives).forEach((dir) => {
     const selector = `[${dir}]`;
@@ -336,101 +361,6 @@ function processSpecialAttributes(root: Element, additionalContext?: any) {
 function bindDirectives(el: Element, additionalContext?: any) {
   processBuiltInDirectives(el, additionalContext);
   processSpecialAttributes(el, additionalContext);
-}
-
-// async function hydrateComponents(scope: Element) {
-//   // Get all potential web component tags from the components registry.
-//   const potentialTags = Object.keys(components).filter((tag) => tag.includes('-'));
-//   console.log(potentialTags);
-
-//   if (potentialTags.length === 0) return;
-
-//   // For each potential tag, check if it exists in the DOM.
-//   const tagsInDom = potentialTags.filter((tag) => scope.querySelector(tag));
-
-//   if (tagsInDom.length === 0) return;
-
-//   // Create whenDefined promises ONLY for tags that are actually in the DOM.
-//   const definitionPromises = tagsInDom.map((tag) => customElements.whenDefined(tag));
-
-//   console.log(' wait for comps');
-
-//   await Promise.all(definitionPromises);
-//   console.log(' hydr comps');
-
-//   // Now hydrate them.
-//   const selector = tagsInDom.join(',');
-//   scope.querySelectorAll(selector).forEach((el: Element) => {
-//     if (el instanceof Component && !el._data) {
-//       hydrateWebComponent(el as Component);
-//     }
-//   });
-// }
-
-// async function hydrateOld(el: Element) {
-//   console.log('hydr');
-
-//   const scope = el || document.body;
-
-//   // 1. x-data
-//   scope.querySelectorAll('[x-data]').forEach((el: Element) => {
-//     if (el.closest('template')) return;
-
-//     const dataAttr = el.getAttribute('x-data');
-//     if (dataAttr) {
-//       if (components[dataAttr]) {
-//         (el as any)._data = components[dataAttr]();
-//       } else {
-//         try {
-//           const rawObject = evaluateExpression(dataAttr, {});
-//           const reactiveObject = makeObjectReactive(rawObject);
-//           (el as any)._data = reactiveObject;
-//         } catch (e) {
-//           console.warn(`Failed to evaluate x-data "${dataAttr}" as inline object`, e);
-//         }
-//       }
-//     }
-//   });
-
-//   // 2. Dispatch init event and wait for it to be processed
-//   // document.dispatchEvent(new CustomEvent('framework:init'));
-//   init();
-
-//   // Wait a tick to allow inline scripts to register components
-//   await new Promise((resolve) => setTimeout(resolve, 0));
-
-//   // 3. Hydrate all web components
-//   await hydrateComponents(scope);
-
-//   // 4. bind
-//   bindDirectives(scope);
-// }
-
-async function hydrate() {
-  console.log('fr:hydrate');
-
-  // First, wait for all web components to be defined
-  await waitForWebComponents();
-
-  // Now traverse and hydrate
-  traverseDOM(document.body, {}, (el, ctx) => {
-    let newContext = { ...ctx };
-
-    // x-data - hydrate and add new data to context
-    newContext = hydrateData(el, newContext);
-
-    // web-component - hydrate (with or without x-props)
-    const componentContext = hydrateWebComponentInTraversal(el, newContext);
-    if (componentContext !== newContext) {
-      newContext = componentContext;
-    }
-    console.log(el.tagName, newContext);
-
-    // hydrating bindings
-    hydrateBindings(el, newContext);
-
-    return newContext;
-  });
 }
 
 function hydrateData(element: Element, context: any): any {
@@ -544,24 +474,6 @@ function createEmit(component: Component) {
   };
 }
 
-function hydrateWebComponent(component: Component) {
-  if (component._data) return; // Already hydrated
-
-  const componentName = component.tagName.toLowerCase();
-  const componentSetup = components[componentName];
-  if (!componentSetup) return;
-
-  // Collect parent context for props parsing
-  const parentContext = collectContext(component.parentElement as Element);
-
-  const props = parseProps(component.getAttribute('x-props') || '', parentContext);
-
-  // Add emit function to props
-  const emit = createEmit(component);
-
-  component._data = componentSetup({ ...props, emit });
-}
-
 function data(id: string, setup: any) {
   components[id] = setup;
 }
@@ -614,35 +526,6 @@ function parseProps(propsAttr: string, parentData: any) {
     console.warn('Error parsing props:', e);
     return {};
   }
-}
-
-function getInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): any {
-  if (inputEl instanceof HTMLInputElement) {
-    if (inputEl.type === 'checkbox') {
-      return inputEl.checked;
-    } else if (inputEl.type === 'radio') {
-      return inputEl.checked ? inputEl.value : null;
-    } else if (inputEl.type === 'number') {
-      return inputEl.value === '' ? null : Number(inputEl.value);
-    } else {
-      return inputEl.value;
-    }
-  } else {
-    return inputEl.value;
-  }
-}
-
-function setInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: any): void {
-  if (inputEl instanceof HTMLInputElement) {
-    if (inputEl.type === 'checkbox') {
-      inputEl.checked = Boolean(value);
-      return;
-    } else if (inputEl.type === 'radio') {
-      inputEl.checked = inputEl.value === String(value);
-      return;
-    }
-  }
-  inputEl.value = String(value ?? '');
 }
 
 function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, formConfig: any): void {
@@ -741,13 +624,7 @@ function createWebComponent(tag: string, template: HTMLTemplateElement) {
   customElements.define(tag, WebComponent);
 }
 
-function init() {
-  console.log('fr:init');
-
-  document.dispatchEvent(new CustomEvent('framework:init'));
-}
-
-const Framework = { init, data, component, hydrate, form, signal, effect };
+const Framework = { data, component, hydrate, form, signal, effect };
 
 // Expose framework to window for inline scripts
 if (typeof window !== 'undefined') {
