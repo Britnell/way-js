@@ -240,7 +240,10 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 //  * Hydration
 
 async function render(root: Element) {
-  await waitForWebComponents(Object.keys(components));
+  document.dispatchEvent(new CustomEvent('framework:init'));
+  // await waitForWebComponents(Object.keys(components));
+  console.log('render');
+
   hydrate(root);
 }
 

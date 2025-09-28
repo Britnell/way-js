@@ -18,7 +18,7 @@ so for fun i built my own alpine, with signals for reactivity, because signals a
 
 ## todo
 - [x] input x-model
-- [ ] write comp in `<script>` beside `<template>`
+- [x] write comp in `<script>` beside `<template>`
 - [ ] x-else-if
 - [ ] stores
 

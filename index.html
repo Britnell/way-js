@@ -60,15 +60,13 @@
     </my-clock>
   </div>
   <template id="my-clock">
-    <p>clock</p>x
+    <h3>clock</h3>
     <span x-text="time"></span>
   </template>
   <script>
     document.addEventListener('framework:init', () => {
-      console.log('script:init');
       Framework.component('my-clock', () => {
-        console.log('clock');
-        const time = Framework.signal(new Date().getTime())
+        const time = Framework.signal(new Date())
         return {
           time
         }
