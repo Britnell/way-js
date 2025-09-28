@@ -5,7 +5,14 @@ declare global {
 }
 
 import { signal, effect } from '@preact/signals-core';
-import { createWebComponent, evaluateExpression, getInputValue, setInputValue } from './helper';
+import {
+  createMarker,
+  createWebComponent,
+  evaluateExpression,
+  findElseTemplate,
+  getInputValue,
+  setInputValue,
+} from './helper';
 
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
@@ -96,89 +103,53 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     }
 
     const templateEl = el;
-    const container = templateEl.parentNode as HTMLElement;
-
-    // Create or get comment marker
-    let marker: Comment | null = null;
-    if (templateEl.nextSibling instanceof Comment) {
-      marker = templateEl.nextSibling as Comment;
-    } else {
-      marker = document.createComment('x-if-end');
-      container.insertBefore(marker, templateEl.nextSibling);
-    }
-
-    let ifNodes: Node[] = [];
-    let elseTemplate: HTMLTemplateElement | null = null;
-    let elseNodes: Node[] = [];
-    let elseMarker: Comment | null = null;
-
-    // Find x-else template
-    const nextElement = templateEl.nextElementSibling;
-    if (nextElement instanceof HTMLTemplateElement && nextElement.hasAttribute('x-else')) {
-      elseTemplate = nextElement;
-
-      // Create or get else comment marker
-      if (elseTemplate.nextSibling instanceof Comment) {
-        elseMarker = elseTemplate.nextSibling as Comment;
-      } else {
-        elseMarker = document.createComment('x-else-end');
-        container.insertBefore(elseMarker, elseTemplate.nextSibling);
-      }
-    }
+    const marker = createMarker(templateEl, 'x-if-end');
+    const elseTemplate = findElseTemplate(templateEl);
+    const elseMarker = elseTemplate ? createMarker(elseTemplate, 'x-else-end') : null;
 
     effect(() => {
       const shouldShow = evaluateExpression(expression, data);
 
       if (shouldShow) {
-        // Remove else nodes if they exist
-        elseNodes.forEach((node) => {
-          if (node.parentNode === container) {
-            container.removeChild(node);
-          }
-        });
-        elseNodes = [];
-
-        // Add if nodes if they don't exist
-        if (ifNodes.length === 0) {
-          const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
-
-          // Insert nodes between template and marker
-          while (fragment.firstChild) {
-            const node = fragment.firstChild;
-            container.insertBefore(node, marker);
-            ifNodes.push(node);
-
-            if (node instanceof Element) {
-              hydrate(node, data);
-            }
-          }
+        removeNodesBetween(elseTemplate, elseMarker);
+        if (!hasNodesBetween(templateEl, marker)) {
+          renderTemplate(templateEl, marker, data);
         }
       } else {
-        // Remove if nodes if they exist
-        ifNodes.forEach((node) => {
-          if (node.parentNode === container) {
-            container.removeChild(node);
-          }
-        });
-        ifNodes = [];
-
-        // Add else nodes if they don't exist and else template exists
-        if (elseTemplate && elseNodes.length === 0) {
-          const fragment = elseTemplate.content.cloneNode(true) as DocumentFragment;
-
-          // Insert nodes between else template and else marker
-          while (fragment.firstChild) {
-            const node = fragment.firstChild;
-            container.insertBefore(node, elseMarker);
-            elseNodes.push(node);
-
-            if (node instanceof Element) {
-              hydrate(node, data);
-            }
-          }
+        removeNodesBetween(templateEl, marker);
+        if (elseTemplate && !hasNodesBetween(elseTemplate, elseMarker!)) {
+          renderTemplate(elseTemplate, elseMarker!, data);
         }
       }
     });
+
+    function renderTemplate(template: HTMLTemplateElement, marker: Comment, data: any) {
+      const fragment = template.content.cloneNode(true) as DocumentFragment;
+      const children = Array.from(fragment.children);
+
+      for (const child of children) {
+        template.parentElement?.insertBefore(child, marker);
+        if (child instanceof Element) {
+          hydrate(child, data);
+        }
+      }
+    }
+
+    function removeNodesBetween(start: Element | null, end: Comment | null) {
+      if (!start || !end) return;
+
+      let current = start.nextSibling;
+      while (current && current !== end) {
+        const next = current.nextSibling;
+        current.parentNode?.removeChild(current);
+        current = next;
+      }
+    }
+
+    function hasNodesBetween(start: Element | null, end: Comment | null): boolean {
+      if (!start || !end) return false;
+      return start.nextSibling !== end;
+    }
   },
   'x-for': (el: Element, expression: string, data: any) => {
     if (!(el instanceof HTMLTemplateElement)) {

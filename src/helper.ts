@@ -65,3 +65,18 @@ export function createWebComponent(tag: string, template: HTMLTemplateElement) {
   }
   customElements.define(tag, WebComponent);
 }
+
+export function createMarker(template: HTMLTemplateElement, text: string): Comment {
+  const nextSibling = template.nextSibling;
+  if (nextSibling instanceof Comment && nextSibling.nodeValue === text) {
+    return nextSibling;
+  }
+  const marker = document.createComment(text);
+  template.parentNode?.insertBefore(marker, template.nextSibling);
+  return marker;
+}
+
+export function findElseTemplate(template: HTMLTemplateElement): HTMLTemplateElement | null {
+  const nextElement = template.nextElementSibling;
+  return nextElement instanceof HTMLTemplateElement && nextElement.hasAttribute('x-else') ? nextElement : null;
+}
