@@ -199,9 +199,9 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
     return;
   }
 
-  createMarker(templateEl, 'x-if-end');
+  createMarker(templateEl, 'x-if');
   const elseTemplate = findElseTemplate(templateEl);
-  if (elseTemplate) createMarker(elseTemplate, 'x-else-end');
+  if (elseTemplate) createMarker(elseTemplate, 'x-else');
   let lastState: boolean | null = null;
 
   const renderTemplate = (template: HTMLTemplateElement, data: any) => {
@@ -219,18 +219,17 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
   effect(() => {
     const shouldShow = evaluateExpression(expression, data);
 
-    // Only update when the condition actually changes
     if (lastState === shouldShow) return;
     lastState = shouldShow;
 
     if (shouldShow) {
-      removeNodesUntil(elseTemplate, 'x-else-end');
-      if (!hasContentAfter(templateEl, 'x-if-end')) {
+      removeNodesUntil(elseTemplate, 'x-else');
+      if (!hasContentAfter(templateEl, 'x-if')) {
         renderTemplate(templateEl, data);
       }
     } else {
-      removeNodesUntil(templateEl, 'x-if-end');
-      if (elseTemplate && !hasContentAfter(elseTemplate, 'x-else-end')) {
+      removeNodesUntil(templateEl, 'x-if');
+      if (elseTemplate && !hasContentAfter(elseTemplate, 'x-else')) {
         renderTemplate(elseTemplate, data);
       }
     }
@@ -241,8 +240,7 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 
 async function render(root: Element) {
   document.dispatchEvent(new CustomEvent('framework:init'));
-  // await waitForWebComponents(Object.keys(components));
-  console.log('render');
+  await waitForWebComponents(Object.keys(components));
 
   hydrate(root);
 }
