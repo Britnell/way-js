@@ -46,9 +46,28 @@
 
       </div>
     </div>
-
-
   </div>
+
+  <div>
+    <my-clock>
+    </my-clock>
+  </div>
+  <template id="my-clock">
+    <p>clock</p>x
+    <span x-text="time"></span>
+  </template>
+  <script>
+    document.addEventListener('framework:init', () => {
+      console.log('script:init');
+      Framework.component('my-clock', () => {
+        console.log('clock');
+        const time = Framework.signal(new Date().getTime())
+        return {
+          time
+        }
+      })
+    })
+  </script>
 
   <template id="my-counter">
     <div>

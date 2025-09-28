@@ -348,7 +348,38 @@ function bindDirectives(el: Element, additionalContext?: any) {
   processSpecialAttributes(el, additionalContext);
 }
 
-function hydrate(el: Element) {
+async function hydrateComponents(scope: Element) {
+  // Get all potential web component tags from the components registry.
+  const potentialTags = Object.keys(components).filter((tag) => tag.includes('-'));
+  console.log(potentialTags);
+
+  if (potentialTags.length === 0) return;
+
+  // For each potential tag, check if it exists in the DOM.
+  const tagsInDom = potentialTags.filter((tag) => scope.querySelector(tag));
+
+  if (tagsInDom.length === 0) return;
+
+  // Create whenDefined promises ONLY for tags that are actually in the DOM.
+  const definitionPromises = tagsInDom.map((tag) => customElements.whenDefined(tag));
+
+  console.log(' wait for comps');
+
+  await Promise.all(definitionPromises);
+  console.log(' hydr comps');
+
+  // Now hydrate them.
+  const selector = tagsInDom.join(',');
+  scope.querySelectorAll(selector).forEach((el: Element) => {
+    if (el instanceof Component && !el._data) {
+      hydrateWebComponent(el as Component);
+    }
+  });
+}
+
+async function hydrate(el: Element) {
+  console.log('hydr');
+
   const scope = el || document.body;
 
   // 1. x-data
@@ -371,15 +402,18 @@ function hydrate(el: Element) {
     }
   });
 
-  // 2. x-props
-  scope.querySelectorAll('[x-props]').forEach((el: Element) => {
-    if (el instanceof Component && !el._data) {
-      hydrateWebComponent(el as Component);
-    }
-  });
+  // 2. Dispatch init event and wait for it to be processed
+  // document.dispatchEvent(new CustomEvent('framework:init'));
+  init();
 
-  // 3. bind
-  bindDirectives(document.body);
+  // Wait a tick to allow inline scripts to register components
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // 3. Hydrate all web components
+  await hydrateComponents(scope);
+
+  // 4. bind
+  bindDirectives(scope);
 }
 
 function createEmit(component: Component) {
@@ -590,4 +624,29 @@ function createWebComponent(tag: string, template: HTMLTemplateElement) {
   customElements.define(tag, WebComponent);
 }
 
-export { data, component, hydrate, form };
+function init() {
+  console.log('fr:init');
+
+  document.dispatchEvent(new CustomEvent('framework:init'));
+}
+
+const Framework = { init, data, component, hydrate, form, signal, effect };
+
+// Expose framework to window for inline scripts
+if (typeof window !== 'undefined') {
+  window.Framework = Framework;
+}
+
+// Add type declarations for window.Framework
+declare global {
+  interface Window {
+    Framework: {
+      data: typeof data;
+      component: typeof component;
+      hydrate: typeof hydrate;
+      form: typeof form;
+    };
+  }
+}
+
+export default Framework;
