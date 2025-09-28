@@ -39,6 +39,13 @@
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
 
+      <template x-if="count.value%3==0">
+        x<p x-text="double"></p>
+        x<p x-text="double"></p>
+      </template>
+      <template x-else>
+        <p>____</p>
+      </template>
       <div class=" my-10 " x-data="{open: true}">
         <button x-show="!open.value" @click="open.value=!open.value">open</button>
         <my-counter x-else x-props="{x: count, title: 'cool' }" @close="open.value=false">

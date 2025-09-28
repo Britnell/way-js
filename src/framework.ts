@@ -89,6 +89,97 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       }
     });
   },
+  'x-if': (el: Element, expression: string, data: any) => {
+    if (!(el instanceof HTMLTemplateElement)) {
+      console.error('x-if directive must be used on a <template> element.');
+      return;
+    }
+
+    const templateEl = el;
+    const container = templateEl.parentNode as HTMLElement;
+
+    // Create or get comment marker
+    let marker: Comment | null = null;
+    if (templateEl.nextSibling instanceof Comment) {
+      marker = templateEl.nextSibling as Comment;
+    } else {
+      marker = document.createComment('x-if-end');
+      container.insertBefore(marker, templateEl.nextSibling);
+    }
+
+    let ifNodes: Node[] = [];
+    let elseTemplate: HTMLTemplateElement | null = null;
+    let elseNodes: Node[] = [];
+    let elseMarker: Comment | null = null;
+
+    // Find x-else template
+    const nextElement = templateEl.nextElementSibling;
+    if (nextElement instanceof HTMLTemplateElement && nextElement.hasAttribute('x-else')) {
+      elseTemplate = nextElement;
+
+      // Create or get else comment marker
+      if (elseTemplate.nextSibling instanceof Comment) {
+        elseMarker = elseTemplate.nextSibling as Comment;
+      } else {
+        elseMarker = document.createComment('x-else-end');
+        container.insertBefore(elseMarker, elseTemplate.nextSibling);
+      }
+    }
+
+    effect(() => {
+      const shouldShow = evaluateExpression(expression, data);
+
+      if (shouldShow) {
+        // Remove else nodes if they exist
+        elseNodes.forEach((node) => {
+          if (node.parentNode === container) {
+            container.removeChild(node);
+          }
+        });
+        elseNodes = [];
+
+        // Add if nodes if they don't exist
+        if (ifNodes.length === 0) {
+          const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
+
+          // Insert nodes between template and marker
+          while (fragment.firstChild) {
+            const node = fragment.firstChild;
+            container.insertBefore(node, marker);
+            ifNodes.push(node);
+
+            if (node instanceof Element) {
+              hydrate(node, data);
+            }
+          }
+        }
+      } else {
+        // Remove if nodes if they exist
+        ifNodes.forEach((node) => {
+          if (node.parentNode === container) {
+            container.removeChild(node);
+          }
+        });
+        ifNodes = [];
+
+        // Add else nodes if they don't exist and else template exists
+        if (elseTemplate && elseNodes.length === 0) {
+          const fragment = elseTemplate.content.cloneNode(true) as DocumentFragment;
+
+          // Insert nodes between else template and else marker
+          while (fragment.firstChild) {
+            const node = fragment.firstChild;
+            container.insertBefore(node, elseMarker);
+            elseNodes.push(node);
+
+            if (node instanceof Element) {
+              hydrate(node, data);
+            }
+          }
+        }
+      }
+    });
+  },
   'x-for': (el: Element, expression: string, data: any) => {
     if (!(el instanceof HTMLTemplateElement)) {
       console.error('x-for directive must be used on a <template> element.');
