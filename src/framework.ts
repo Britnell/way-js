@@ -11,6 +11,9 @@ import {
   evaluateExpression,
   findElseTemplate,
   getInputValue,
+  hasContentAfter,
+  parseForExpression,
+  removeNodesUntil,
   setInputValue,
 } from './helper';
 
@@ -103,53 +106,31 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     }
 
     const templateEl = el;
-    const marker = createMarker(templateEl, 'x-if-end');
+    createMarker(templateEl, 'x-if-end');
     const elseTemplate = findElseTemplate(templateEl);
-    const elseMarker = elseTemplate ? createMarker(elseTemplate, 'x-else-end') : null;
+    if (elseTemplate) createMarker(elseTemplate, 'x-else-end');
+
+    let lastState: boolean | null = null;
 
     effect(() => {
       const shouldShow = evaluateExpression(expression, data);
 
+      // Only update when the condition actually changes
+      if (lastState === shouldShow) return;
+      lastState = shouldShow;
+
       if (shouldShow) {
-        removeNodesBetween(elseTemplate, elseMarker);
-        if (!hasNodesBetween(templateEl, marker)) {
-          renderTemplate(templateEl, marker, data);
+        removeNodesUntil(elseTemplate, 'x-else-end');
+        if (!hasContentAfter(templateEl, 'x-if-end')) {
+          renderTemplate(templateEl, data);
         }
       } else {
-        removeNodesBetween(templateEl, marker);
-        if (elseTemplate && !hasNodesBetween(elseTemplate, elseMarker!)) {
-          renderTemplate(elseTemplate, elseMarker!, data);
+        removeNodesUntil(templateEl, 'x-if-end');
+        if (elseTemplate && !hasContentAfter(elseTemplate, 'x-else-end')) {
+          renderTemplate(elseTemplate, data);
         }
       }
     });
-
-    function renderTemplate(template: HTMLTemplateElement, marker: Comment, data: any) {
-      const fragment = template.content.cloneNode(true) as DocumentFragment;
-      const children = Array.from(fragment.children);
-
-      for (const child of children) {
-        template.parentElement?.insertBefore(child, marker);
-        if (child instanceof Element) {
-          hydrate(child, data);
-        }
-      }
-    }
-
-    function removeNodesBetween(start: Element | null, end: Comment | null) {
-      if (!start || !end) return;
-
-      let current = start.nextSibling;
-      while (current && current !== end) {
-        const next = current.nextSibling;
-        current.parentNode?.removeChild(current);
-        current = next;
-      }
-    }
-
-    function hasNodesBetween(start: Element | null, end: Comment | null): boolean {
-      if (!start || !end) return false;
-      return start.nextSibling !== end;
-    }
   },
   'x-for': (el: Element, expression: string, data: any) => {
     if (!(el instanceof HTMLTemplateElement)) {
@@ -242,18 +223,16 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
   },
 };
 
-function parseForExpression(expression: string): [string, string | null, string] {
-  const withIndex = expression.match(/^\((\w+),\s*(\w+)\)\s+in\s+(.+)$/);
-  if (withIndex) {
-    return [withIndex[1], withIndex[2], withIndex[3].trim()];
-  }
+function renderTemplate(template: HTMLTemplateElement, data: any) {
+  const fragment = template.content.cloneNode(true) as DocumentFragment;
+  const children = Array.from(fragment.children);
 
-  const withoutIndex = expression.match(/^(\w+)\s+in\s+(.+)$/);
-  if (!withoutIndex) {
-    throw new Error(`Invalid x-for expression: "${expression}"`);
+  for (const child of children) {
+    template.parentElement?.insertBefore(child, template.nextSibling);
+    if (child instanceof Element) {
+      hydrate(child, data);
+    }
   }
-
-  return [withoutIndex[1], null, withoutIndex[2].trim()];
 }
 
 function bindProperty(element: Element, propName: string, expression: string, context: any) {

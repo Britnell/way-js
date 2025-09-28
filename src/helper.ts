@@ -80,3 +80,33 @@ export function findElseTemplate(template: HTMLTemplateElement): HTMLTemplateEle
   const nextElement = template.nextElementSibling;
   return nextElement instanceof HTMLTemplateElement && nextElement.hasAttribute('x-else') ? nextElement : null;
 }
+
+export function hasContentAfter(template: HTMLTemplateElement, markerText: string): boolean {
+  const nextSibling = template.nextSibling;
+  return nextSibling instanceof Comment && nextSibling.nodeValue === markerText ? false : nextSibling !== null;
+}
+
+export function removeNodesUntil(start: Element | null, markerText: string) {
+  if (!start) return;
+
+  let current = start.nextSibling;
+  while (current && !(current instanceof Comment && current.nodeValue === markerText)) {
+    const next = current.nextSibling;
+    current.parentNode?.removeChild(current);
+    current = next;
+  }
+}
+
+export function parseForExpression(expression: string): [string, string | null, string] {
+  const withIndex = expression.match(/^\((\w+),\s*(\w+)\)\s+in\s+(.+)$/);
+  if (withIndex) {
+    return [withIndex[1], withIndex[2], withIndex[3].trim()];
+  }
+
+  const withoutIndex = expression.match(/^(\w+)\s+in\s+(.+)$/);
+  if (!withoutIndex) {
+    throw new Error(`Invalid x-for expression: "${expression}"`);
+  }
+
+  return [withoutIndex[1], null, withoutIndex[2].trim()];
+}
