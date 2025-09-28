@@ -114,3 +114,64 @@ export function parseForExpression(expression: string): [string, string | null, 
 export function getItemKey(keyAttr: string | null, itemScope: any, index: number): string {
   return keyAttr ? String(evaluateExpression(keyAttr, itemScope)) : String(index);
 }
+
+export function createItemContext(
+  baseContext: any,
+  itemVar: string,
+  indexVar: string | null,
+  itemValue: any,
+  index: number,
+): any {
+  const context: any = {
+    ...baseContext,
+    [itemVar]: itemValue,
+    $index: index,
+  };
+
+  if (indexVar) {
+    context[indexVar] = index;
+    context.index = index; // Also provide default 'index' for backward compatibility
+  }
+
+  return context;
+}
+
+export function traverseDOM(
+  root: Element,
+  initialContext: any = {},
+  callback: (element: Element, context: any) => any,
+): void {
+  function traverseNode(element: Element, currentContext: any): void {
+    const componentTempalte = element.tagName === 'TEMPLATE' && element.id;
+    if (componentTempalte) return;
+
+    const newContext = callback(element, currentContext);
+
+    const children = Array.from(element.children);
+    for (const child of children) {
+      traverseNode(child, newContext);
+    }
+  }
+
+  // Start traversal from the root element
+  traverseNode(root, initialContext);
+}
+
+export async function waitForWebComponents(names: string[]): Promise<void> {
+  const potentialTags = names.filter((tag) => tag.includes('-'));
+  if (potentialTags.length > 0) {
+    const definitionPromises = potentialTags.map((tag) => customElements.whenDefined(tag).catch(() => null));
+    await Promise.all(definitionPromises);
+  }
+}
+
+export function createEmit(component: Element) {
+  return (eventName: string, arg: any) => {
+    component.dispatchEvent(
+      new CustomEvent(eventName, {
+        detail: arg,
+        bubbles: true,
+      }),
+    );
+  };
+}

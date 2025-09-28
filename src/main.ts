@@ -43,8 +43,6 @@ Framework.component('my-counter', ({ emit, ...props }: any) => {
   return { x, incr, title: props.title, onDisconnected, count: 33, close, val, uppercase };
 });
 
-console.log('main');
-
 document.addEventListener('DOMContentLoaded', async () => {
   Framework.render(document.body);
 });
