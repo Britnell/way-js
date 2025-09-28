@@ -11,6 +11,7 @@ import {
   evaluateExpression,
   findElseTemplate,
   getInputValue,
+  getItemKey,
   hasContentAfter,
   parseForExpression,
   removeNodesUntil,
@@ -137,85 +138,79 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       console.error('x-for directive must be used on a <template> element.');
       return;
     }
+
     const templateEl = el;
-    const [itemVar, indexVar, arrayExpr] = parseForExpression(expression);
     const container = templateEl.parentNode as HTMLElement;
+    const [itemVar, indexVar, arrayExpr] = parseForExpression(expression);
     const keyAttr = templateEl.getAttribute(':key') || templateEl.getAttribute('x-key');
+
+    const startMarker = document.createComment(` x-for: ${expression} `);
+    container.insertBefore(startMarker, templateEl);
 
     let renderedItems = new Map<string, { nodes: Node[]; scope: any }>();
 
+    const createAndHydrateNewItem = (itemScope: any): Node[] => {
+      const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
+      const newNodes = Array.from(fragment.childNodes);
+      for (const node of newNodes) {
+        if (node instanceof Element) {
+          hydrate(node, itemScope);
+        }
+      }
+      return newNodes;
+    };
+
     effect(() => {
       const array = evaluateExpression(arrayExpr, data);
-
-      if (!Array.isArray(array)) {
-        console.error(`x-for expression "${arrayExpr}" did not evaluate to an array`);
-        renderedItems.forEach(({ nodes }) => {
-          nodes.forEach((node) => container.removeChild(node));
-        });
-        renderedItems.clear();
-        return;
-      }
-
+      const oldRenderedItems = renderedItems;
       const newRenderedItems = new Map<string, { nodes: Node[]; scope: any }>();
       const newNodesOrdered: Node[] = [];
 
-      for (let index = 0; index < array.length; index++) {
-        const item = array[index];
-        const itemScope = createItemContext(data, itemVar, indexVar, item, index);
+      if (Array.isArray(array)) {
+        for (let index = 0; index < array.length; index++) {
+          const item = array[index];
+          const itemScope = createItemContext(data, itemVar, indexVar, item, index);
+          const key = getItemKey(keyAttr, itemScope, index);
 
-        const key = keyAttr ? String(evaluateExpression(keyAttr, itemScope)) : String(index);
-        const currentItem = renderedItems.get(key);
+          const existingItem = oldRenderedItems.get(key);
 
-        if (currentItem) {
-          Object.assign(currentItem.scope, itemScope);
-          newNodesOrdered.push(...currentItem.nodes);
-          newRenderedItems.set(key, currentItem);
-          renderedItems.delete(key);
-        } else {
-          const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
-          const tempWrapper = document.createElement('div');
-          tempWrapper.appendChild(fragment);
-
-          // Insert the new nodes into the DOM temporarily
-          container.insertBefore(tempWrapper, templateEl);
-
-          // Get the inserted nodes
-          const newNodes = Array.from(tempWrapper.childNodes);
-
-          // Hydrate each new node with the item scope
-          for (const node of newNodes) {
-            if (node instanceof Element) {
-              hydrate(node, itemScope);
-            }
+          if (existingItem) {
+            Object.assign(existingItem.scope, itemScope);
+            newNodesOrdered.push(...existingItem.nodes);
+            newRenderedItems.set(key, existingItem);
+            oldRenderedItems.delete(key);
+          } else {
+            const newNodes = createAndHydrateNewItem(itemScope);
+            newNodesOrdered.push(...newNodes);
+            newRenderedItems.set(key, { nodes: newNodes, scope: itemScope });
           }
-
-          newNodesOrdered.push(...newNodes);
-          newRenderedItems.set(key, { nodes: newNodes, scope: itemScope });
         }
       }
 
-      // Remove old items
-      renderedItems.forEach(({ nodes }) => {
-        nodes.forEach((node) => container.removeChild(node));
-      });
+      // Remove nodes of items that are no longer in the list
+      for (const { nodes } of oldRenderedItems.values()) {
+        nodes.forEach((node) => {
+          if (node.parentNode === container) container.removeChild(node);
+        });
+      }
 
-      // Reorder existing nodes and insert new ones
-      const referenceNode = templateEl;
-      let currentInsertPosition: ChildNode | null = referenceNode;
-
+      // Reconcile the DOM to match the new order
+      let lastNode: Node = startMarker;
       for (const node of newNodesOrdered) {
-        if (node.parentNode !== container) {
-          container.insertBefore(node, currentInsertPosition);
+        if (lastNode.nextSibling !== node) {
+          container.insertBefore(node, lastNode.nextSibling);
         }
-        currentInsertPosition = node.nextSibling;
+        lastNode = node;
       }
 
-      // Remove any remaining nodes that weren't in the new list
-      let nextNode: ChildNode | null = currentInsertPosition;
-      while (nextNode && nextNode !== templateEl) {
-        const toRemove = nextNode;
-        nextNode = nextNode.nextSibling;
-        container.removeChild(toRemove);
+      // Remove any old nodes that are still lingering at the end of the list
+      let nodeToRemove = lastNode.nextSibling;
+      while (nodeToRemove && nodeToRemove !== templateEl) {
+        const next = nodeToRemove.nextSibling;
+        if (nodeToRemove.parentNode === container) {
+          container.removeChild(nodeToRemove);
+        }
+        nodeToRemove = next;
       }
 
       renderedItems = newRenderedItems;
@@ -311,33 +306,6 @@ function createItemContext(
   if (indexVar) {
     context[indexVar] = index;
     context.index = index; // Also provide default 'index' for backward compatibility
-  }
-
-  return context;
-}
-
-function collectContext(el: Element): any {
-  const context: any = {};
-
-  // Collect all parents with _data (closest last for proper precedence)
-  const parents = [];
-  let current = el.closest('[x-data], [x-props]');
-  while (current) {
-    if (current._data) {
-      parents.push(current);
-    }
-    // Move to next parent up the tree
-    current = current.parentElement?.closest('[x-data], [x-props]') || null;
-  }
-
-  // Merge parents (closest overwrites furthest)
-  for (let i = parents.length - 1; i >= 0; i--) {
-    Object.assign(context, parents[i]._data);
-  }
-
-  // Add current element's data if it's a web component (highest precedence)
-  if (el._data) {
-    Object.assign(context, el._data);
   }
 
   return context;

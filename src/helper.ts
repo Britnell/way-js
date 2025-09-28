@@ -110,3 +110,7 @@ export function parseForExpression(expression: string): [string, string | null, 
 
   return [withoutIndex[1], null, withoutIndex[2].trim()];
 }
+
+export function getItemKey(keyAttr: string | null, itemScope: any, index: number): string {
+  return keyAttr ? String(evaluateExpression(keyAttr, itemScope)) : String(index);
+}
