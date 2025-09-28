@@ -46,7 +46,7 @@ Framework.component('my-counter', ({ emit, ...props }: any) => {
 console.log('main');
 
 document.addEventListener('DOMContentLoaded', async () => {
-  Framework.hydrate();
+  Framework.render(document.body);
 });
 
 Framework.form(

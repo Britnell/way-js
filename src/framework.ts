@@ -5,7 +5,7 @@ declare global {
 }
 
 import { signal, effect } from '@preact/signals-core';
-import { evaluateExpression, getInputValue, setInputValue } from './helper';
+import { createWebComponent, evaluateExpression, getInputValue, setInputValue } from './helper';
 
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
@@ -53,7 +53,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
   },
   'x-form': (el, expression, _data) => {
     if (!(el instanceof HTMLFormElement)) {
-      console.warn('x-form directive can only be used on form elements.');
+      console.error('x-form directive can only be used on form elements.');
       return;
     }
 
@@ -62,7 +62,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     const formConfig = validationSchemas[formName];
 
     if (!formConfig) {
-      console.warn(`Form validation schema not found: "${formName}"`);
+      console.error(`Form validation schema not found: "${formName}"`);
       return;
     }
 
@@ -91,7 +91,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
   },
   'x-for': (el: Element, expression: string, data: any) => {
     if (!(el instanceof HTMLTemplateElement)) {
-      console.warn('x-for directive must be used on a <template> element.');
+      console.error('x-for directive must be used on a <template> element.');
       return;
     }
     const templateEl = el;
@@ -105,7 +105,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       const array = evaluateExpression(arrayExpr, data);
 
       if (!Array.isArray(array)) {
-        console.warn(`x-for expression "${arrayExpr}" did not evaluate to an array`);
+        console.error(`x-for expression "${arrayExpr}" did not evaluate to an array`);
         renderedItems.forEach(({ nodes }) => {
           nodes.forEach((node) => container.removeChild(node));
         });
@@ -133,10 +133,19 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
           const tempWrapper = document.createElement('div');
           tempWrapper.appendChild(fragment);
 
-          // Apply all directives with item scope as additional context
-          bindDirectives(tempWrapper, itemScope);
+          // Insert the new nodes into the DOM temporarily
+          container.insertBefore(tempWrapper, templateEl);
 
+          // Get the inserted nodes
           const newNodes = Array.from(tempWrapper.childNodes);
+
+          // Hydrate each new node with the item scope
+          for (const node of newNodes) {
+            if (node instanceof Element) {
+              hydrate(node, itemScope);
+            }
+          }
+
           newNodesOrdered.push(...newNodes);
           newRenderedItems.set(key, { nodes: newNodes, scope: itemScope });
         }
@@ -227,7 +236,7 @@ function bindProperty(element: Element, propName: string, expression: string, co
 function bindEvent(element: Element, eventName: string, expression: string, context: any) {
   // Find emit function from nearest web component parent
   const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
-    if (el instanceof Component && el._data) {
+    if (el?._data) {
       return createEmit(el);
     }
     return el.parentElement ? findEmit(el.parentElement) : null;
@@ -286,7 +295,7 @@ function collectContext(el: Element): any {
   }
 
   // Add current element's data if it's a web component (highest precedence)
-  if (el instanceof Component && el._data) {
+  if (el._data) {
     Object.assign(context, el._data);
   }
 
@@ -295,72 +304,30 @@ function collectContext(el: Element): any {
 
 //  * Hydration
 
-async function hydrate() {
+async function render(root: Element) {
   await waitForWebComponents();
 
-  traverseDOM(document.body, {}, (el, ctx) => {
+  hydrate(root);
+}
+
+function hydrate(root: Element = document.body, initialContext = {}) {
+  traverseDOM(root, initialContext, (el, ctx) => {
     let newContext = { ...ctx };
 
-    // x-data - hydrate and add new data to context
+    // x-data
     newContext = hydrateData(el, newContext);
 
-    // web-component - hydrate (with or without x-props)
+    // components
     const componentContext = hydrateWebComponentInTraversal(el, newContext);
     if (componentContext !== newContext) {
       newContext = componentContext;
     }
-    console.log(el.tagName, newContext);
 
-    // hydrating bindings
+    // bindings
     hydrateBindings(el, newContext);
 
     return newContext;
   });
-}
-
-function processBuiltInDirectives(root: Element, additionalContext?: any) {
-  Object.keys(directives).forEach((dir) => {
-    const selector = `[${dir}]`;
-    root.querySelectorAll(selector).forEach((element) => {
-      const expression = element.getAttribute(dir);
-      if (expression) {
-        const context = collectContext(element);
-        const finalContext = additionalContext ?? context;
-        directives[dir](element, expression, finalContext);
-      }
-    });
-  });
-}
-
-function processSpecialAttributes(root: Element, additionalContext?: any) {
-  root.querySelectorAll('*').forEach((element) => {
-    const specialAttrs = Array.from(element.attributes).filter(
-      (attr) => attr.name.startsWith('@') || attr.name.startsWith(':'),
-    );
-
-    if (specialAttrs.length === 0) return;
-
-    const context = collectContext(element);
-    const finalContext = additionalContext ?? context;
-
-    specialAttrs.forEach((attr) => {
-      const expression = attr.value;
-      if (!expression) return;
-
-      if (attr.name.startsWith('@')) {
-        const eventName = attr.name.substring(1);
-        bindEvent(element, eventName, expression, finalContext);
-      } else if (attr.name.startsWith(':')) {
-        const propName = attr.name.substring(1);
-        bindProperty(element, propName, expression, finalContext);
-      }
-    });
-  });
-}
-
-function bindDirectives(el: Element, additionalContext?: any) {
-  processBuiltInDirectives(el, additionalContext);
-  processSpecialAttributes(el, additionalContext);
 }
 
 function hydrateData(element: Element, context: any): any {
@@ -375,7 +342,7 @@ function hydrateData(element: Element, context: any): any {
       const reactiveObject = makeObjectReactive(rawObject);
       element._data = reactiveObject;
     } catch (e) {
-      console.warn(`Failed to evaluate x-data "${dataAttr}" as inline object`, e);
+      console.error(`Failed to evaluate x-data "${dataAttr}" as inline object`, e);
       return context;
     }
   }
@@ -407,7 +374,7 @@ function hydrateWebComponentInTraversal(element: Element, context: any): any {
   const props = parseProps(element.getAttribute('x-props') || '', context);
 
   // Add emit function
-  const emit = createEmit(element as Component);
+  const emit = createEmit(element);
 
   // Hydrate the component
   element._data = components[componentName]({ ...props, emit });
@@ -463,7 +430,7 @@ function traverseDOM(root: Element, initialContext: any = {}, callback: (element
   traverseNode(root, initialContext);
 }
 
-function createEmit(component: Component) {
+function createEmit(component: Element) {
   return (eventName: string, arg: any) => {
     component.dispatchEvent(
       new CustomEvent(eventName, {
@@ -523,7 +490,7 @@ function parseProps(propsAttr: string, parentData: any) {
   try {
     return evaluateExpression(propsAttr, parentData);
   } catch (e) {
-    console.warn('Error parsing props:', e);
+    console.error('Error parsing props:', e);
     return {};
   }
 }
@@ -594,53 +561,22 @@ function validateForm(formEl: HTMLFormElement, formConfig: any): boolean {
   return allValid;
 }
 
-class Component extends HTMLElement {
-  template: HTMLTemplateElement;
-  _data: any;
+const Framework = { data, component, render, form, signal, effect };
 
-  constructor(template: HTMLTemplateElement) {
-    super();
-    this.template = template;
-  }
-
-  connectedCallback() {
-    const content = this.template.content.cloneNode(true);
-    this.appendChild(content);
-  }
-
-  disconnectedCallback() {
-    if (this._data.onDisconnected) {
-      this._data.onDisconnected();
-    }
-  }
-}
-
-function createWebComponent(tag: string, template: HTMLTemplateElement) {
-  class WebComponent extends Component {
-    constructor() {
-      super(template);
-    }
-  }
-  customElements.define(tag, WebComponent);
-}
-
-const Framework = { data, component, hydrate, form, signal, effect };
-
-// Expose framework to window for inline scripts
-if (typeof window !== 'undefined') {
-  window.Framework = Framework;
-}
-
-// Add type declarations for window.Framework
 declare global {
   interface Window {
     Framework: {
       data: typeof data;
       component: typeof component;
-      hydrate: typeof hydrate;
+      render: typeof hydrate;
       form: typeof form;
+      // signal:
+      // effect:
     };
   }
 }
 
+if (typeof window !== 'undefined') {
+  window.Framework = Framework;
+}
 export default Framework;

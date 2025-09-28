@@ -35,3 +35,33 @@ export function setInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | 
   }
   inputEl.value = String(value ?? '');
 }
+
+export class FrameworkComponent extends HTMLElement {
+  template: HTMLTemplateElement;
+  _data: any;
+
+  constructor(template: HTMLTemplateElement) {
+    super();
+    this.template = template;
+  }
+
+  connectedCallback() {
+    const content = this.template.content.cloneNode(true);
+    this.appendChild(content);
+  }
+
+  disconnectedCallback() {
+    if (this._data.onDisconnected) {
+      this._data.onDisconnected();
+    }
+  }
+}
+
+export function createWebComponent(tag: string, template: HTMLTemplateElement) {
+  class WebComponent extends FrameworkComponent {
+    constructor() {
+      super(template);
+    }
+  }
+  customElements.define(tag, WebComponent);
+}
