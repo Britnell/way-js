@@ -20,7 +20,7 @@
       </p>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
-      <p x-if="count%2==0">even</p>
+      <p x-show="count%2==0">even</p>
       <p x-else>uneven</p>
       <ul :style="{'font-size': `${24-count.value*0.5}px`}">
         <template x-for="(i,j) in Array(count.value).fill(0)">
@@ -40,7 +40,7 @@
       <button @click="decrement()">-</button>
 
       <div class=" my-10 " x-data="{open: true}">
-        <button x-if="!open.value" @click="open.value=!open.value">open</button>
+        <button x-show="!open.value" @click="open.value=!open.value">open</button>
         <my-counter x-else x-props="{x: count, title: 'cool' }" @close="open.value=false">
         </my-counter>
 

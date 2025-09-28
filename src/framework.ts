@@ -17,12 +17,12 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       el.textContent = value;
     });
   },
-  'x-if': (el, expression, data) => {
+  'x-show': (el, expression, data) => {
     effect(() => {
       const value = evaluateExpression(expression, data);
       const shouldShow = value;
 
-      // x-if
+      // x-show
       (el as HTMLElement).style.display = shouldShow ? '' : 'none';
 
       // x-else
@@ -384,7 +384,7 @@ function hydrateWebComponentInTraversal(element: Element, context: any): any {
 }
 
 function hydrateBindings(element: Element, context: any): void {
-  // x-text, x-if, x-model ...
+  // x-text, x-show, x-model ...
   Object.keys(directives).forEach((dir) => {
     if (element.hasAttribute(dir)) {
       const expression = element.getAttribute(dir);
@@ -568,10 +568,10 @@ declare global {
     Framework: {
       data: typeof data;
       component: typeof component;
-      render: typeof hydrate;
+      render: typeof render;
       form: typeof form;
-      // signal:
-      // effect:
+      signal: typeof signal;
+      effect: typeof effect;
     };
   }
 }
