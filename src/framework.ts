@@ -5,29 +5,21 @@ declare global {
 }
 
 import { signal, effect } from '@preact/signals-core';
+import { evaluateExpression } from './helper';
 
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
 
-function evaluate(expression: string, data: any) {
-  try {
-    return new Function('data', `with(data) { return ${expression} }`)(data);
-  } catch (e) {
-    console.error(`Error evaluating expression: "${expression}"`, e);
-    return null;
-  }
-}
-
 const directives: Record<string, (el: Element, expression: string, data: any) => void> = {
   'x-text': (el, expression, data) => {
     effect(() => {
-      const value = evaluate(expression, data);
+      const value = evaluateExpression(expression, data);
       el.textContent = value;
     });
   },
   'x-if': (el, expression, data) => {
     effect(() => {
-      const value = evaluate(expression, data);
+      const value = evaluateExpression(expression, data);
       const shouldShow = value;
 
       // x-if
@@ -45,7 +37,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     const inputEl = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 
     effect(() => {
-      const value = evaluate(expression, data);
+      const value = evaluateExpression(expression, data);
       setInputValue(inputEl, value);
     });
 
@@ -110,7 +102,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     let renderedItems = new Map<string, { nodes: Node[]; scope: any }>();
 
     effect(() => {
-      const array = evaluate(arrayExpr, data);
+      const array = evaluateExpression(arrayExpr, data);
 
       if (!Array.isArray(array)) {
         console.warn(`x-for expression "${arrayExpr}" did not evaluate to an array`);
@@ -128,7 +120,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
         const item = array[index];
         const itemScope = createItemContext(data, itemVar, indexVar, item, index);
 
-        const key = keyAttr ? String(evaluate(keyAttr, itemScope)) : String(index);
+        const key = keyAttr ? String(evaluateExpression(keyAttr, itemScope)) : String(index);
         const currentItem = renderedItems.get(key);
 
         if (currentItem) {
@@ -195,7 +187,7 @@ function parseForExpression(expression: string): [string, string | null, string]
 
 function bindProperty(element: Element, propName: string, expression: string, context: any) {
   effect(() => {
-    const value = evaluate(expression, context);
+    const value = evaluateExpression(expression, context);
 
     if (propName === 'class') {
       // Handle class binding specially
@@ -249,7 +241,7 @@ function bindEvent(element: Element, eventName: string, expression: string, cont
       $event: event,
       emit,
     };
-    evaluate(expression, eventContext);
+    evaluateExpression(expression, eventContext);
   });
 }
 
@@ -390,7 +382,7 @@ function bindDirectives(el: Element, additionalContext?: any) {
 //         (el as any)._data = components[dataAttr]();
 //       } else {
 //         try {
-//           const rawObject = evaluate(dataAttr, {});
+//           const rawObject = evaluateExpression(dataAttr, {});
 //           const reactiveObject = makeObjectReactive(rawObject);
 //           (el as any)._data = reactiveObject;
 //         } catch (e) {
@@ -449,7 +441,7 @@ function hydrateData(element: Element, context: any): any {
     element._data = components[dataAttr]();
   } else {
     try {
-      const rawObject = evaluate(dataAttr, {});
+      const rawObject = evaluateExpression(dataAttr, {});
       const reactiveObject = makeObjectReactive(rawObject);
       element._data = reactiveObject;
     } catch (e) {
@@ -617,7 +609,7 @@ function makeObjectReactive(obj: any): any {
 function parseProps(propsAttr: string, parentData: any) {
   if (!propsAttr) return {};
   try {
-    return evaluate(propsAttr, parentData);
+    return evaluateExpression(propsAttr, parentData);
   } catch (e) {
     console.warn('Error parsing props:', e);
     return {};
