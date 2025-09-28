@@ -342,78 +342,203 @@ function processSpecialAttributes(root: Element, additionalContext?: any) {
 }
 
 function bindDirectives(el: Element, additionalContext?: any) {
-  if (el.closest('template')) return;
-
   processBuiltInDirectives(el, additionalContext);
   processSpecialAttributes(el, additionalContext);
 }
 
-async function hydrateComponents(scope: Element) {
-  // Get all potential web component tags from the components registry.
-  const potentialTags = Object.keys(components).filter((tag) => tag.includes('-'));
-  console.log(potentialTags);
+// async function hydrateComponents(scope: Element) {
+//   // Get all potential web component tags from the components registry.
+//   const potentialTags = Object.keys(components).filter((tag) => tag.includes('-'));
+//   console.log(potentialTags);
 
-  if (potentialTags.length === 0) return;
+//   if (potentialTags.length === 0) return;
 
-  // For each potential tag, check if it exists in the DOM.
-  const tagsInDom = potentialTags.filter((tag) => scope.querySelector(tag));
+//   // For each potential tag, check if it exists in the DOM.
+//   const tagsInDom = potentialTags.filter((tag) => scope.querySelector(tag));
 
-  if (tagsInDom.length === 0) return;
+//   if (tagsInDom.length === 0) return;
 
-  // Create whenDefined promises ONLY for tags that are actually in the DOM.
-  const definitionPromises = tagsInDom.map((tag) => customElements.whenDefined(tag));
+//   // Create whenDefined promises ONLY for tags that are actually in the DOM.
+//   const definitionPromises = tagsInDom.map((tag) => customElements.whenDefined(tag));
 
-  console.log(' wait for comps');
+//   console.log(' wait for comps');
 
-  await Promise.all(definitionPromises);
-  console.log(' hydr comps');
+//   await Promise.all(definitionPromises);
+//   console.log(' hydr comps');
 
-  // Now hydrate them.
-  const selector = tagsInDom.join(',');
-  scope.querySelectorAll(selector).forEach((el: Element) => {
-    if (el instanceof Component && !el._data) {
-      hydrateWebComponent(el as Component);
+//   // Now hydrate them.
+//   const selector = tagsInDom.join(',');
+//   scope.querySelectorAll(selector).forEach((el: Element) => {
+//     if (el instanceof Component && !el._data) {
+//       hydrateWebComponent(el as Component);
+//     }
+//   });
+// }
+
+// async function hydrateOld(el: Element) {
+//   console.log('hydr');
+
+//   const scope = el || document.body;
+
+//   // 1. x-data
+//   scope.querySelectorAll('[x-data]').forEach((el: Element) => {
+//     if (el.closest('template')) return;
+
+//     const dataAttr = el.getAttribute('x-data');
+//     if (dataAttr) {
+//       if (components[dataAttr]) {
+//         (el as any)._data = components[dataAttr]();
+//       } else {
+//         try {
+//           const rawObject = evaluate(dataAttr, {});
+//           const reactiveObject = makeObjectReactive(rawObject);
+//           (el as any)._data = reactiveObject;
+//         } catch (e) {
+//           console.warn(`Failed to evaluate x-data "${dataAttr}" as inline object`, e);
+//         }
+//       }
+//     }
+//   });
+
+//   // 2. Dispatch init event and wait for it to be processed
+//   // document.dispatchEvent(new CustomEvent('framework:init'));
+//   init();
+
+//   // Wait a tick to allow inline scripts to register components
+//   await new Promise((resolve) => setTimeout(resolve, 0));
+
+//   // 3. Hydrate all web components
+//   await hydrateComponents(scope);
+
+//   // 4. bind
+//   bindDirectives(scope);
+// }
+
+async function hydrate() {
+  console.log('fr:hydrate');
+
+  // First, wait for all web components to be defined
+  await waitForWebComponents();
+
+  // Now traverse and hydrate
+  traverseDOM(document.body, {}, (el, ctx) => {
+    let newContext = { ...ctx };
+
+    // x-data - hydrate and add new data to context
+    newContext = hydrateData(el, newContext);
+
+    // web-component - hydrate (with or without x-props)
+    const componentContext = hydrateWebComponentInTraversal(el, newContext);
+    if (componentContext !== newContext) {
+      newContext = componentContext;
     }
+    console.log(el.tagName, newContext);
+
+    // hydrating bindings
+    hydrateBindings(el, newContext);
+
+    return newContext;
   });
 }
 
-async function hydrate(el: Element) {
-  console.log('hydr');
+function hydrateData(element: Element, context: any): any {
+  const dataAttr = element.getAttribute('x-data');
+  if (!dataAttr) return context;
 
-  const scope = el || document.body;
+  if (components[dataAttr]) {
+    element._data = components[dataAttr]();
+  } else {
+    try {
+      const rawObject = evaluate(dataAttr, {});
+      const reactiveObject = makeObjectReactive(rawObject);
+      element._data = reactiveObject;
+    } catch (e) {
+      console.warn(`Failed to evaluate x-data "${dataAttr}" as inline object`, e);
+      return context;
+    }
+  }
 
-  // 1. x-data
-  scope.querySelectorAll('[x-data]').forEach((el: Element) => {
-    if (el.closest('template')) return;
+  // Return new context with this element's data added
+  return { ...context, ...element._data };
+}
 
-    const dataAttr = el.getAttribute('x-data');
-    if (dataAttr) {
-      if (components[dataAttr]) {
-        (el as any)._data = components[dataAttr]();
-      } else {
-        try {
-          const rawObject = evaluate(dataAttr, {});
-          const reactiveObject = makeObjectReactive(rawObject);
-          (el as any)._data = reactiveObject;
-        } catch (e) {
-          console.warn(`Failed to evaluate x-data "${dataAttr}" as inline object`, e);
-        }
+async function waitForWebComponents(): Promise<void> {
+  const potentialTags = Object.keys(components).filter((tag) => tag.includes('-'));
+  if (potentialTags.length > 0) {
+    const definitionPromises = potentialTags.map((tag) => customElements.whenDefined(tag).catch(() => null));
+    await Promise.all(definitionPromises);
+  }
+}
+
+function hydrateWebComponentInTraversal(element: Element, context: any): any {
+  // Check if this is a web component (tag contains dash)
+  if (!element.tagName.includes('-')) return context;
+
+  // Check if it's a registered component
+  const componentName = element.tagName.toLowerCase();
+  if (!components[componentName]) return context;
+
+  // Skip if already hydrated
+  if (element._data) return context;
+
+  // Parse props using parent context
+  const props = parseProps(element.getAttribute('x-props') || '', context);
+
+  // Add emit function
+  const emit = createEmit(element as Component);
+
+  // Hydrate the component
+  element._data = components[componentName]({ ...props, emit });
+
+  // Return new context with component data added
+  return { ...context, ...element._data };
+}
+
+function hydrateBindings(element: Element, context: any): void {
+  // x-text, x-if, x-model ...
+  Object.keys(directives).forEach((dir) => {
+    if (element.hasAttribute(dir)) {
+      const expression = element.getAttribute(dir);
+      if (expression) {
+        directives[dir](element, expression, context);
       }
     }
   });
 
-  // 2. Dispatch init event and wait for it to be processed
-  // document.dispatchEvent(new CustomEvent('framework:init'));
-  init();
+  // @events, :properties
+  const specialAttrs = Array.from(element.attributes).filter(
+    (attr) => attr.name.startsWith('@') || attr.name.startsWith(':'),
+  );
 
-  // Wait a tick to allow inline scripts to register components
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  specialAttrs.forEach((attr) => {
+    const expression = attr.value;
+    if (!expression) return;
 
-  // 3. Hydrate all web components
-  await hydrateComponents(scope);
+    if (attr.name.startsWith('@')) {
+      const eventName = attr.name.substring(1);
+      bindEvent(element, eventName, expression, context);
+    } else if (attr.name.startsWith(':')) {
+      const propName = attr.name.substring(1);
+      bindProperty(element, propName, expression, context);
+    }
+  });
+}
 
-  // 4. bind
-  bindDirectives(scope);
+function traverseDOM(root: Element, initialContext: any = {}, callback: (element: Element, context: any) => any): void {
+  function traverseNode(element: Element, currentContext: any): void {
+    const componentTempalte = element.tagName === 'TEMPLATE' && element.id;
+    if (componentTempalte) return;
+
+    const newContext = callback(element, currentContext);
+
+    const children = Array.from(element.children);
+    for (const child of children) {
+      traverseNode(child, newContext);
+    }
+  }
+
+  // Start traversal from the root element
+  traverseNode(root, initialContext);
 }
 
 function createEmit(component: Component) {
