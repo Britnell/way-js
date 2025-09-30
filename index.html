@@ -22,8 +22,8 @@
     <h2>A</h2>
     <div x-data="counter">
       <p :style="{'--x': count.value}">
-        count:<span x-text="count"></span>
-        x 2 = <span x-text="double"></span>
+        count: {count} <br>
+        x 2 = {double}
       </p>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
@@ -31,7 +31,8 @@
       <p x-else>uneven</p>
       <ul :style="{'font-size': `${24-count.value*0.5}px`}">
         <template x-for="(i,j) in Array(count.value).fill(0)">
-          <li x-text="j+1" key="j">
+          <li key="j">
+            {j+1}
           </li>
         </template>
       </ul>
@@ -40,15 +41,16 @@
     <h2>B</h2>
     <div x-data="counter">
       <p>
-        count:<span x-text="count" :class="count%2?'a':'b'"></span>
-        x 2 = <span x-text="double"></span>
+        count:<span :class="count%2?'a':'b'">{count}</span>
+        x 2 = {double}
       </p>
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
 
       <template x-if="count.value%3==0">
-        x<p x-text="double"></p>
-        x<p x-text="double"></p>
+        <p>
+          //{double}\\
+        </p>
       </template>
       <template x-else>
         <p>____</p>
@@ -75,9 +77,9 @@
       <option value="green">green</option>
     </select>
     <div class="x" :style="{ color: theme.color.value }">
-      color: <span x-text="theme.color.value"></span>
+      color: {theme.color.value}
       <h3>clock</h3>
-      <p x-text="time"></p>
+      <p>{time}</p>
     </div>
   </template>
   <script>
@@ -94,21 +96,20 @@
 
   <template id="my-counter">
     <div>
-      <h3 x-text="title"></h3>
+      <h3>{title}</h3>
       <p>
-        x= <span x-text="x"></span>
+        x= {x}
       </p>
       <button @click="incr()">++</button>
       <button @click="close()">close</button>
 
       <p>
-        B= <span x-text="count"></span>
+        B= {count}
       </p>
 
       <form x-form="userForm">
         <div>
-          <p>val =
-            <span x-text="uppercase"></span>
+          <p>val = {uppercase}
           </p>
           <div>
 

@@ -352,6 +352,18 @@ function hydrateBindings(element: Element, context: any): void {
     }
   });
 
+  // {} text interpolation
+  if (element.childNodes.length > 0) {
+    Array.from(element.childNodes).forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const textContent = node.textContent || '';
+        if (textContent.includes('{') && textContent.includes('}')) {
+          bindTextInterpolation(node as Text, context);
+        }
+      }
+    });
+  }
+
   // @events, :properties
   const specialAttrs = Array.from(element.attributes).filter(
     (attr) => attr.name.startsWith('@') || attr.name.startsWith(':'),
@@ -367,6 +379,22 @@ function hydrateBindings(element: Element, context: any): void {
       const propName = attr.name.substring(1);
       bindProperty(element, propName, expression, context);
     }
+  });
+}
+
+function bindTextInterpolation(textNode: Text, context: any) {
+  const originalText = textNode.textContent || '';
+
+  effect(() => {
+    const interpolatedText = originalText.replace(/\{([^}]+)\}/g, (match, expression) => {
+      try {
+        return evaluateExpression(expression.trim(), context);
+      } catch (e) {
+        console.error(`Error evaluating interpolation: "${expression}"`, e);
+        return match;
+      }
+    });
+    textNode.textContent = interpolatedText;
   });
 }
 
