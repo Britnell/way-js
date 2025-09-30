@@ -222,11 +222,11 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 
 //  * Hydration
 
-async function render(root: Element) {
+async function render(root: Element, initial?: any) {
   document.dispatchEvent(new CustomEvent('framework:init'));
   await waitForWebComponents(Object.keys(components));
 
-  hydrate(root);
+  hydrate(root, initial);
 }
 
 function hydrate(root: Element = document.body, initialContext = {}) {
@@ -497,6 +497,7 @@ const Framework = { data, component, render, form, signal, effect };
 
 declare global {
   interface Window {
+    pageprops?: any;
     Framework: {
       data: typeof data;
       component: typeof component;

@@ -1,7 +1,7 @@
 import './style.css';
 import { signal, computed, effect } from '@preact/signals-core';
 import Framework from './framework';
-import { z } from 'zod';
+import z from 'zod';
 
 Framework.data('counter', () => {
   const count = signal(0);
@@ -57,5 +57,5 @@ Framework.form(
   },
 );
 
-Framework.render(document.body);
+Framework.render(document.body, window.pageprops);
 // document.addEventListener('DOMContentLoaded', async () => {});
