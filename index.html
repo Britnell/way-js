@@ -81,8 +81,8 @@
   </template>
   <script>
     document.addEventListener('way:init', () => {
-      Way.component('my-clock', () => {
-        const time = Way.signal(new Date())
+      way.component('my-clock', () => {
+        const time = way.signal(new Date())
         return {
           time
         }
@@ -119,6 +119,17 @@
       </form>
     </div>
   </template>
+
+  <template id="card">
+    <div style="border: 1px solid #ccc; padding: 16px; margin: 16px 0;">
+      <h3>Card</h3>
+      <slot></slot>
+    </div>
+  </template>
+
+  <div x-temp="card">
+    <p>This is the content that will be slotted into the card.</p>
+  </div>
 
 </body>
 
