@@ -221,7 +221,7 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 //  * Hydration
 
 async function render(root: Element, initial?: any) {
-  document.dispatchEvent(new CustomEvent('framework:init'));
+  document.dispatchEvent(new CustomEvent('way:init'));
   await waitForWebComponents(Object.keys(components));
 
   hydrate(root, initial);
@@ -508,12 +508,12 @@ function validateForm(formEl: HTMLFormElement, formConfig: any): boolean {
   return allValid;
 }
 
-const Framework = { data, component, render, form, signal, effect, store };
+const Way = { data, component, render, form, signal, effect, store };
 
 declare global {
   interface Window {
     pageprops?: any;
-    Framework: {
+    way: {
       data: typeof data;
       component: typeof component;
       render: typeof render;
@@ -526,9 +526,9 @@ declare global {
 }
 
 if (typeof window !== 'undefined') {
-  window.Framework = Framework;
+  window.way = Way;
 }
-export default Framework;
+export default Way;
 
 //  *** helpers
 
@@ -579,7 +579,7 @@ function setInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSel
   inputEl.value = String(value ?? '');
 }
 
-class FrameworkComponent extends HTMLElement {
+class WayComponent extends HTMLElement {
   template: HTMLTemplateElement;
   _data: any;
 
@@ -601,7 +601,7 @@ class FrameworkComponent extends HTMLElement {
 }
 
 function createWebComponent(tag: string, template: HTMLTemplateElement) {
-  class WebComponent extends FrameworkComponent {
+  class WebComponent extends WayComponent {
     constructor() {
       super(template);
     }

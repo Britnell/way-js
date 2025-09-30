@@ -1,9 +1,9 @@
 import './style.css';
 import { signal, computed, effect, Signal } from '@preact/signals-core';
-import Framework from './framework';
+import Way from './framework';
 import z from 'zod';
 
-Framework.data('counter', () => {
+Way.data('counter', () => {
   const count = signal(0);
   const double = computed(() => count.value * 2);
 
@@ -23,7 +23,7 @@ type Props = {
   title?: string;
 };
 
-Framework.component<Props>('my-counter', (props, { emit }) => {
+Way.component<Props>('my-counter', (props, { emit }) => {
   const x = signal(props.x?.value ?? 0);
   const val = signal('abc');
   const uppercase = computed(() => val.value.toUpperCase());
@@ -43,7 +43,7 @@ Framework.component<Props>('my-counter', (props, { emit }) => {
   return { x, incr, title: props.title, onUnmounted, count: 33, close, val, uppercase };
 });
 
-Framework.form(
+Way.form(
   'userForm',
   {
     password: z
@@ -58,9 +58,9 @@ Framework.form(
   },
 );
 
-Framework.store('theme', () => {
-  const color = Framework.signal('red');
+Way.store('theme', () => {
+  const color = Way.signal('red');
   return { color };
 });
-Framework.render(document.body, window.pageprops);
+Way.render(document.body, window.pageprops);
 // document.addEventListener('DOMContentLoaded', async () => {});

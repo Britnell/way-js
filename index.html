@@ -80,9 +80,9 @@
     </div>
   </template>
   <script>
-    document.addEventListener('framework:init', () => {
-      Framework.component('my-clock', () => {
-        const time = Framework.signal(new Date())
+    document.addEventListener('way:init', () => {
+      Way.component('my-clock', () => {
+        const time = Way.signal(new Date())
         return {
           time
         }
