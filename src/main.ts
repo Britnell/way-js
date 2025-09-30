@@ -59,7 +59,7 @@ Framework.form(
 );
 
 Framework.store('theme', () => {
-  const color = Framework.signal('#f00');
+  const color = Framework.signal('red');
   return { color };
 });
 Framework.render(document.body, window.pageprops);

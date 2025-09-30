@@ -13,41 +13,35 @@ const stores: Record<string, any> = {};
 const directives: Record<string, (el: Element, expression: string, data: any) => void> = {
   'x-text': (el, expression, data) => {
     effect(() => {
-      const value = evaluateExpression(expression, data);
-      el.textContent = value;
+      el.textContent = evaluateExpression(expression, data);
     });
   },
   'x-show': (el, expression, data) => {
     effect(() => {
-      const value = evaluateExpression(expression, data);
-      const shouldShow = value;
-
-      // x-show
+      const shouldShow = evaluateExpression(expression, data);
       (el as HTMLElement).style.display = shouldShow ? '' : 'none';
 
       // x-else
-      const nextElement = el.nextElementSibling;
-      if (nextElement && nextElement.hasAttribute('x-else')) {
-        const shouldShowElse = !shouldShow;
-        (nextElement as HTMLElement).style.display = shouldShowElse ? '' : 'none';
+      const nextEl = el.nextElementSibling;
+      if (nextEl?.hasAttribute('x-else')) {
+        (nextEl as HTMLElement).style.display = shouldShow ? 'none' : '';
       }
     });
   },
   'x-model': (el, expression, data) => {
     const inputEl = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+    const field = objectGet(data, expression);
+    if (!isSignal(field)) {
+      console.error(`[x-model] Expression "${expression}" does not resolve to a signal. x-model requires a signal.`);
+      return;
+    }
 
     effect(() => {
-      const value = evaluateExpression(expression, data);
-      setInputValue(inputEl, value);
+      setInputValue(inputEl, field.value);
     });
 
     inputEl.addEventListener('input', () => {
-      const newValue = getInputValue(inputEl);
-      if (data[expression]?.value !== undefined) {
-        data[expression].value = newValue;
-      } else {
-        data[expression] = newValue;
-      }
+      field.value = getInputValue(inputEl);
     });
   },
   'x-form': formDirective,
@@ -536,6 +530,15 @@ if (typeof window !== 'undefined') {
 export default Framework;
 
 //  *** helpers
+
+function objectGet(obj: any, path: string): any {
+  const keys = path.split('.');
+  let field = obj;
+  for (const key of keys) {
+    field = field[key];
+  }
+  return field;
+}
 
 function evaluateExpression(expression: string, data: any) {
   try {

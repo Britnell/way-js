@@ -73,8 +73,8 @@
       <option value="red">red</option>
       <option value="green">green</option>
     </select>
-    <div class="x" :style="`color:${theme.color.value}`">
-      color<span x-text="theme.color.value"></span>
+    <div class="x" :style="{ color: theme.color.value }">
+      color: <span x-text="theme.color.value"></span>
       <h3>clock</h3>
       <p x-text="time"></p>
     </div>
