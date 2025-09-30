@@ -568,8 +568,8 @@ class FrameworkComponent extends HTMLElement {
   }
 
   disconnectedCallback() {
-    if (this._data.onDisconnected) {
-      this._data.onDisconnected();
+    if (this._data.onUnmounted) {
+      this._data.onUnmounted();
     }
   }
 }

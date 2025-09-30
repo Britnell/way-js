@@ -20,7 +20,6 @@ Framework.data('counter', () => {
 
 Framework.component('my-counter', ({ emit, ...props }: any) => {
   const x = signal(props.x?.value ?? 0);
-  // const x = props.x;
 
   const incr = () => {
     x.value++;
@@ -29,7 +28,7 @@ Framework.component('my-counter', ({ emit, ...props }: any) => {
   const close = () => {
     emit('close', x.value);
   };
-  function onDisconnected() {
+  function onUnmounted() {
     //
   }
 
@@ -40,11 +39,7 @@ Framework.component('my-counter', ({ emit, ...props }: any) => {
   const val = signal('abc');
   const uppercase = computed(() => val.value.toUpperCase());
 
-  return { x, incr, title: props.title, onDisconnected, count: 33, close, val, uppercase };
-});
-
-document.addEventListener('DOMContentLoaded', async () => {
-  Framework.render(document.body);
+  return { x, incr, title: props.title, onUnmounted, count: 33, close, val, uppercase };
 });
 
 Framework.form(
@@ -61,3 +56,6 @@ Framework.form(
     console.log('submit', values);
   },
 );
+
+Framework.render(document.body);
+// document.addEventListener('DOMContentLoaded', async () => {});
