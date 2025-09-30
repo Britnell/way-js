@@ -209,40 +209,68 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
     return;
   }
 
-  createMarker(templateEl, 'x-if');
-  const elseTemplate = findElseTemplate(templateEl);
-  if (elseTemplate) createMarker(elseTemplate, 'x-else');
-  let lastState: boolean | null = null;
+  const wrapper = document.createElement('div');
+  wrapper.style.display = 'contents';
+  templateEl.parentNode!.insertBefore(wrapper, templateEl);
+
+  const chain: { template: HTMLTemplateElement; expression: string | null }[] = [];
+  chain.push({ template: templateEl as HTMLTemplateElement, expression });
+
+  let nextEl = templateEl.nextElementSibling;
+  while (nextEl) {
+    if (nextEl instanceof HTMLTemplateElement && nextEl.hasAttribute('x-else-if')) {
+      chain.push({ template: nextEl, expression: nextEl.getAttribute('x-else-if')! });
+    } else if (nextEl instanceof HTMLTemplateElement && nextEl.hasAttribute('x-else')) {
+      chain.push({ template: nextEl, expression: null });
+      break;
+    } else {
+      break;
+    }
+    nextEl = nextEl.nextElementSibling;
+  }
+
+  let lastActiveIndex = -1;
 
   const renderTemplate = (template: HTMLTemplateElement, data: any) => {
     const fragment = template.content.cloneNode(true) as DocumentFragment;
     const children = Array.from(fragment.children);
 
+    // Hydrate the newly inserted elements
     for (const child of children) {
-      template.parentElement?.insertBefore(child, template.nextSibling);
       if (child instanceof Element) {
         hydrate(child, data);
       }
     }
+
+    wrapper.append(fragment);
+  };
+
+  const clearContent = () => {
+    wrapper.innerHTML = '';
   };
 
   effect(() => {
-    const shouldShow = evaluateExpression(expression, data);
-
-    if (lastState === shouldShow) return;
-    lastState = shouldShow;
-
-    if (shouldShow) {
-      removeNodesUntil(elseTemplate, 'x-else');
-      if (!hasContentAfter(templateEl, 'x-if')) {
-        renderTemplate(templateEl, data);
-      }
-    } else {
-      removeNodesUntil(templateEl, 'x-if');
-      if (elseTemplate && !hasContentAfter(elseTemplate, 'x-else')) {
-        renderTemplate(elseTemplate, data);
+    let activeIndex = -1;
+    for (let i = 0; i < chain.length; i++) {
+      const { expression } = chain[i];
+      // expression is null for x-else
+      if (expression === null || evaluateExpression(expression, data)) {
+        activeIndex = i;
+        break;
       }
     }
+
+    if (activeIndex === lastActiveIndex) {
+      return;
+    }
+
+    clearContent();
+
+    if (activeIndex !== -1) {
+      renderTemplate(chain[activeIndex].template, data);
+    }
+
+    lastActiveIndex = activeIndex;
   });
 }
 
@@ -662,26 +690,7 @@ function createMarker(template: HTMLTemplateElement, text: string): Comment {
   return marker;
 }
 
-function findElseTemplate(template: HTMLTemplateElement): HTMLTemplateElement | null {
-  const nextElement = template.nextElementSibling;
-  return nextElement instanceof HTMLTemplateElement && nextElement.hasAttribute('x-else') ? nextElement : null;
-}
 
-function hasContentAfter(template: HTMLTemplateElement, markerText: string): boolean {
-  const nextSibling = template.nextSibling;
-  return nextSibling instanceof Comment && nextSibling.nodeValue === markerText ? false : nextSibling !== null;
-}
-
-function removeNodesUntil(start: Element | null, markerText: string) {
-  if (!start) return;
-
-  let current = start.nextSibling;
-  while (current && !(current instanceof Comment && current.nodeValue === markerText)) {
-    const next = current.nextSibling;
-    current.parentNode?.removeChild(current);
-    current = next;
-  }
-}
 
 function parseForExpression(expression: string): [string, string | null, string] {
   const withIndex = expression.match(/^\((\w+),\s*(\w+)\)\s+in\s+(.+)$/);
