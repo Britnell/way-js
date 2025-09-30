@@ -52,6 +52,9 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
   'x-form': formDirective,
   'x-if': ifDirective,
   'x-for': forLoopDirective,
+  'x-load': (el, _expression, _data) => {
+    (el as HTMLElement).style.display = 'block';
+  },
 };
 
 function formDirective(el: Element, expression: string, _data: any) {
@@ -288,8 +291,9 @@ function hydrateBindings(element: Element, context: any): void {
   Object.keys(directives).forEach((dir) => {
     if (element.hasAttribute(dir)) {
       const expression = element.getAttribute(dir);
-      if (expression) {
-        directives[dir](element, expression, context);
+      // For directives like x-load that don't require an expression
+      if (expression || dir === 'x-load') {
+        directives[dir](element, expression || '', context);
       }
     }
   });
@@ -384,7 +388,10 @@ function form(name: string, fields: any, onSubmit?: (event: Event, values: Recor
   };
 }
 
-function component<T = any>(tag: string, setup: (props: T, context: { emit: (eventName: string, arg?: any) => void }) => any) {
+function component<T = any>(
+  tag: string,
+  setup: (props: T, context: { emit: (eventName: string, arg?: any) => void }) => any,
+) {
   components[tag] = setup;
   const template = document.getElementById(tag) as HTMLTemplateElement;
   if (template) {

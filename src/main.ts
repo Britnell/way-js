@@ -25,24 +25,20 @@ type Props = {
 
 Framework.component<Props>('my-counter', (props, { emit }) => {
   const x = signal(props.x?.value ?? 0);
-
-  const incr = () => {
-    x.value++;
-  };
-
-  const close = () => {
-    emit('close', x.value);
-  };
-  function onUnmounted() {
-    //
-  }
+  const val = signal('abc');
+  const uppercase = computed(() => val.value.toUpperCase());
 
   effect(() => {
     x.value = props.x.value;
   });
 
-  const val = signal('abc');
-  const uppercase = computed(() => val.value.toUpperCase());
+  const incr = () => x.value++;
+
+  const close = () => emit('close', x.value);
+
+  function onUnmounted() {
+    //
+  }
 
   return { x, incr, title: props.title, onUnmounted, count: 33, close, val, uppercase };
 });
