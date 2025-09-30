@@ -630,6 +630,10 @@ class wayComponent extends HTMLElement {
     }
 
     this.appendChild(content);
+
+    if (this._data.onMounted) {
+      this._data.onMounted();
+    }
   }
 
   disconnectedCallback() {
