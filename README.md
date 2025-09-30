@@ -64,7 +64,10 @@ Framework.component('my-counter', ({ props }) => {
 - [x] write comp in `<script>` beside `<template>`
 - [x] hide #app before webComp loaded (x-load)
 - [ ] x-else-if
-- [ ] stores
+- [ ] x-template
+- [ ] @click.outside.prevent
+- [x] stores
+- [ ] component onMount
 - [x] useQuery  (@preact-signals/query)
 - [ ] turbolinks
 - [ ] view transitions
