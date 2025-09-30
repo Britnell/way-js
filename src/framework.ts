@@ -353,7 +353,8 @@ function hydrateBindings(element: Element, context: any): void {
   });
 
   // {} text interpolation
-  if (element.childNodes.length > 0) {
+  const shouldSkipInterpolation = 'STYLE,SCRIPT'.includes(element.tagName);
+  if (!shouldSkipInterpolation) {
     Array.from(element.childNodes).forEach((node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const textContent = node.textContent || '';
@@ -687,13 +688,13 @@ class wayComponent extends HTMLElement {
 
     this.appendChild(content);
 
-    if (this._data.onMounted) {
+    if (this._data?.onMounted) {
       this._data.onMounted();
     }
   }
 
   disconnectedCallback() {
-    if (this._data.onUnmounted) {
+    if (this._data?.onUnmounted) {
       this._data.onUnmounted();
     }
   }
@@ -717,8 +718,6 @@ function createMarker(template: HTMLTemplateElement, text: string): Comment {
   template.parentNode?.insertBefore(marker, template.nextSibling);
   return marker;
 }
-
-
 
 function parseForExpression(expression: string): [string, string | null, string] {
   const withIndex = expression.match(/^\((\w+),\s*(\w+)\)\s+in\s+(.+)$/);
