@@ -62,10 +62,10 @@ Framework.component('my-counter', ({ props }) => {
 # todo
 - [x] input x-model
 - [x] write comp in `<script>` beside `<template>`
-- [ ] hide #app before webComp loaded
+- [x] hide #app before webComp loaded (x-load)
 - [ ] x-else-if
 - [ ] stores
-- [x] useQuery = @preact-signals/query
+- [x] useQuery  (@preact-signals/query)
 - [ ] turbolinks
 - [ ] view transitions
 - [ ] intersection api
