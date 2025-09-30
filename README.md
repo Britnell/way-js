@@ -5,22 +5,72 @@ this is my first own web framework combining all the best of :
 - web components
 - signals
 
-## alpine
-obviously this is inspired by alpine. i wanted to combine alpine with web-components for templating / reusability.  I think they are such a great combination.
 
-## web-components
-i love alpine, but not having components is such a limiting factor. this framework can be used in 2 ways :
-- like alpine, server-render pages and adding some light-weight interactivity on top
-- as full spa. with components its powerful enough to build much more complex apps
+# WHY!?!??!
 
-## signals 
-so for fun i built my own alpine, with signals for reactivity, because signals are perfect for this
+yes ... well. i love alpine - sprinkling interactivity through html attributes is the way. I think we've lost the way with jsx, and need to get back, and closer to html & the dom.
 
-## todo
+**jsx was a mistake.** why are we inventing a new language, that needs an extra compile step, just to emulate html so your app code can attach to it?
+Vue already does so much in attributes `v-if` to `:class`, the question really is, why is this not html?
+
+Alpine was genius to take this same system, bundle it in a super light framework and let us use those **directives** straight in html.
+But it doesn't scale nicely to building larger, more complex apps, i wanted templating & reusable components.  
+
+**Web components** are the perfect fit - already built-in and html native. write `<my-counter />` just like you're used to with other frameworks. feels like jsx, but isnt. 
+I tried building this by extending alpine with custom directives etc. but couldn't make it work really, let alone make it work nicely.
+
+So then i thought of **signals**, its fine-grained reactivity is perfect for updating specific elements & their attributes. so i started building my own version of alpine with signals.
+
+The important part for components is having **props**, which finally lead me to defining components similar to Alpine.data but with a **setup** function, that should feel familiar
+
+```
+<div id="app">
+    <div x-data="{xstart: 123}">
+        <h1>Counter</h1>
+        <my-counter x-props="{xstart: count}" ></my-counter>
+    </div>
+</div>
+
+<template id="my-counter">
+    <p>the count is 
+        <span x-text="x"></span>
+    </p>
+    <button @click="incr">+1</button>
+</template>
+
+<script>
+Framework.component('my-counter', ({ props }) => {
+  const x = signal(props.xstart);
+  const double = computed(() => count.value * 2);
+
+  const incr = () => x.value++;
+  
+  effect(() => {
+    console.log('props changed: ', props.xstart);
+  });
+
+  return { x, double, incr };
+});
+</script>
+
+```
+
+**first class forms** - why cant we jsut server render everything? forms are a big part of this. we want validation & error messages. so i added an 'x-form' directive inspired by vee-validate, just give it a **zod schema** and it will do the work for you. 
+
+**Bottom line** this should look and feel a lot like vue3. really just without the jsx. write html again, your markup is your markup, your js is the interactivity that hides & shows certain elements.
+
+# todo
 - [x] input x-model
 - [x] write comp in `<script>` beside `<template>`
+- [ ] hide #app before webComp loaded
 - [ ] x-else-if
 - [ ] stores
+- [x] useQuery = @preact-signals/query
+- [ ] turbolinks
+- [ ] view transitions
+- [ ] intersection api
+- [ ] scroll animations
+- [ ] pageload
 
 ## future
 some current thoughts
