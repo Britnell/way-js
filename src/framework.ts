@@ -253,8 +253,10 @@ function hydrateData(element: Element, context: any): any {
   if (!dataAttr) return context;
 
   if (components[dataAttr]) {
+    // x-data="comp"
     element._data = components[dataAttr]();
   } else {
+    // x-data="{x:123}"
     try {
       const rawObject = evaluateExpression(dataAttr, {});
       const reactiveObject = makeObjectReactive(rawObject);
@@ -377,8 +379,7 @@ function data(id: string, setup: any) {
 }
 
 function store(name: string, setup: () => any) {
-  const storeData = setup();
-  stores[name] = makeObjectReactive(storeData);
+  stores[name] = setup();
 }
 
 function form(name: string, fields: any, onSubmit?: (event: Event, values: Record<string, string>) => void) {
