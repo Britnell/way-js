@@ -56,6 +56,7 @@
       <div class=" my-10 " x-data="{open: true}">
         <button x-show="!open.value" @click="open.value=!open.value">open</button>
         <my-counter x-else x-props="{x: count, title: 'cool' }" @close="open.value=false">
+          <p>This is some slotted content for the my-counter component.</p>
         </my-counter>
       </div>
     </div>
@@ -117,6 +118,7 @@
           <button>submit</button>
         </div>
       </form>
+      <slot></slot>
     </div>
   </template>
 

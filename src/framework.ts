@@ -64,15 +64,18 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       return;
     }
 
-    const slotContent = el.innerHTML;
+    const slotFragment = document.createDocumentFragment();
+    while (el.firstChild) {
+      slotFragment.appendChild(el.firstChild);
+    }
+
     const templateContent = template.content.cloneNode(true) as DocumentFragment;
     const slot = templateContent.querySelector('slot');
 
     if (slot) {
-      slot.outerHTML = slotContent;
+      slot.replaceWith(slotFragment);
     }
 
-    el.innerHTML = '';
     el.appendChild(templateContent);
   },
 };
@@ -614,7 +617,18 @@ class wayComponent extends HTMLElement {
   }
 
   connectedCallback() {
-    const content = this.template.content.cloneNode(true);
+    const slotFragment = document.createDocumentFragment();
+    while (this.firstChild) {
+      slotFragment.appendChild(this.firstChild);
+    }
+
+    const content = this.template.content.cloneNode(true) as DocumentFragment;
+    const slot = content.querySelector('slot');
+
+    if (slot) {
+      slot.replaceWith(slotFragment);
+    }
+
     this.appendChild(content);
   }
 
