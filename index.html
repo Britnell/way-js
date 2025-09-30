@@ -69,8 +69,15 @@
   </div>
 
   <template id="my-clock">
-    <h3>clock</h3>
-    <span x-text="time"></span>
+    <select x-model="theme.color">
+      <option value="red">red</option>
+      <option value="green">green</option>
+    </select>
+    <div class="x" :style="`color:${theme.color.value}`">
+      color<span x-text="theme.color.value"></span>
+      <h3>clock</h3>
+      <p x-text="time"></p>
+    </div>
   </template>
   <script>
     document.addEventListener('framework:init', () => {

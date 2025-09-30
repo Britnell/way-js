@@ -8,6 +8,7 @@ import { signal, effect } from '@preact/signals-core';
 
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
+const stores: Record<string, any> = {};
 
 const directives: Record<string, (el: Element, expression: string, data: any) => void> = {
   'x-text': (el, expression, data) => {
@@ -233,7 +234,8 @@ async function render(root: Element, initial?: any) {
 }
 
 function hydrate(root: Element = document.body, initialContext = {}) {
-  traverseDOM(root, initialContext, (el, ctx) => {
+  const contextWithStores = { ...stores, ...initialContext };
+  traverseDOM(root, contextWithStores, (el, ctx) => {
     let newContext = { ...ctx };
 
     // x-data
@@ -380,6 +382,11 @@ function data(id: string, setup: any) {
   components[id] = setup;
 }
 
+function store(name: string, setup: () => any) {
+  const storeData = setup();
+  stores[name] = makeObjectReactive(storeData);
+}
+
 function form(name: string, fields: any, onSubmit?: (event: Event, values: Record<string, string>) => void) {
   // Store the fields and onSubmit handler separately
   validationSchemas[name] = {
@@ -399,8 +406,12 @@ function component<T = any>(
   }
 }
 
+function isSignal(val: any): boolean {
+  return !!(val && typeof val === 'object' && typeof val.peek === 'function');
+}
+
 function makeObjectReactive(obj: any): any {
-  if (typeof obj !== 'object' || obj === null) {
+  if (typeof obj !== 'object' || obj === null || isSignal(obj)) {
     return obj;
   }
 
@@ -409,7 +420,9 @@ function makeObjectReactive(obj: any): any {
   Object.keys(obj).forEach((key) => {
     const value = obj[key];
 
-    if (typeof value === 'function') {
+    if (isSignal(value)) {
+      reactive[key] = value;
+    } else if (typeof value === 'function') {
       reactive[key] = value.bind(reactive);
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       // Recursively make nested objects reactive
@@ -500,7 +513,7 @@ function validateForm(formEl: HTMLFormElement, formConfig: any): boolean {
   return allValid;
 }
 
-const Framework = { data, component, render, form, signal, effect };
+const Framework = { data, component, render, form, signal, effect, store };
 
 declare global {
   interface Window {
@@ -512,6 +525,7 @@ declare global {
       form: typeof form;
       signal: typeof signal;
       effect: typeof effect;
+      store: typeof store;
     };
   }
 }

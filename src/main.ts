@@ -58,5 +58,9 @@ Framework.form(
   },
 );
 
+Framework.store('theme', () => {
+  const color = Framework.signal('#f00');
+  return { color };
+});
 Framework.render(document.body, window.pageprops);
 // document.addEventListener('DOMContentLoaded', async () => {});
