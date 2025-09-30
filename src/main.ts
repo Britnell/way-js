@@ -1,5 +1,5 @@
 import './style.css';
-import { signal, computed, effect } from '@preact/signals-core';
+import { signal, computed, effect, Signal } from '@preact/signals-core';
 import Framework from './framework';
 import z from 'zod';
 
@@ -18,7 +18,12 @@ Framework.data('counter', () => {
   return { count, double, increment, decrement };
 });
 
-Framework.component('my-counter', ({ emit, ...props }: any) => {
+type Props = {
+  x: Signal<number>;
+  title?: string;
+};
+
+Framework.component<Props>('my-counter', (props, { emit }) => {
   const x = signal(props.x?.value ?? 0);
 
   const incr = () => {

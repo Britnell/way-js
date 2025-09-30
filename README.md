@@ -11,7 +11,7 @@ this is my first own web framework combining all the best of :
 yes ... well. i love alpine - sprinkling interactivity through html attributes is the way. I think we've lost the way with jsx, and need to get back, and closer to html & the dom.
 
 **jsx was a mistake.** why are we inventing a new language, that needs an extra compile step, just to emulate html so your app code can attach to it?
-Vue already does so much in attributes `v-if` to `:class`, the question really is, why is this not html?
+Vue already does so much in attributes `v-if` to `:class`, the question really is, why can't we use html?
 
 Alpine was genius to take this same system, bundle it in a super light framework and let us use those **directives** straight in html.
 But it doesn't scale nicely to building larger, more complex apps, i wanted templating & reusable components.  
@@ -21,7 +21,7 @@ I tried building this by extending alpine with custom directives etc. but couldn
 
 So then i thought of **signals**, its fine-grained reactivity is perfect for updating specific elements & their attributes. so i started building my own version of alpine with signals.
 
-The important part for components is having **props**, which finally lead me to defining components similar to Alpine.data but with a **setup** function, that should feel familiar
+The important part for reusable components is passing **props**, which finally lead me to define components similar to `Alpine.data` but with a **setup** function, that should feel familiar
 
 ```
 <div id="app">

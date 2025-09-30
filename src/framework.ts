@@ -278,7 +278,7 @@ function hydrateWebComponent(element: Element, context: any): any {
 
   const props = parseProps(element, context);
   const emit = createEmit(element);
-  element._data = components[componentName]({ ...props, emit });
+  element._data = components[componentName](props, { emit });
 
   return { ...context, ...element._data };
 }
@@ -384,7 +384,7 @@ function form(name: string, fields: any, onSubmit?: (event: Event, values: Recor
   };
 }
 
-function component(tag: string, setup: any) {
+function component<T = any>(tag: string, setup: (props: T, context: { emit: (eventName: string, arg?: any) => void }) => any) {
   components[tag] = setup;
   const template = document.getElementById(tag) as HTMLTemplateElement;
   if (template) {
