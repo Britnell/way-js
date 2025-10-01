@@ -285,20 +285,22 @@ async function render(root: Element, initial?: any) {
 
 function hydrate(root: Element = document.body, initialContext = {}) {
   const contextWithStores = { ...stores, ...initialContext };
-  traverseDOM(root, contextWithStores, (el, ctx) => {
+  traverseDOM(root, contextWithStores, (node, ctx) => {
     let newContext = { ...ctx };
 
-    // x-data
-    newContext = hydrateData(el, newContext);
+    if (node instanceof Element) {
+      // x-data
+      newContext = hydrateData(node, newContext);
 
-    // components
-    const componentContext = hydrateWebComponent(el, newContext);
-    if (componentContext !== newContext) {
-      newContext = componentContext;
+      // components
+      const componentContext = hydrateWebComponent(node, newContext);
+      if (componentContext !== newContext) {
+        newContext = componentContext;
+      }
     }
 
-    // bindings
-    hydrateBindings(el, newContext);
+    // bindings (handles both elements and text nodes)
+    hydrateBindings(node, newContext);
 
     return newContext;
   });
@@ -340,33 +342,26 @@ function hydrateWebComponent(element: Element, context: any): any {
   return { ...context, ...element._data };
 }
 
-function hydrateBindings(element: Element, context: any): void {
+function hydrateBindings(node: Element | Text, context: any): void {
+  // {} text interpolation
+  bindTextInterpolation(node, context);
+
+  // Only process directives and attributes on Elements
+  if (!(node instanceof Element)) return;
+
   // x-text, x-show, x-model ...
   Object.keys(directives).forEach((dir) => {
-    if (element.hasAttribute(dir)) {
-      const expression = element.getAttribute(dir);
+    if (node.hasAttribute(dir)) {
+      const expression = node.getAttribute(dir);
       // For directives like x-load that don't require an expression
       if (expression || dir === 'x-load') {
-        directives[dir](element, expression || '', context);
+        directives[dir](node, expression || '', context);
       }
     }
   });
 
-  // {} text interpolation
-  const shouldSkipInterpolation = 'STYLE,SCRIPT'.includes(element.tagName);
-  if (!shouldSkipInterpolation) {
-    Array.from(element.childNodes).forEach((node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const textContent = node.textContent || '';
-        if (textContent.includes('{') && textContent.includes('}')) {
-          bindTextInterpolation(node as Text, context);
-        }
-      }
-    });
-  }
-
   // @events, :properties
-  const specialAttrs = Array.from(element.attributes).filter(
+  const specialAttrs = Array.from(node.attributes).filter(
     (attr) => attr.name.startsWith('@') || attr.name.startsWith(':'),
   );
   specialAttrs.forEach((attr) => {
@@ -375,28 +370,26 @@ function hydrateBindings(element: Element, context: any): void {
 
     if (attr.name.startsWith('@')) {
       const eventName = attr.name.substring(1);
-      bindEvent(element, eventName, expression, context);
+      bindEvent(node, eventName, expression, context);
     } else if (attr.name.startsWith(':')) {
       const propName = attr.name.substring(1);
-      bindProperty(element, propName, expression, context);
+      bindProperty(node, propName, expression, context);
     }
   });
 }
 
-function bindTextInterpolation(textNode: Text, context: any) {
-  const originalText = textNode.textContent || '';
-
-  effect(() => {
-    const interpolatedText = originalText.replace(/\{([^}]+)\}/g, (match, expression) => {
-      try {
-        return evaluateExpression(expression.trim(), context);
-      } catch (e) {
-        console.error(`Error evaluating interpolation: "${expression}"`, e);
-        return match;
-      }
-    });
-    textNode.textContent = interpolatedText;
-  });
+function bindTextInterpolation(node: Element, context: any) {
+  // xxx
+  // console.log(node);
+  // You can check if the node is a Text node
+  if (node.nodeType === Node.TEXT_NODE) {
+    const txt = node.textContent;
+    if (txt?.trim()) {
+      console.log('\t', node);
+    }
+    // Do something with the text node
+    // Example: console.log(node.textContent);
+  }
 }
 
 function bindProperty(element: Element, propName: string, expression: string, context: any) {
@@ -758,16 +751,24 @@ function createItemContext(
   return context;
 }
 
-function traverseDOM(root: Element, initialContext: any = {}, callback: (element: Element, context: any) => any): void {
-  function traverseNode(element: Element, currentContext: any): void {
-    const componentTempalte = element.tagName === 'TEMPLATE' && element.id;
-    if (componentTempalte) return;
+function traverseDOM(
+  root: Element,
+  initialContext: any = {},
+  callback: (node: Element | Text, context: any) => any,
+): void {
+  function traverseNode(node: Element | Text, currentContext: any): void {
+    if (node instanceof Element) {
+      const componentTemplate = node.tagName === 'TEMPLATE' && node.id;
+      if (componentTemplate) return;
 
-    const newContext = callback(element, currentContext);
+      const newContext = callback(node, currentContext);
 
-    const children = Array.from(element.children);
-    for (const child of children) {
-      traverseNode(child, newContext);
+      const childNodes = Array.from(node.childNodes);
+      for (const child of childNodes) {
+        traverseNode(child as Element | Text, newContext);
+      }
+    } else if (node instanceof Text) {
+      callback(node, currentContext);
     }
   }
 
