@@ -63,10 +63,10 @@ Framework.component('my-counter', ({ props }) => {
 - [x] input x-model
 - [x] write comp in `<script>` beside `<template>`
 - [x] hide #app before webComp loaded (x-load)
-- [ ] string {template}
+- [x] string {template}
 - [x] x-else-if
 - [x] x-template
-- [ ] comp without setup function (props)=>props
+- [x] comp without setup function (props)=>props
 - [ ] @click.outside.prevent
 - [x] stores
 - [x] component onMount

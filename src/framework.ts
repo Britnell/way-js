@@ -387,14 +387,16 @@ function bindTextInterpolation(node: Text, context: any) {
   const parts = txt.split(/(\{[^}]+\})/g);
 
   effect(() => {
-    node.textContent = parts.map(part => {
-      if (part.startsWith('{') && part.endsWith('}')) {
-        const expression = part.slice(1, -1);
-        const value = evaluateExpression(expression, context);
-        return value === null || value === undefined ? '' : String(value);
-      }
-      return part;
-    }).join('');
+    node.textContent = parts
+      .map((part) => {
+        if (part.startsWith('{') && part.endsWith('}')) {
+          const expression = part.slice(1, -1);
+          const value = evaluateExpression(expression, context);
+          return value === null || value === undefined ? '' : String(value);
+        }
+        return part;
+      })
+      .join('');
   });
 }
 
@@ -476,9 +478,9 @@ function form(name: string, fields: any, onSubmit?: (event: Event, values: Recor
 
 function component<T = any>(
   tag: string,
-  setup: (props: T, context: { emit: (eventName: string, arg?: any) => void }) => any,
+  setup?: (props: T, context: { emit: (eventName: string, arg?: any) => void }) => any,
 ) {
-  components[tag] = setup;
+  components[tag] = setup || ((props: T, _context: any) => props);
   const template = document.getElementById(tag) as HTMLTemplateElement;
   if (template) {
     createWebComponent(tag, template);
