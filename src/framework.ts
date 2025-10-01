@@ -342,12 +342,13 @@ function hydrateWebComponent(element: Element, context: any): any {
   return { ...context, ...element._data };
 }
 
-function hydrateBindings(node: Element, context: any): void {
-  // {} text interpolation
-  bindTextInterpolation(node, context);
+function hydrateBindings(node: Element | Text, context: any): void {
+  if (node instanceof Text) {
+    bindTextInterpolation(node, context);
+    return;
+  }
 
   // Only process directives and attributes on Elements
-  if (!(node instanceof Element)) return;
   // x-text, x-show, x-model ...
   Object.keys(directives).forEach((dir) => {
     if (node.hasAttribute(dir)) {
@@ -377,30 +378,24 @@ function hydrateBindings(node: Element, context: any): void {
   });
 }
 
-function bindTextInterpolation(node: Element, context: any) {
-  // xxx
+function bindTextInterpolation(node: Text, context: any) {
   const txt = node.textContent;
-  if (node.nodeType !== Node.TEXT_NODE || !txt?.trim()) {
+  if (!txt?.trim() || !txt.includes('{')) {
     return;
   }
 
-  const matches = txt.matchAll(/\{(.+?)\}/g);
-  // the {x} is {y}
-  const splits = [];
-  for (const m of matches) {
-    splits.push(m.index);
-    splits.push(m.index + m[0].length);
-  }
-  if (splits.length === 0) return;
+  const parts = txt.split(/(\{[^}]+\})/g);
 
-  let last = 0;
-  const parts = splits.map((it, i) => {
-    const t = txt.slice(last, it);
-    last = it;
-    return t;
+  effect(() => {
+    node.textContent = parts.map(part => {
+      if (part.startsWith('{') && part.endsWith('}')) {
+        const expression = part.slice(1, -1);
+        const value = evaluateExpression(expression, context);
+        return value === null || value === undefined ? '' : String(value);
+      }
+      return part;
+    }).join('');
   });
-  // [ ' the','{x}',' is ', '{y} ']
-  console.log(parts);
 }
 
 function bindProperty(element: Element, propName: string, expression: string, context: any) {
