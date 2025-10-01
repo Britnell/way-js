@@ -342,13 +342,12 @@ function hydrateWebComponent(element: Element, context: any): any {
   return { ...context, ...element._data };
 }
 
-function hydrateBindings(node: Element | Text, context: any): void {
+function hydrateBindings(node: Element, context: any): void {
   // {} text interpolation
   bindTextInterpolation(node, context);
 
   // Only process directives and attributes on Elements
   if (!(node instanceof Element)) return;
-
   // x-text, x-show, x-model ...
   Object.keys(directives).forEach((dir) => {
     if (node.hasAttribute(dir)) {
@@ -380,16 +379,28 @@ function hydrateBindings(node: Element | Text, context: any): void {
 
 function bindTextInterpolation(node: Element, context: any) {
   // xxx
-  // console.log(node);
-  // You can check if the node is a Text node
-  if (node.nodeType === Node.TEXT_NODE) {
-    const txt = node.textContent;
-    if (txt?.trim()) {
-      console.log('\t', node);
-    }
-    // Do something with the text node
-    // Example: console.log(node.textContent);
+  const txt = node.textContent;
+  if (node.nodeType !== Node.TEXT_NODE || !txt?.trim()) {
+    return;
   }
+
+  const matches = txt.matchAll(/\{(.+?)\}/g);
+  // the {x} is {y}
+  const splits = [];
+  for (const m of matches) {
+    splits.push(m.index);
+    splits.push(m.index + m[0].length);
+  }
+  if (splits.length === 0) return;
+
+  let last = 0;
+  const parts = splits.map((it, i) => {
+    const t = txt.slice(last, it);
+    last = it;
+    return t;
+  });
+  // [ ' the','{x}',' is ', '{y} ']
+  console.log(parts);
 }
 
 function bindProperty(element: Element, propName: string, expression: string, context: any) {
@@ -758,8 +769,11 @@ function traverseDOM(
 ): void {
   function traverseNode(node: Element | Text, currentContext: any): void {
     if (node instanceof Element) {
+      const dontparse = ['SCRIPT', 'STYLE'].includes(node.tagName);
       const componentTemplate = node.tagName === 'TEMPLATE' && node.id;
-      if (componentTemplate) return;
+      if (dontparse || componentTemplate) {
+        return;
+      }
 
       const newContext = callback(node, currentContext);
 
