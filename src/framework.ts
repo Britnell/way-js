@@ -344,15 +344,19 @@ function bindTextInterpolation(node: Text, context: any) {
     return;
   }
 
-  const parts = txt.split(/(\{[^}]+\})/g);
+  const parts = txt.split(/(\{[\s\S]*?\})/g);
 
   effect(() => {
     node.textContent = parts
       .map((part) => {
         if (part.startsWith('{') && part.endsWith('}')) {
           const expression = part.slice(1, -1);
-          const value = evaluateExpression(expression, context);
-          return value === null || value === undefined ? '' : String(value);
+          try {
+            const value = evaluateExpression(expression, context);
+            return value === null || value === undefined ? part : String(value);
+          } catch (e) {
+            return part;
+          }
         }
         return part;
       })
