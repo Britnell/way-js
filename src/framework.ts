@@ -310,20 +310,32 @@ function hydrateData(element: Element, context: any): any {
   const dataAttr = element.getAttribute('x-data');
   if (!dataAttr) return context;
 
-  if (components[dataAttr]) {
-    // x-data="comp"
-    element._data = components[dataAttr]();
-  } else {
-    // x-data="{x:123}"
+  let elementData: any = {};
+
+  // Check if it's an inline object (starts with {)
+  if (dataAttr.includes('{')) {
     try {
       const rawObject = evaluateExpression(dataAttr, {});
-      const reactiveObject = makeObjectReactive(rawObject);
-      element._data = reactiveObject;
+      elementData = makeObjectReactive(rawObject);
     } catch (e) {
       console.error(`Failed to evaluate x-data "${dataAttr}" as inline object`, e);
       return context;
     }
+  } else {
+    // Handle comma-separated component names or single component
+    const componentNames = dataAttr.split(',').map((name) => name.trim());
+
+    for (const componentName of componentNames) {
+      if (components[componentName]) {
+        const componentData = components[componentName]();
+        elementData = { ...elementData, ...componentData };
+      } else {
+        console.warn(`Component "${componentName}" not found in x-data "${dataAttr}"`);
+      }
+    }
   }
+
+  element._data = elementData;
 
   // Return new context with this element's data added
   return { ...context, ...element._data };
@@ -457,7 +469,6 @@ const eventModifiers: Record<string, (element: Element, event: Event) => boolean
       return true; // Skip execution if target is not the element itself
     }
   },
-
 };
 
 function parseEventModifiers(eventName: string): { event: string; modifiers: string[] } {
@@ -470,7 +481,7 @@ function parseEventModifiers(eventName: string): { event: string; modifiers: str
 
 function bindEvent(element: Element, eventName: string, expression: string, context: any) {
   const { event: baseEvent, modifiers } = parseEventModifiers(eventName);
-  
+
   // Find emit function from nearest web component parent
   const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
     if (el?._data) {
@@ -754,8 +765,6 @@ function createWebComponent(tag: string, template: HTMLTemplateElement) {
   }
   customElements.define(tag, WebComponent);
 }
-
-
 
 function parseForExpression(expression: string): [string, string | null, string] {
   const withIndex = expression.match(/^\((\w+),\s*(\w+)\)\s+in\s+(.+)$/);
