@@ -3,7 +3,7 @@ import { signal, computed, effect, Signal } from '@preact/signals-core';
 import Way from './framework';
 import z from 'zod';
 
-Way.component('counter', () => {
+Way.comp('counter', () => {
   const count = signal(0);
   const double = computed(() => count.value * 2);
 
@@ -23,7 +23,7 @@ type Props = {
   title?: string;
 };
 
-Way.component<Props>('my-counter', (props, { emit }) => {
+Way.comp<Props>('my-counter', (props, { emit }) => {
   const x = signal(props.x?.value ?? 0);
   const val = signal('abc');
   const uppercase = computed(() => val.value.toUpperCase());
