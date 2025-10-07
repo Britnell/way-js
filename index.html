@@ -14,46 +14,34 @@
     [x-load] {
       display: none;
     }
+
+    .for-list {
+      list-style: none;
+      display: flex;
+      gap: 2px;
+    }
   </style>
 
   <script>window.pageprops = { tommy: 123 }</script>
+  <main id="app" x-load>
+    <h1>Way - A Web-framework</h1>
 
-  <h1>A Web-framework</h1>
-
-  <h2>1. this is just alpine with signals</h2>
-
-  <div x-data="{x:1}">
-    <p>The count {x},
-      <span x-show="x.value%2===0">is even</span>
-      <span x-else>is odd</span>
-    </p>
-    <p>
-      {x} x 2 = {x.value*2}
-    </p>
-    <button @click="x.value = x.value+1">+1</button>
-  </div>
-
-  <div id="app" x-load>
-    <h1>Counter Example</h1>
-
-    <h2>A</h2>
-    <div x-data="counter">
-      <p :style="{'--x': count}">
-        count: {count}
-        x 2 = {double}
-      </p>
-      <button @click="increment()">+</button>
-      <button @click="decrement()">-</button>
-      <p x-show="count%2==0">even</p>
-      <p x-else>uneven</p>
+    <h2>1. this is just alpine with signals</h2>
+    <div x-data="{x:1}">
       <p>
-        IF:
-        <template x-if="count%2==0">even</template>
+        {x} x 3 = {x.value*3}
+      </p>
+      <button @click="x.value = x.value+1">+1</button>
+      <h3>
+        conditional logic
+      </h3>
+      <p :style="{ color: x%2===0 ?'blue':'black' }">
+        <template x-if="x%2==0">even</template>
         <template x-else>uneven</template>
       </p>
-
-      <ul :style="{'font-size': `${24-count*0.5}px`}">
-        <template x-for="(i,j) in Array(count.value).fill(0)">
+      <h3>and for loops</h3>
+      <ul class="for-list" :style="{'font-size': `${24-x*0.5}px`}">
+        <template x-for="(i,j) in Array(x.value).fill(0)">
           <li key="j">
             {j+1}
           </li>
@@ -61,90 +49,131 @@
       </ul>
     </div>
 
-    <h2>B</h2>
-    <!-- <div x-data="counter">
-      <p>
-        count:<span :class="count%2?'a':'b'">{count}</span>
+    <h2>2. reusable data</h2>
+    <p>but for larger apps we have loads of javascript that doesnt really fit into attributes, so we want js logic, so
+      just write them the same way as vue3 setup components. we can now write complex js, in separate file, or inline,
+      and reuse this data logic</p>
+
+    <p>
+      Way.comp('counter', () => {
+      const count = signal(0);
+      const double = computed(() => count.value * 2);
+      const incr = () => count.value++;
+      const decr = () => count.value--;
+      return { count, double, incr, decr };
+      });
+    </p>
+
+    <div x-data="counter">
+      <h3>counter</h3>
+      <p :style="{'--x': count}">
+        count A : {count}
         x 2 = {double}
       </p>
-      <button @click="increment()">+</button>
-      <button @click="decrement()">-</button>
+      <button @click="incr()">+</button>
+      <button @click="decr()">-</button>
 
-      <template x-if="count%3==0">
+    </div>
+
+    <div x-data="counter">
+      <h3>reuse for another counter </h3>
+      <p>Counter B : {count}</p>
+      <button @click="incr()"> +1</button>
+    </div>
+
+    <h2>components</h2>
+    <p>
+      ok but if we need to write something slightly bigger, we just have one huge nestede html, tracking state gets
+      confusing, and no reusable tempaltes or components for repeating logic
+    </p>
+
+    <div>
+      <h3>Web components</h3>
+
+      <p>so we can add templating for reusable components that have both logic + html</p>
+      <p>and bonus, for us framework brains, this looks like using components in framework jsx </p>
+      <my-clock x-props="{seconds:true}" />
+      <template id="my-clock">
         <p>
-          //{double}\\
+          The time is {time}
         </p>
       </template>
-      <template x-else>
-        <p>____</p>
-      </template>
-      <div class=" my-10 " x-data="{open: true}">
-        <button x-show="!open" @click="open=!open">open</button>
-        <my-counter x-else x-props="{x: count, title: 'cool' }" @close="open=false">
-          <p>This is some slotted content for the my-counter component.</p>
-        </my-counter>
-      </div>
-    </div> -->
+      <script>
+        document.addEventListener('way:init', () => {
+          way.comp('my-clock', (props) => {
+            const time = way.signal(gettime())
 
+            function gettime() {
+              const d = new Date();
+              const h = d.getHours()
+              const m = d.getMinutes()
+              const s = d.getSeconds()
+              let t = `${h}:${m}`
+              if (props.seconds)
+                t += `:${s}`
+              return t
+            }
 
-    <div>
-      <my-clock>
-      </my-clock>
+            setInterval(() => {
+              time.value = gettime()
+            }, 1000);
+            return {
+              time
+            }
+          })
+        })
+      </script>
     </div>
 
-  </div>
+    <h2>but components receive props so we can pass them signals to react to</h2>
 
-  <template id="my-clock">
-    <select x-model="theme.color">
-      <option value="red">red</option>
-      <option value="green">green</option>
-    </select>
-    <div class="x" :style="{ color: theme.color }">
-      color: {theme.color}
-      <h3>clock</h3>
-      <p>{time}</p>
+    <div x-data="counter">
+      <h3>reuse for another counter </h3>
+      <p>Counter C : {count}</p>
+      <button @click="incr()"> +1</button>
+      <count-down x-props="{start: count}" />
     </div>
-  </template>
-  <script>
-    document.addEventListener('way:init', () => {
-      way.comp('my-clock', () => {
-        const time = way.signal(new Date())
-        return {
-          time
-        }
+
+    <template id="count-down">
+      <p>
+        countdown! : {countdown}
+      </p>
+    </template>
+    <script>
+      document.addEventListener('way:init', () => {
+        way.comp('count-down', (props) => {
+          const start = props.start
+          const countdown = way.signal(start.value)
+          let intvl;
+
+          const runcountdown = () => {
+            if (intvl) clearInterval(intvl)
+            countdown.value = start.value
+            intvl = setInterval(() => {
+              if (countdown.value > 0) {
+                countdown.value -= 1
+              }
+              else {
+                clearInterval(intvl)
+              }
+            }, 500);
+          }
+
+          way.effect(() => {
+            runcountdown()
+          })
+
+          return { countdown }
+        })
       })
-    })
-  </script>
+    </script>
+
+  </main>
 
 
-  <template id="my-counter">
-    <div>
-      <h3>{title}</h3>
-      <p>
-        x= {x}
-      </p>
-      <button @click="incr()">++</button>
-      <button @click="close()">close</button>
 
-      <p>
-        B= {count}
-      </p>
 
-      <form x-form="userForm">
-        <div>
-          <p>val = {uppercase}
-          </p>
-          <div>
 
-            <input name="password" x-model="val" aria-describedby="pwerror" />
-            <p id="pwerror"></p>
-          </div>
-          <button>submit</button>
-        </div>
-      </form>
-      <slot></slot>
-    </div>
-  </template>
 
   <template id="card">
     <div style="border: 1px solid #ccc; padding: 16px; margin: 16px 0;">

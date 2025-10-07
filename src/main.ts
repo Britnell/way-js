@@ -6,42 +6,15 @@ import z from 'zod';
 Way.comp('counter', () => {
   const count = signal(0);
   const double = computed(() => count.value * 2);
-
-  const increment = () => {
-    count.value++;
-  };
-
-  const decrement = () => {
-    count.value--;
-  };
-
-  return { count, double, increment, decrement };
+  const incr = () => count.value++;
+  const decr = () => count.value--;
+  return { count, double, incr, decr };
 });
 
 type Props = {
   x: Signal<number>;
   title?: string;
 };
-
-Way.comp<Props>('my-counter', (props, { emit }) => {
-  const x = signal(props.x?.value ?? 0);
-  const val = signal('abc');
-  const uppercase = computed(() => val.value.toUpperCase());
-
-  effect(() => {
-    x.value = props.x.value;
-  });
-
-  const incr = () => x.value++;
-
-  const close = () => emit('close', x.value);
-
-  function onUnmounted() {
-    //
-  }
-
-  return { x, incr, title: props.title, onUnmounted, count: 33, close, val, uppercase };
-});
 
 Way.form(
   'userForm',

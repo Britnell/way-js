@@ -4,7 +4,7 @@ declare global {
   }
 }
 
-import { signal, effect } from '@preact/signals-core';
+import { signal, effect, computed } from '@preact/signals-core';
 
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
@@ -275,7 +275,7 @@ function hydrateData(element: Element, context: any): any {
     for (const componentName of componentNames) {
       if (components[componentName]) {
         const emit = createEmit(element);
-        const componentData = components[componentName]({}, { emit });
+        const componentData = components[componentName]({ emit, el: element });
         elementData = { ...elementData, ...componentData };
       } else {
         console.warn(`Component "${componentName}" not found in x-data "${dataAttr}"`);
@@ -297,7 +297,7 @@ function hydrateWebComponent(element: Element, context: any): any {
 
   const props = parseProps(element, context);
   const emit = createEmit(element);
-  element._data = components[componentName](props, { emit });
+  element._data = components[componentName]({ el: element, emit }, props);
 
   return { ...context, ...element._data };
 }
@@ -482,9 +482,9 @@ function form(name: string, fields: any, onSubmit?: (event: Event, values: Recor
 
 function comp<T = any>(
   tag: string,
-  setup?: (props: T, context: { emit: (eventName: string, arg?: any) => void }) => any,
+  setup?: (context: { el: Element; emit: (eventName: string, arg?: any) => void }, props?: T) => any,
 ) {
-  components[tag] = setup || ((props: T, _context: any) => props);
+  components[tag] = setup || ((_context: any, props: T) => props);
   const template = document.getElementById(tag) as HTMLTemplateElement;
   if (tag.includes('-') && template) {
     createWebComponent(tag, template);
@@ -598,7 +598,7 @@ function validateForm(formEl: HTMLFormElement, formConfig: any): boolean {
   return allValid;
 }
 
-const way = { comp, render, form, signal, effect, store };
+const way = { comp, render, form, signal, effect, computed, store };
 
 declare global {
   interface Window {
