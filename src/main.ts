@@ -1,5 +1,4 @@
 import Way from './framework';
-
 import './style.css';
 import z from 'zod';
 
@@ -12,8 +11,9 @@ Way.comp('counter', () => {
 });
 
 Way.form(
-  'userForm',
+  'login',
   {
+    name: z.string().min(1, 'Name is required'),
     password: z
       .string()
       .min(4, 'Password is too short')

@@ -1,0 +1,5 @@
+.for-list {
+  list-style: none;
+  display: flex;
+  gap: 2px;
+}

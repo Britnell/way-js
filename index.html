@@ -11,17 +11,7 @@
 </head>
 
 <body>
-  <style>
-    [x-load] {
-      display: none;
-    }
 
-    .for-list {
-      list-style: none;
-      display: flex;
-      gap: 2px;
-    }
-  </style>
 
   <script>window.pageprops = { name: 'Tommy' }</script>
   <main id="app" x-load>
@@ -88,41 +78,12 @@
       confusing, and no reusable tempaltes or components for repeating logic
     </p>
 
-    <div>
-      <h3>Web components</h3>
-      <p>so we create components with web components and write their content in templates, for reusable components that
-        have both logic + html</p>
-      <p>and bonus, for us framework brains, this looks like using components in framework jsx </p>
+    <h3>Web components</h3>
+    <p>so we create components with web components and write their content in templates, for reusable components that
+      have both logic + html</p>
+    <p>and bonus, for us framework brains, this looks like using components in framework jsx </p>
 
-      <my-clock x-props="{seconds:true}" />
-      <template id="my-clock">
-        <p>
-          The time is {time}
-        </p>
-      </template>
-      <script>
-        way.comp('my-clock', ({ }, props) => {
-          const time = way.signal(gettime())
-
-          function gettime() {
-            const d = new Date();
-            const h = d.getHours().toString()
-            const m = d.getMinutes().toString().padStart(2, '0')
-            const s = d.getSeconds().toString().padStart(2, '0')
-            let t = `${h}:${m}`
-            if (props.seconds) t += `:${s}`
-            return t
-          }
-
-          setInterval(() => {
-            time.value = gettime()
-          }, 1000);
-          return {
-            time
-          }
-        })
-      </script>
-    </div>
+    <my-clock x-props="{seconds:true}"></my-clock>
 
     <h2>Props</h2>
     <p>but components receive props so we can pass them signals and write complex reactive logic</p>
@@ -134,54 +95,97 @@
       <count-down x-props="{start: count}" />
     </div>
 
-    <template id="count-down">
-      <p>
-        countdown! : {countdown}
-      </p>
-    </template>
-    <script>
-      way.comp('count-down', ({ }, props) => {
-        const start = props.start
-        const countdown = way.signal(start.value)
-        let intvl;
+    <h2>Forms</h2>
 
-        const runcountdown = () => {
-          if (intvl) clearInterval(intvl)
-          countdown.value = start.value
-          intvl = setInterval(() => {
-            if (countdown.value > 0) {
-              countdown.value -= 1
-            }
-            else {
-              clearInterval(intvl)
-            }
-          }, 500);
-        }
+    <p>frameworks can natively bind to inputs, but input validation is such an important part in everyday framworking,
+      i just baked it right in. simplify define x-form with zod schema, inspired by vee-validate.</p>
 
-        way.effect(() => {
-          runcountdown()
-        })
+    <form x-form="login">
 
-        return { countdown }
-      })
-    </script>
+      <label>
+        Name:
+        <input name="name" aria-describedby="nameerror" />
+      </label>
+      <p id="nameerror"></p>
 
+      <label>
+        password:
+        <input name="password" aria-describedby="passworderror" />
+      </label>
+      <p id="passworderror"></p>
+      <button>Submit</button>
+    </form>
 
+    <!-- <h2>The result - Way</h2>
+      <p>i mean, is it even a js framework? i'd prefer to call it a web-framework</p>
 
-    <h2>The result - Way</h2>
-    <p>i mean, is it even a js framework? i'd prefer to call it a web-framework</p>
-
-    <ul>
-      <li>no jsx!</li>
-      <li>technically its vanilla js + web components + signals - html first!</li>
-      <li>web platform first! </li>
-    </ul>
+      <ul>
+        <li>no jsx!</li>
+        <li>technically its vanilla js + web components + signals - html first!</li>
+        <li>web platform first! </li>
+      </ul> -->
   </main>
 
+  <template id="my-clock">
+    <p>
+      The time is {time}
+    </p>
+  </template>
+  <script>
+    way.comp('my-clock', ({ }, props) => {
+      const time = way.signal(gettime())
 
+      function gettime() {
+        const d = new Date();
+        const h = d.getHours().toString()
+        const m = d.getMinutes().toString().padStart(2, '0')
+        const s = d.getSeconds().toString().padStart(2, '0')
+        let t = `${h}:${m}`
+        if (props.seconds) t += `:${s}`
+        return t
+      }
 
+      setInterval(() => {
+        time.value = gettime()
+      }, 1000);
+      return {
+        time
+      }
+    })
+  </script>
 
+  <template id="count-down">
+    <p>
+      countdown! : {countdown}
+    </p>
+  </template>
 
+  <script>
+    way.comp('count-down', ({ }, props) => {
+      const start = props.start
+      const countdown = way.signal(start.value)
+      let intvl;
+
+      const runcountdown = () => {
+        if (intvl) clearInterval(intvl)
+        countdown.value = start.value
+        intvl = setInterval(() => {
+          if (countdown.value > 0) {
+            countdown.value -= 1
+          }
+          else {
+            clearInterval(intvl)
+          }
+        }, 500);
+      }
+
+      way.effect(() => {
+        runcountdown()
+      })
+
+      return { countdown }
+    })
+  </script>
 
   <template id="card">
     <div style="border: 1px solid #ccc; padding: 16px; margin: 16px 0;">
@@ -189,11 +193,17 @@
       <slot></slot>
     </div>
   </template>
-
+  <!-- 
   <div x-temp="card">
     <p>This is the content that will be slotted into the card.</p>
-  </div>
+  </div> -->
 
+
+  <style>
+    [x-load] {
+      display: none;
+    }
+  </style>
 </body>
 
 </html>
