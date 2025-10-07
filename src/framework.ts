@@ -13,12 +13,12 @@ const stores: Record<string, any> = {};
 const directives: Record<string, (el: Element, expression: string, data: any) => void> = {
   'x-text': (el, expression, data) => {
     effect(() => {
-      el.textContent = evaluateExpression(expression, data);
+      el.textContent = evaluateAndUnwrapExpression(expression, data);
     });
   },
   'x-show': (el, expression, data) => {
     effect(() => {
-      const shouldShow = evaluateExpression(expression, data);
+      const shouldShow = evaluateAndUnwrapExpression(expression, data);
       (el as HTMLElement).style.display = shouldShow ? '' : 'none';
 
       // x-else
@@ -128,78 +128,33 @@ function forLoopDirective(el: Element, expression: string, data: any) {
   const templateEl = el;
   const container = templateEl.parentNode as HTMLElement;
   const [itemVar, indexVar, arrayExpr] = parseForExpression(expression);
-  const keyAttr = templateEl.getAttribute(':key') || templateEl.getAttribute('x-key');
 
   const startMarker = document.createComment(` x-for: ${expression} `);
   container.insertBefore(startMarker, templateEl);
 
-  let renderedItems = new Map<string, { nodes: Node[]; scope: any }>();
-
-  const createAndHydrateNewItem = (itemScope: any): Node[] => {
-    const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
-    const newNodes = Array.from(fragment.childNodes);
-    for (const node of newNodes) {
-      if (node instanceof Element) {
-        hydrate(node, itemScope);
-      }
-    }
-    return newNodes;
-  };
-
   effect(() => {
-    const array = evaluateExpression(arrayExpr, data);
-    const oldRenderedItems = renderedItems;
-    const newRenderedItems = new Map<string, { nodes: Node[]; scope: any }>();
-    const newNodesOrdered: Node[] = [];
+    const rawResult = evaluateExpression(arrayExpr, data);
+    const unwrappedArray = isSignal(rawResult) ? rawResult.value : rawResult;
+    while (startMarker.nextSibling && startMarker.nextSibling !== templateEl) {
+      container.removeChild(startMarker.nextSibling);
+    }
 
-    if (Array.isArray(array)) {
-      for (let index = 0; index < array.length; index++) {
-        const item = array[index];
+    if (Array.isArray(unwrappedArray)) {
+      for (let index = 0; index < unwrappedArray.length; index++) {
+        const item = unwrappedArray[index];
         const itemScope = createItemContext(data, itemVar, indexVar, item, index);
-        const key = getItemKey(keyAttr, itemScope, index);
 
-        const existingItem = oldRenderedItems.get(key);
-
-        if (existingItem) {
-          Object.assign(existingItem.scope, itemScope);
-          newNodesOrdered.push(...existingItem.nodes);
-          newRenderedItems.set(key, existingItem);
-          oldRenderedItems.delete(key);
-        } else {
-          const newNodes = createAndHydrateNewItem(itemScope);
-          newNodesOrdered.push(...newNodes);
-          newRenderedItems.set(key, { nodes: newNodes, scope: itemScope });
+        const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
+        for (const node of Array.from(fragment.childNodes)) {
+          if (node instanceof Element) {
+            hydrate(node, itemScope);
+          } else if (node instanceof Text) {
+            hydrateBindings(node, itemScope);
+          }
         }
+        container.insertBefore(fragment, templateEl);
       }
     }
-
-    // Remove nodes of items that are no longer in the list
-    for (const { nodes } of oldRenderedItems.values()) {
-      nodes.forEach((node) => {
-        if (node.parentNode === container) container.removeChild(node);
-      });
-    }
-
-    // Reconcile the DOM to match the new order
-    let lastNode: Node = startMarker;
-    for (const node of newNodesOrdered) {
-      if (lastNode.nextSibling !== node) {
-        container.insertBefore(node, lastNode.nextSibling);
-      }
-      lastNode = node;
-    }
-
-    // Remove any old nodes that are still lingering at the end of the list
-    let nodeToRemove = lastNode.nextSibling;
-    while (nodeToRemove && nodeToRemove !== templateEl) {
-      const next = nodeToRemove.nextSibling;
-      if (nodeToRemove.parentNode === container) {
-        container.removeChild(nodeToRemove);
-      }
-      nodeToRemove = next;
-    }
-
-    renderedItems = newRenderedItems;
   });
 }
 
@@ -254,7 +209,7 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
     for (let i = 0; i < chain.length; i++) {
       const { expression } = chain[i];
       // expression is null for x-else
-      if (expression === null || evaluateExpression(expression, data)) {
+      if (expression === null || evaluateAndUnwrapExpression(expression, data)) {
         activeIndex = i;
         break;
       }
@@ -404,7 +359,7 @@ function bindTextInterpolation(node: Text, context: any) {
       .map((part) => {
         if (part.startsWith('{') && part.endsWith('}')) {
           const expression = part.slice(1, -1);
-          const value = evaluateExpression(expression, context);
+          const value = evaluateAndUnwrapExpression(expression, context);
           return value === null || value === undefined ? '' : String(value);
         }
         return part;
@@ -415,7 +370,7 @@ function bindTextInterpolation(node: Text, context: any) {
 
 function bindProperty(element: Element, propName: string, expression: string, context: any) {
   effect(() => {
-    const value = evaluateExpression(expression, context);
+    const value = evaluateAndUnwrapExpression(expression, context);
 
     if (propName === 'class') {
       // Handle class binding specially
@@ -688,6 +643,55 @@ function evaluateExpression(expression: string, data: any) {
   }
 }
 
+function createUnwrappingContext(context: any, cache = new WeakMap()): any {
+  if (typeof context !== 'object' || context === null) {
+    return context;
+  }
+  if (cache.has(context)) {
+    return cache.get(context);
+  }
+
+  const unwrappedContext: any = Array.isArray(context) ? [] : {};
+  cache.set(context, unwrappedContext);
+
+  for (const key in context) {
+    if (Object.prototype.hasOwnProperty.call(context, key)) {
+      const value = context[key];
+      if (isSignal(value)) {
+        unwrappedContext[key] = {
+          _isSignalWrapper: true,
+          [Symbol.toPrimitive]() {
+            return value.value;
+          },
+          get value() {
+            return value.value;
+          },
+          peek() {
+            return value.peek();
+          },
+        };
+      } else {
+        unwrappedContext[key] = createUnwrappingContext(value, cache);
+      }
+    }
+  }
+  return unwrappedContext;
+}
+
+function evaluateAndUnwrapExpression(expression: string, data: any) {
+  const unwrappingData = createUnwrappingContext(data);
+  try {
+    let result = new Function('data', `with(data) { return ${expression} }`)(unwrappingData);
+    if (result && result._isSignalWrapper) {
+      result = result.value;
+    }
+    return result;
+  } catch (e) {
+    console.error(`Error evaluating expression: "${expression}"`, e);
+    return null;
+  }
+}
+
 function getInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): any {
   if (inputEl instanceof HTMLInputElement) {
     if (inputEl.type === 'checkbox') {
@@ -774,10 +778,6 @@ function parseForExpression(expression: string): [string, string | null, string]
   }
 
   return [withoutIndex[1], null, withoutIndex[2].trim()];
-}
-
-function getItemKey(keyAttr: string | null, itemScope: any, index: number): string {
-  return keyAttr ? String(evaluateExpression(keyAttr, itemScope)) : String(index);
 }
 
 function createItemContext(

@@ -21,7 +21,7 @@
 
     <h2>A</h2>
     <div x-data="counter">
-      <p :style="{'--x': count.value}">
+      <p :style="{'--x': count}">
         count: {count}
         x 2 = {double}
       </p>
@@ -29,7 +29,13 @@
       <button @click="decrement()">-</button>
       <p x-show="count%2==0">even</p>
       <p x-else>uneven</p>
-      <ul :style="{'font-size': `${24-count.value*0.5}px`}">
+      <p>
+        IF:
+        <template x-if="count%2==0">even</template>
+        <template x-else>uneven</template>
+      </p>
+
+      <ul :style="{'font-size': `${24-count*0.5}px`}">
         <template x-for="(i,j) in Array(count.value).fill(0)">
           <li key="j">
             {j+1}
@@ -47,7 +53,7 @@
       <button @click="increment()">+</button>
       <button @click="decrement()">-</button>
 
-      <template x-if="count.value%3==0">
+      <template x-if="count%3==0">
         <p>
           //{double}\\
         </p>
@@ -56,8 +62,8 @@
         <p>____</p>
       </template>
       <div class=" my-10 " x-data="{open: true}">
-        <button x-show="!open.value" @click="open.value=!open.value">open</button>
-        <my-counter x-else x-props="{x: count, title: 'cool' }" @close="open.value=false">
+        <button x-show="!open" @click="open=!open">open</button>
+        <my-counter x-else x-props="{x: count, title: 'cool' }" @close="open=false">
           <p>This is some slotted content for the my-counter component.</p>
         </my-counter>
       </div>
@@ -76,15 +82,15 @@
       <option value="red">red</option>
       <option value="green">green</option>
     </select>
-    <div class="x" :style="{ color: theme.color.value }">
-      color: {theme.color.value}
+    <div class="x" :style="{ color: theme.color }">
+      color: {theme.color}
       <h3>clock</h3>
       <p>{time}</p>
     </div>
   </template>
   <script>
     document.addEventListener('way:init', () => {
-      way.component('my-clock', () => {
+      way.comp('my-clock', () => {
         const time = way.signal(new Date())
         return {
           time
