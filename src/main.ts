@@ -1,7 +1,7 @@
+import Way from './framework';
+
 import './style.css';
 import z from 'zod';
-
-const Way = window.way;
 
 Way.comp('counter', () => {
   const count = Way.signal(0);
