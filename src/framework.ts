@@ -327,7 +327,8 @@ function hydrateData(element: Element, context: any): any {
 
     for (const componentName of componentNames) {
       if (components[componentName]) {
-        const componentData = components[componentName]();
+        const emit = createEmit(element);
+        const componentData = components[componentName]({}, { emit });
         elementData = { ...elementData, ...componentData };
       } else {
         console.warn(`Component "${componentName}" not found in x-data "${dataAttr}"`);
@@ -516,10 +517,6 @@ function bindEvent(element: Element, eventName: string, expression: string, cont
   element.addEventListener(baseEvent, handler, options);
 }
 
-function data(id: string, setup: any) {
-  components[id] = setup;
-}
-
 function store(name: string, setup: () => any) {
   stores[name] = setup();
 }
@@ -532,13 +529,13 @@ function form(name: string, fields: any, onSubmit?: (event: Event, values: Recor
   };
 }
 
-function component<T = any>(
+function comp<T = any>(
   tag: string,
   setup?: (props: T, context: { emit: (eventName: string, arg?: any) => void }) => any,
 ) {
   components[tag] = setup || ((props: T, _context: any) => props);
   const template = document.getElementById(tag) as HTMLTemplateElement;
-  if (template) {
+  if (tag.includes('-') && template) {
     createWebComponent(tag, template);
   }
 }
@@ -650,14 +647,13 @@ function validateForm(formEl: HTMLFormElement, formConfig: any): boolean {
   return allValid;
 }
 
-const way = { data, component, render, form, signal, effect, store };
+const way = { comp, render, form, signal, effect, store };
 
 declare global {
   interface Window {
     pageprops?: any;
     way: {
-      data: typeof data;
-      component: typeof component;
+      comp: typeof comp;
       render: typeof render;
       form: typeof form;
       signal: typeof signal;

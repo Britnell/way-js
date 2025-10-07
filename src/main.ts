@@ -3,7 +3,7 @@ import { signal, computed, effect, Signal } from '@preact/signals-core';
 import Way from './framework';
 import z from 'zod';
 
-Way.data('counter', () => {
+Way.component('counter', () => {
   const count = signal(0);
   const double = computed(() => count.value * 2);
 
