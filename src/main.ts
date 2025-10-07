@@ -1,20 +1,15 @@
 import './style.css';
-import { signal, computed, effect, Signal } from '@preact/signals-core';
-import Way from './framework';
 import z from 'zod';
 
+const Way = window.way;
+
 Way.comp('counter', () => {
-  const count = signal(0);
-  const double = computed(() => count.value * 2);
+  const count = Way.signal(0);
+  const double = Way.computed(() => count.value * 2);
   const incr = () => count.value++;
   const decr = () => count.value--;
   return { count, double, incr, decr };
 });
-
-type Props = {
-  x: Signal<number>;
-  title?: string;
-};
 
 Way.form(
   'userForm',

@@ -1,9 +1,3 @@
-declare global {
-  interface Element {
-    _data?: any;
-  }
-}
-
 import { signal, effect, computed } from '@preact/signals-core';
 
 const components: Record<string, any> = {};
@@ -95,7 +89,6 @@ function formDirective(el: Element, expression: string, _data: any) {
     return;
   }
 
-  // Listen to form events (input, submit)
   formEl.addEventListener('input', (event) => {
     const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
     validateField(target, formConfig);
@@ -134,9 +127,7 @@ function forLoopDirective(el: Element, expression: string, data: any) {
 
   effect(() => {
     const rawResult = evaluateExpression(arrayExpr, data);
-    // Then unwrap the result for actual use
     const unwrappedArray = isSignal(rawResult) ? rawResult.value : rawResult;
-    // Clear all previously rendered nodes
     while (startMarker.nextSibling && startMarker.nextSibling !== templateEl) {
       container.removeChild(startMarker.nextSibling);
     }
@@ -231,22 +222,22 @@ async function render(root: Element, initial?: any) {
 }
 
 function hydrate(root: Element = document.body, initialContext = {}) {
-  const contextWithStores = { ...stores, ...initialContext };
+  const contextWithStores = { ...stores, ...window.pageprops, ...initialContext };
   traverseDOM(root, contextWithStores, (node, ctx) => {
     let newContext = { ...ctx };
 
     if (node instanceof Element) {
-      // x-data
+      // * data
       newContext = hydrateData(node, newContext);
 
-      // components
+      // * components
       const componentContext = hydrateWebComponent(node, newContext);
       if (componentContext !== newContext) {
         newContext = componentContext;
       }
     }
 
-    // bindings (handles both elements and text nodes)
+    // * bindings
     hydrateBindings(node, newContext);
 
     return newContext;
@@ -259,7 +250,6 @@ function hydrateData(element: Element, context: any): any {
 
   let elementData: any = {};
 
-  // Check if it's an inline object (starts with {)
   if (dataAttr.includes('{')) {
     try {
       const rawObject = evaluateExpression(dataAttr, {});
@@ -285,7 +275,6 @@ function hydrateData(element: Element, context: any): any {
 
   element._data = elementData;
 
-  // Return new context with this element's data added
   return { ...context, ...element._data };
 }
 
@@ -308,12 +297,10 @@ function hydrateBindings(node: Element | Text, context: any): void {
     return;
   }
 
-  // Only process directives and attributes on Elements
   // x-text, x-show, x-model ...
   Object.keys(directives).forEach((dir) => {
     if (node.hasAttribute(dir)) {
       const expression = node.getAttribute(dir);
-      // For directives like x-load that don't require an expression
       if (expression || dir === 'x-load') {
         directives[dir](node, expression || '', context);
       }
@@ -369,13 +356,11 @@ function bindProperty(element: Element, propName: string, expression: string, co
     const value = evaluateExpression(expression, context);
 
     if (propName === 'class') {
-      // Handle class binding specially
       if (typeof value === 'string') {
         (element as HTMLElement).className = value;
       } else if (Array.isArray(value)) {
         (element as HTMLElement).className = value.join(' ');
       } else if (typeof value === 'object') {
-        // Handle object format { active: true, disabled: false }
         const classes = Object.entries(value)
           .filter(([_, active]) => active)
           .map(([className]) => className)
@@ -383,17 +368,14 @@ function bindProperty(element: Element, propName: string, expression: string, co
         (element as HTMLElement).className = classes;
       }
     } else if (propName === 'style') {
-      // Handle style binding
       if (typeof value === 'string') {
         (element as HTMLElement).style.cssText = value;
       } else if (typeof value === 'object') {
-        // Handle object format { color: 'red', fontSize: '14px' }
         Object.entries(value).forEach(([key, val]) => {
           (element as HTMLElement).style.setProperty(key, String(val));
         });
       }
     } else {
-      // Handle all other properties
       if (value === false || value === null || value === undefined) {
         element.removeAttribute(propName);
       } else {
@@ -412,13 +394,15 @@ const eventModifiers: Record<string, (element: Element, event: Event) => boolean
   },
   outside: (element, event) => {
     if (!event.target) return true;
+    // Skip execution if click is inside
     if (element.contains(event.target as Node)) {
-      return true; // Skip execution if click is inside
+      return true;
     }
   },
   self: (element, event) => {
+    // Skip execution if target is not the element itself
     if (event.target !== element) {
-      return true; // Skip execution if target is not the element itself
+      return true;
     }
   },
 };
@@ -473,7 +457,6 @@ function store(name: string, setup: () => any) {
 }
 
 function form(name: string, fields: any, onSubmit?: (event: Event, values: Record<string, string>) => void) {
-  // Store the fields and onSubmit handler separately
   validationSchemas[name] = {
     fields,
     onSubmit,
@@ -510,10 +493,8 @@ function makeObjectReactive(obj: any): any {
     } else if (typeof value === 'function') {
       reactive[key] = value.bind(reactive);
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      // Recursively make nested objects reactive
       reactive[key] = makeObjectReactive(value);
     } else {
-      // Wrap primitive values in signals
       reactive[key] = signal(value);
     }
   });
@@ -551,10 +532,7 @@ function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSel
     return;
   }
 
-  // Validate just this field using Zod directly
   const result = fields[inputName].safeParse(inputEl.value);
-
-  // Update the input element with validation state
   const errorId = inputEl.getAttribute('aria-describedby');
   let errorEl: HTMLElement | null = null;
 
@@ -579,17 +557,14 @@ function validateForm(formEl: HTMLFormElement, formConfig: any): boolean {
   const formDataObj: Record<string, string> = {};
   let allValid = true;
 
-  // Convert FormData to object using input names
   formData.forEach((value, key) => {
     formDataObj[key] = value.toString();
   });
 
-  // Validate each field individually
   formEl.querySelectorAll('input, textarea, select').forEach((input) => {
     const inputEl = input as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
     validateField(inputEl, formConfig);
 
-    // Check if this field is valid
     if (!inputEl.checkValidity()) {
       allValid = false;
     }
@@ -601,16 +576,15 @@ function validateForm(formEl: HTMLFormElement, formConfig: any): boolean {
 const way = { comp, render, form, signal, effect, computed, store };
 
 declare global {
+  interface Element {
+    _data?: any;
+  }
+}
+
+declare global {
   interface Window {
     pageprops?: any;
-    way: {
-      comp: typeof comp;
-      render: typeof render;
-      form: typeof form;
-      signal: typeof signal;
-      effect: typeof effect;
-      store: typeof store;
-    };
+    way: typeof way;
   }
 }
 
@@ -633,8 +607,7 @@ function objectGet(obj: any, path: string): any {
 function evaluateExpression(expression: string, data: any) {
   try {
     return new Function('data', `with(data) { return (${expression}) }`)(data);
-  } catch (e) {
-    console.error(`Error evaluating expression: "${expression}"`, e);
+  } catch {
     return null;
   }
 }

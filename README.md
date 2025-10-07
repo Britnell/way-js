@@ -71,17 +71,16 @@ Framework.component('my-counter', ({ props }) => {
 - [x] stores
 - [x] component onMount
 - [x] useQuery  (@preact-signals/query)
-- [ ] components get (el)=> ref
-- [ ] forms - conditional logic to hide inputs / sections , form , on update callback, (form,el)=> then just get by name/id
+- [x] components get (el)=> ref
+- [x] forms - some easyinput validations
+- [ ] forms - conditional logic to hide inputs / sections ? form , on update callback, (form,el)=> then just get by name/id
 - [ ] turbolinks
 - [ ] view transitions compatibility
 - [ ] intersection api
 - [ ] scroll animations
 - [ ] pageload
+- [ ] data fetching hooks like useQuery ?
 
-## future
-some current thoughts
-- [ ] forms are so important, i want to try adding some helpers for input validation
-- [ ] nice fetching hooks like useQuery builtin
-- [ ] client side routing / htmx like features or at least work smoothly with ViewTransitions
-- [ ] if so, smart prefetching?
+## bummers / open questions
+- [ ] i tried unwrapping all signals so dont have to use signal.value inside html attributes, but there was some issues
+
