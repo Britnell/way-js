@@ -13,12 +13,12 @@ const stores: Record<string, any> = {};
 const directives: Record<string, (el: Element, expression: string, data: any) => void> = {
   'x-text': (el, expression, data) => {
     effect(() => {
-      el.textContent = evaluateAndUnwrapExpression(expression, data);
+      el.textContent = evaluateExpression(expression, data);
     });
   },
   'x-show': (el, expression, data) => {
     effect(() => {
-      const shouldShow = evaluateAndUnwrapExpression(expression, data);
+      const shouldShow = evaluateExpression(expression, data);
       (el as HTMLElement).style.display = shouldShow ? '' : 'none';
 
       // x-else
@@ -190,9 +190,9 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 
   effect(() => {
     let activeTemplate: HTMLTemplateElement | null = null;
-    
+
     for (const { template, expression } of chain) {
-      if (expression === null || evaluateAndUnwrapExpression(expression, data)) {
+      if (expression === null || evaluateExpression(expression, data)) {
         activeTemplate = template;
         break;
       }
@@ -351,7 +351,7 @@ function bindTextInterpolation(node: Text, context: any) {
       .map((part) => {
         if (part.startsWith('{') && part.endsWith('}')) {
           const expression = part.slice(1, -1);
-          const value = evaluateAndUnwrapExpression(expression, context);
+          const value = evaluateExpression(expression, context);
           return value === null || value === undefined ? '' : String(value);
         }
         return part;
@@ -362,7 +362,7 @@ function bindTextInterpolation(node: Text, context: any) {
 
 function bindProperty(element: Element, propName: string, expression: string, context: any) {
   effect(() => {
-    const value = evaluateAndUnwrapExpression(expression, context);
+    const value = evaluateExpression(expression, context);
 
     if (propName === 'class') {
       // Handle class binding specially
@@ -628,56 +628,7 @@ function objectGet(obj: any, path: string): any {
 
 function evaluateExpression(expression: string, data: any) {
   try {
-    return new Function('data', `with(data) { return ${expression} }`)(data);
-  } catch (e) {
-    console.error(`Error evaluating expression: "${expression}"`, e);
-    return null;
-  }
-}
-
-function createUnwrappingContext(context: any, cache = new WeakMap()): any {
-  if (typeof context !== 'object' || context === null) {
-    return context;
-  }
-  if (cache.has(context)) {
-    return cache.get(context);
-  }
-
-  const unwrappedContext: any = Array.isArray(context) ? [] : {};
-  cache.set(context, unwrappedContext);
-
-  for (const key in context) {
-    if (Object.prototype.hasOwnProperty.call(context, key)) {
-      const value = context[key];
-      if (isSignal(value)) {
-        unwrappedContext[key] = {
-          _isSignalWrapper: true,
-          [Symbol.toPrimitive]() {
-            return value.value;
-          },
-          get value() {
-            return value.value;
-          },
-          peek() {
-            return value.peek();
-          },
-        };
-      } else {
-        unwrappedContext[key] = createUnwrappingContext(value, cache);
-      }
-    }
-  }
-  return unwrappedContext;
-}
-
-function evaluateAndUnwrapExpression(expression: string, data: any) {
-  const unwrappingData = createUnwrappingContext(data);
-  try {
-    let result = new Function('data', `with(data) { return ${expression} }`)(unwrappingData);
-    if (result && result._isSignalWrapper) {
-      result = result.value;
-    }
-    return result;
+    return new Function('data', `with(data) { return (${expression}) }`)(data);
   } catch (e) {
     console.error(`Error evaluating expression: "${expression}"`, e);
     return null;

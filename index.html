@@ -23,8 +23,14 @@
   <h2>1. this is just alpine with signals</h2>
 
   <div x-data="{x:1}">
-    <p>The count is {x}</p>
-    <button @click="x+=1">+1</button>
+    <p>The count {x},
+      <span x-show="x.value%2===0">is even</span>
+      <span x-else>is odd</span>
+    </p>
+    <p>
+      {x} x 2 = {x.value*2}
+    </p>
+    <button @click="x.value = x.value+1">+1</button>
   </div>
 
   <div id="app" x-load>
