@@ -439,7 +439,38 @@ function bindProperty(element: Element, propName: string, expression: string, co
   });
 }
 
+const eventModifiers: Record<string, (element: Element, event: Event) => boolean | void> = {
+  prevent: (_element, event) => {
+    event.preventDefault();
+  },
+  stop: (_element, event) => {
+    event.stopPropagation();
+  },
+  outside: (element, event) => {
+    if (!event.target) return true;
+    if (element.contains(event.target as Node)) {
+      return true; // Skip execution if click is inside
+    }
+  },
+  self: (element, event) => {
+    if (event.target !== element) {
+      return true; // Skip execution if target is not the element itself
+    }
+  },
+
+};
+
+function parseEventModifiers(eventName: string): { event: string; modifiers: string[] } {
+  const parts = eventName.split('.');
+  return {
+    event: parts[0],
+    modifiers: parts.slice(1),
+  };
+}
+
 function bindEvent(element: Element, eventName: string, expression: string, context: any) {
+  const { event: baseEvent, modifiers } = parseEventModifiers(eventName);
+  
   // Find emit function from nearest web component parent
   const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
     if (el?._data) {
@@ -450,14 +481,28 @@ function bindEvent(element: Element, eventName: string, expression: string, cont
 
   const emit = findEmit(element);
 
-  element.addEventListener(eventName, (event: Event) => {
+  const handler = (event: Event) => {
+    // Apply modifiers
+    for (const modifier of modifiers) {
+      const modifierFn = eventModifiers[modifier];
+      if (modifierFn) {
+        const shouldSkip = modifierFn(element, event);
+        if (shouldSkip === true) {
+          return; // Skip execution if modifier returns true
+        }
+      }
+    }
+
     const eventContext = {
       ...context,
       $event: event,
       emit,
     };
     evaluateExpression(expression, eventContext);
-  });
+  };
+
+  const options = modifiers.includes('once') ? { once: true } : {};
+  element.addEventListener(baseEvent, handler, options);
 }
 
 function data(id: string, setup: any) {
@@ -710,15 +755,7 @@ function createWebComponent(tag: string, template: HTMLTemplateElement) {
   customElements.define(tag, WebComponent);
 }
 
-function createMarker(template: HTMLTemplateElement, text: string): Comment {
-  const nextSibling = template.nextSibling;
-  if (nextSibling instanceof Comment && nextSibling.nodeValue === text) {
-    return nextSibling;
-  }
-  const marker = document.createComment(text);
-  template.parentNode?.insertBefore(marker, template.nextSibling);
-  return marker;
-}
+
 
 function parseForExpression(expression: string): [string, string | null, string] {
   const withIndex = expression.match(/^\((\w+),\s*(\w+)\)\s+in\s+(.+)$/);

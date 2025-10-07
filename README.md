@@ -71,8 +71,10 @@ Framework.component('my-counter', ({ props }) => {
 - [x] stores
 - [x] component onMount
 - [x] useQuery  (@preact-signals/query)
+- [ ] components get (el)=> ref
+- [ ] forms - conditional logic to hide inputs / sections , form , on update callback, (form,el)=> then just get by name/id
 - [ ] turbolinks
-- [ ] view transitions
+- [ ] view transitions compatibility
 - [ ] intersection api
 - [ ] scroll animations
 - [ ] pageload
