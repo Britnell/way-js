@@ -134,7 +134,9 @@ function forLoopDirective(el: Element, expression: string, data: any) {
 
   effect(() => {
     const rawResult = evaluateExpression(arrayExpr, data);
+    // Then unwrap the result for actual use
     const unwrappedArray = isSignal(rawResult) ? rawResult.value : rawResult;
+    // Clear all previously rendered nodes
     while (startMarker.nextSibling && startMarker.nextSibling !== templateEl) {
       container.removeChild(startMarker.nextSibling);
     }
@@ -184,48 +186,38 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
     nextEl = nextEl.nextElementSibling;
   }
 
-  let lastActiveIndex = -1;
-
-  const renderTemplate = (template: HTMLTemplateElement, data: any) => {
-    const fragment = template.content.cloneNode(true) as DocumentFragment;
-    const children = Array.from(fragment.children);
-
-    // Hydrate the newly inserted elements
-    for (const child of children) {
-      if (child instanceof Element) {
-        hydrate(child, data);
-      }
-    }
-
-    wrapper.append(fragment);
-  };
-
-  const clearContent = () => {
-    wrapper.innerHTML = '';
-  };
+  let lastActiveTemplate: HTMLTemplateElement | null = null;
 
   effect(() => {
-    let activeIndex = -1;
-    for (let i = 0; i < chain.length; i++) {
-      const { expression } = chain[i];
-      // expression is null for x-else
+    let activeTemplate: HTMLTemplateElement | null = null;
+    
+    for (const { template, expression } of chain) {
       if (expression === null || evaluateAndUnwrapExpression(expression, data)) {
-        activeIndex = i;
+        activeTemplate = template;
         break;
       }
     }
 
-    if (activeIndex === lastActiveIndex) {
+    if (activeTemplate === lastActiveTemplate) {
       return;
     }
 
-    clearContent();
+    wrapper.innerHTML = '';
 
-    if (activeIndex !== -1) {
-      renderTemplate(chain[activeIndex].template, data);
+    if (activeTemplate) {
+      const fragment = activeTemplate.content.cloneNode(true) as DocumentFragment;
+      const children = Array.from(fragment.children);
+
+      for (const child of children) {
+        if (child instanceof Element) {
+          hydrate(child, data);
+        }
+      }
+
+      wrapper.append(fragment);
     }
 
-    lastActiveIndex = activeIndex;
+    lastActiveTemplate = activeTemplate;
   });
 }
 

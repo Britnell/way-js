@@ -15,7 +15,18 @@
       display: none;
     }
   </style>
+
   <script>window.pageprops = { tommy: 123 }</script>
+
+  <h1>A Web-framework</h1>
+
+  <h2>1. this is just alpine with signals</h2>
+
+  <div x-data="{x:1}">
+    <p>The count is {x}</p>
+    <button @click="x+=1">+1</button>
+  </div>
+
   <div id="app" x-load>
     <h1>Counter Example</h1>
 
