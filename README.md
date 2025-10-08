@@ -71,6 +71,7 @@ Framework.component('x-counter', ({ props }) => {
 - [x] useQuery  (@preact-signals/query)
 - [x] components get (el)=> ref
 - [x] forms - some easyinput validations
+- [ ] replace zod with valibot
 - [ ] forms - conditional logic to hide inputs / sections ? form , on update callback, (form,el)=> then just get by name/id
 - [ ] turbolinks
 - [ ] view transitions compatibility
