@@ -42,7 +42,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       field.value = getInputValue(inputEl);
     });
   },
-  'x-form': formDirective,
+  // 'x-form': formDirective,
   'x-if': ifDirective,
   'x-for': forLoopDirective,
   'x-load': (el, _expression, _data) => {
@@ -73,43 +73,43 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
   },
 };
 
-function formDirective(el: Element, expression: string, _data: any) {
-  if (!(el instanceof HTMLFormElement)) {
-    console.error('x-form directive can only be used on form elements.');
-    return;
-  }
+// function formDirective(el: Element, expression: string, _data: any) {
+//   if (!(el instanceof HTMLFormElement)) {
+//     console.error('x-form directive can only be used on form elements.');
+//     return;
+//   }
 
-  const formEl = el as HTMLFormElement;
-  const formName = expression;
-  const formConfig = validationSchemas[formName];
+//   const formEl = el as HTMLFormElement;
+//   const formName = expression;
+//   const formConfig = validationSchemas[formName];
 
-  if (!formConfig) {
-    console.error(`Form validation schema not found: "${formName}"`);
-    return;
-  }
+//   if (!formConfig) {
+//     console.error(`Form validation schema not found: "${formName}"`);
+//     return;
+//   }
 
-  formEl.addEventListener('input', (event) => {
-    const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
-    validateField(target, formConfig);
-  });
+//   formEl.addEventListener('input', (event) => {
+//     const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+//     validateField(target, formConfig);
+//   });
 
-  formEl.addEventListener('submit', (event) => {
-    const isValid = validateForm(formEl, formConfig);
-    if (!isValid) {
-      event.preventDefault();
-      return;
-    }
+//   formEl.addEventListener('submit', (event) => {
+//     const isValid = validateForm(formEl, formConfig);
+//     if (!isValid) {
+//       event.preventDefault();
+//       return;
+//     }
 
-    if (formConfig.onSubmit) {
-      const formData = new FormData(formEl);
-      const formDataObj: Record<string, string> = {};
-      formData.forEach((value, key) => {
-        formDataObj[key] = value.toString();
-      });
-      formConfig.onSubmit(event, formDataObj);
-    }
-  });
-}
+//     if (formConfig.onSubmit) {
+//       const formData = new FormData(formEl);
+//       const formDataObj: Record<string, string> = {};
+//       formData.forEach((value, key) => {
+//         formDataObj[key] = value.toString();
+//       });
+//       formConfig.onSubmit(event, formDataObj);
+//     }
+//   });
+// }
 
 function forLoopDirective(templateEl: Element, expression: string, data: any) {
   if (!(templateEl instanceof HTMLTemplateElement)) {
