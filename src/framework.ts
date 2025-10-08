@@ -111,25 +111,23 @@ function formDirective(el: Element, expression: string, _data: any) {
   });
 }
 
-function forLoopDirective(el: Element, expression: string, data: any) {
-  if (!(el instanceof HTMLTemplateElement)) {
+function forLoopDirective(templateEl: Element, expression: string, data: any) {
+  if (!(templateEl instanceof HTMLTemplateElement)) {
     console.error('x-for directive must be used on a <template> element.');
     return;
   }
 
-  const templateEl = el;
-  const container = templateEl.parentNode as HTMLElement;
-  const [itemVar, indexVar, arrayExpr] = parseForExpression(expression);
+  const wrapper = document.createElement('div');
+  wrapper.style.display = 'contents';
+  templateEl.parentNode!.insertBefore(wrapper, templateEl);
 
-  const startMarker = document.createComment(` x-for: ${expression} `);
-  container.insertBefore(startMarker, templateEl);
+  const [itemVar, indexVar, arrayExpr] = parseForExpression(expression);
 
   effect(() => {
     const rawResult = evaluateExpression(arrayExpr, data);
     const unwrappedArray = isSignal(rawResult) ? rawResult.value : rawResult;
-    while (startMarker.nextSibling && startMarker.nextSibling !== templateEl) {
-      container.removeChild(startMarker.nextSibling);
-    }
+
+    wrapper.innerHTML = '';
 
     if (Array.isArray(unwrappedArray)) {
       for (let index = 0; index < unwrappedArray.length; index++) {
@@ -144,7 +142,7 @@ function forLoopDirective(el: Element, expression: string, data: any) {
             hydrateBindings(node, itemScope);
           }
         }
-        container.insertBefore(fragment, templateEl);
+        wrapper.appendChild(fragment);
       }
     }
   });
