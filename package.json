@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "bundle": "rollup -c",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "bundle": "rollup -c"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",

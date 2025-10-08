@@ -3,3 +3,9 @@
   display: flex;
   gap: 2px;
 }
+
+pre {
+  background: #ccc;
+  padding: 0.5rem;
+  white-space: pre;
+}

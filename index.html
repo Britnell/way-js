@@ -11,14 +11,49 @@
 </head>
 
 <body>
-
-
   <script>window.pageprops = { name: 'Tommy' }</script>
+
   <main id="app" x-load>
-    <h1>Way - A Web-framework</h1>
-    <p>writen by {name}</p>
-    <h2>1. this is just alpine with signals</h2>
-    <div x-data="{x:1}">
+    <h1>Way.js - A Web-framework</h1>
+    <p>written by {name}</p>
+
+    <h2>
+      Signals x WebComponents <br>
+      = the Way
+    </h2>
+
+    <ul>
+      <li>
+        everything is done via html attributes, just write html! no jsx, no vdom
+      </li>
+      <li>
+        we can still write jsx the nice way
+        &lt;Counter /&gt; by using webcomponents, just for templating
+      </li>
+      <li>
+        fine-grained reactivity through signals, updating the dom when needed
+      </li>
+      <li>
+        the rest is just vanilla js, attach events to dom nodes
+      </li>
+    </ul>
+
+    <p>
+      I love alpine, its basically vue, but everything is via html attributes. So you can just write normal html. no
+      jsx, no build step
+    </p>
+
+    <p>
+      BUT <br />
+      it has no components, the assumption is you're server rendering everything, and just sprinkling in some reactivity
+      via attributes. <br>
+      but what if we want to write a little more frontend functionality, doesn't feel great building complex pages with
+      alpine.
+    </p>
+
+
+    <!-- <h2>1. this is just alpine with signals</h2>
+    <div x-comp="{x:1}">
       <p>
         {x} x 3 = {x.value*3}
       </p>
@@ -38,14 +73,14 @@
           </li>
         </template>
       </ul>
-    </div>
+    </div> -->
 
     <h2>2. reusable data</h2>
     <p>but for larger apps we have loads of javascript that doesnt really fit into attributes, so we want js logic, so
       just write them the same way as vue3 setup components. we can now write complex js, in separate file, or inline,
       and reuse this data logic</p>
 
-    <p>
+    <pre>
       Way.comp('counter', () => {
       const count = signal(0);
       const double = computed(() => count.value * 2);
@@ -53,9 +88,18 @@
       const decr = () => count.value--;
       return { count, double, incr, decr };
       });
-    </p>
+    </pre>
+    <script>
+      Way.comp('counter', () => {
+        const count = Way.signal(0);
+        const double = Way.computed(() => count.value * 2);
+        const incr = () => count.value++;
+        const decr = () => count.value--;
+        return { count, double, incr, decr };
+      });
+    </script>
 
-    <div x-data="counter">
+    <div x-comp="counter">
       <h3>counter</h3>
       <p :style="{'--x': count}">
         count A : {count}
@@ -66,7 +110,7 @@
 
     </div>
 
-    <div x-data="counter">
+    <div x-comp="counter">
       <h3>reuse for another counter </h3>
       <p>Counter B : {count}</p>
       <button @click="incr()"> +1</button>
@@ -88,7 +132,7 @@
     <h2>Props</h2>
     <p>but components receive props so we can pass them signals and write complex reactive logic</p>
 
-    <div x-data="counter">
+    <div x-comp="counter">
       <h3>reuse for another of our counter components, and pass the 'count' as a prop </h3>
       <p>Counter C : {count}</p>
       <button @click="incr()"> +1</button>

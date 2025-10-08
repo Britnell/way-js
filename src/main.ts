@@ -2,14 +2,6 @@ import Way from './framework';
 import './style.css';
 import z from 'zod';
 
-Way.comp('counter', () => {
-  const count = Way.signal(0);
-  const double = Way.computed(() => count.value * 2);
-  const incr = () => count.value++;
-  const decr = () => count.value--;
-  return { count, double, incr, decr };
-});
-
 Way.form(
   'login',
   {
@@ -30,5 +22,6 @@ Way.store('theme', () => {
   const color = Way.signal('red');
   return { color };
 });
+
 Way.render(document.body, window.pageprops);
 // document.addEventListener('DOMContentLoaded', async () => {});

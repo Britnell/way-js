@@ -5,7 +5,7 @@ import terser from '@rollup/plugin-terser';
 export default defineConfig({
   input: 'src/framework.ts',
   output: {
-    file: 'src/framework.min.js',
+    file: 'framework.min.js',
     format: 'iife',
     name: 'Framework',
     sourcemap: false,

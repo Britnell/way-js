@@ -25,7 +25,7 @@ The important part for reusable components is passing **props**, which finally l
 
 ```
 <div id="app">
-    <div x-data="{xstart: 123}">
+    <div x-comp="{xstart: 123}">
         <h1>Counter</h1>
         <my-counter x-props="{xstart: count}" ></my-counter>
     </div>
@@ -67,7 +67,7 @@ Framework.component('my-counter', ({ props }) => {
 - [x] x-else-if
 - [x] x-template
 - [x] comp without setup function (props)=>props
-- [ ] @click.outside.prevent
+- [x] @click.outside.prevent
 - [x] stores
 - [x] component onMount
 - [x] useQuery  (@preact-signals/query)

@@ -14,7 +14,6 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
     effect(() => {
       const shouldShow = evaluateExpression(expression, data);
       (el as HTMLElement).style.display = shouldShow ? '' : 'none';
-
       // x-else
       const nextEl = el.nextElementSibling;
       if (nextEl?.hasAttribute('x-else')) {
@@ -245,7 +244,7 @@ function hydrate(root: Element = document.body, initialContext = {}) {
 }
 
 function hydrateData(element: Element, context: any): any {
-  const dataAttr = element.getAttribute('x-data');
+  const dataAttr = element.getAttribute('x-comp');
   if (!dataAttr) return context;
 
   let elementData: any = {};
@@ -255,7 +254,7 @@ function hydrateData(element: Element, context: any): any {
       const rawObject = evaluateExpression(dataAttr, {});
       elementData = makeObjectReactive(rawObject);
     } catch (e) {
-      console.error(`Failed to evaluate x-data "${dataAttr}" as inline object`, e);
+      console.error(`Failed to evaluate x-comp "${dataAttr}" as inline object`, e);
       return context;
     }
   } else {
@@ -268,7 +267,7 @@ function hydrateData(element: Element, context: any): any {
         const componentData = components[componentName]({ emit, el: element });
         elementData = { ...elementData, ...componentData };
       } else {
-        console.warn(`Component "${componentName}" not found in x-data "${dataAttr}"`);
+        console.warn(`Component "${componentName}" not found in x-comp "${dataAttr}"`);
       }
     }
   }
