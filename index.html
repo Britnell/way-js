@@ -14,42 +14,47 @@
   <script>window.pageprops = { name: 'Tommy' }</script>
 
   <main id="app" x-load>
-    <h1>Way.js - A Web-framework</h1>
-    <p>written by {name}</p>
+    <!-- <div>
 
-    <h2>
-      Signals x WebComponents <br>
-      = the Way
-    </h2>
+      <h1>Way.js - A Web-framework</h1>
+      <p>written by {name}</p>
 
-    <ul>
-      <li>
-        everything is done via html attributes, just write html! no jsx, no vdom
-      </li>
-      <li>
-        we can still write jsx the nice way
-        &lt;Counter /&gt; by using webcomponents, just for templating
-      </li>
-      <li>
-        fine-grained reactivity through signals, updating the dom when needed
-      </li>
-      <li>
-        the rest is just vanilla js, attach events to dom nodes
-      </li>
-    </ul>
+      <h2>
+        Signals x WebComponents <br>
+        = the Way
+      </h2>
 
-    <p>
-      I love alpine, its basically vue, but everything is via html attributes. So you can just write normal html. no
-      jsx, no build step
-    </p>
+      <ul>
+        <li>
+          everything is done via html attributes, just write html! no jsx, no vdom
+        </li>
+        <li>
+          we can still write jsx the nice way
+          &lt;Counter /&gt; by using webcomponents, just for templating
+        </li>
+        <li>
+          fine-grained reactivity through signals, updating the dom when needed
+        </li>
+        <li>
+          the rest is just vanilla js, attach events to dom nodes
+        </li>
+      </ul>
 
-    <p>
-      BUT <br />
-      it has no components, the assumption is you're server rendering everything, and just sprinkling in some reactivity
-      via attributes. <br>
-      but what if we want to write a little more frontend functionality, doesn't feel great building complex pages with
-      alpine.
-    </p>
+      <p>
+        I love alpine, its basically vue, but everything is via html attributes. So you can just write normal html. no
+        jsx, no build step
+      </p>
+
+      <p>
+        BUT <br />
+        it has no components, the assumption is you're server rendering everything, and just sprinkling in some
+        reactivity
+        via attributes. <br>
+        but what if we want to write a little more frontend functionality, doesn't feel great building complex pages
+        with
+        alpine.
+      </p>
+    </div> -->
 
 
     <!-- <h2>1. this is just alpine with signals</h2>
@@ -75,10 +80,12 @@
       </ul>
     </div> -->
 
-    <h2>2. reusable data</h2>
-    <p>but for larger apps we have loads of javascript that doesnt really fit into attributes, so we want js logic, so
-      just write them the same way as vue3 setup components. we can now write complex js, in separate file, or inline,
-      and reuse this data logic</p>
+    <!-- <div>
+      <h2>2. reusable data</h2>
+      <p>but for larger apps we have loads of javascript that doesnt really fit into attributes, so we want js logic, so
+        just write them the same way as vue3 setup components. we can now write complex js, in separate file, or inline,
+        and reuse this data logic</p>
+    </div> -->
 
     <pre>
       Way.comp('counter', () => {
@@ -90,9 +97,9 @@
       });
     </pre>
     <script>
-      Way.comp('counter', () => {
-        const count = Way.signal(0);
-        const double = Way.computed(() => count.value * 2);
+      way.comp('counter', () => {
+        const count = way.signal(0);
+        const double = way.computed(() => count.value * 2);
         const incr = () => count.value++;
         const decr = () => count.value--;
         return { count, double, incr, decr };
@@ -144,11 +151,11 @@
     <p>frameworks can natively bind to inputs, but input validation is such an important part in everyday framworking,
       i just baked it right in. simplify define x-form with zod schema, inspired by vee-validate.</p>
 
-    <form x-form="login">
-
+    <form x-form="login" x-comp="{name: ''}">
+      <p>Hi {name}</p>
       <label>
         Name:
-        <input name="name" aria-describedby="nameerror" />
+        <input x-model="name" name="name" aria-describedby="nameerror" />
       </label>
       <p id="nameerror"></p>
 

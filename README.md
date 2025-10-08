@@ -25,13 +25,11 @@ The important part for reusable components is passing **props**, which finally l
 
 ```
 <div id="app">
-    <div x-comp="{xstart: 123}">
-        <h1>Counter</h1>
-        <my-counter x-props="{xstart: count}" ></my-counter>
-    </div>
+    <h1>Counter</h1>
+    <x-counter x-props="{start: count}"></x-counter>
 </div>
 
-<template id="my-counter">
+<template id="x-counter">
     <p>the count is 
         <span x-text="x"></span>
     </p>
@@ -39,14 +37,14 @@ The important part for reusable components is passing **props**, which finally l
 </template>
 
 <script>
-Framework.component('my-counter', ({ props }) => {
-  const x = signal(props.xstart);
+Framework.component('x-counter', ({ props }) => {
+  const x = signal(props.start);
   const double = computed(() => count.value * 2);
 
   const incr = () => x.value++;
   
   effect(() => {
-    console.log('props changed: ', props.xstart);
+    console.log('props changed: ', props.start);
   });
 
   return { x, double, incr };
