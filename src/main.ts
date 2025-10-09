@@ -10,7 +10,7 @@ Way.form(
       v.string(),
       v.minLength(4, 'Password is too short'),
       v.maxLength(10, 'Password is too long'),
-      v.regex(/\d/, 'Password must include at least one digit')
+      v.regex(/\d/, 'Password must include at least one digit'),
     ),
   },
   (ev, values) => {

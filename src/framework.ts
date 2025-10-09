@@ -4,6 +4,7 @@ import { safeParse } from 'valibot';
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
 const stores: Record<string, any> = {};
+const registeredWebComponents: Set<string> = new Set();
 
 const directives: Record<string, (el: Element, expression: string, data: any) => void> = {
   'x-text': (el, expression, data) => {
@@ -214,7 +215,7 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 
 async function render(root: Element, initial?: any) {
   document.dispatchEvent(new CustomEvent('way:init'));
-  await waitForWebComponents(Object.keys(components));
+  await waitForWebComponents(registeredWebComponents);
 
   hydrate(root, initial);
 }
@@ -263,7 +264,8 @@ function hydrateData(element: Element, context: any): any {
     for (const componentName of componentNames) {
       if (components[componentName]) {
         const emit = createEmit(element);
-        const componentData = components[componentName]({ emit, el: element });
+        const props = parseProps(element, context);
+        const componentData = components[componentName]({ emit, el: element }, props);
         elementData = { ...elementData, ...componentData };
       } else {
         console.warn(`Component "${componentName}" not found in x-comp "${dataAttr}"`);
@@ -467,8 +469,13 @@ function comp<T = any>(
 ) {
   components[tag] = setup || ((_context: any, props: T) => props);
   const template = document.getElementById(tag) as HTMLTemplateElement;
-  if (tag.includes('-') && template) {
-    createWebComponent(tag, template);
+  if (tag.includes('-')) {
+    if (template) {
+      createWebComponent(tag, template);
+      registeredWebComponents.add(tag);
+    } else {
+      console.error(`Web component "${tag}" has a hyphen in its name but no matching template found. The component will not be registered.`);
+    }
   }
 }
 
@@ -747,8 +754,8 @@ function traverseDOM(
   traverseNode(root, initialContext);
 }
 
-async function waitForWebComponents(names: string[]): Promise<void> {
-  const potentialTags = names.filter((tag) => tag.includes('-'));
+async function waitForWebComponents(names: Set<string>): Promise<void> {
+  const potentialTags = Array.from(names).filter((tag) => tag.includes('-'));
   if (potentialTags.length > 0) {
     const definitionPromises = potentialTags.map((tag) => customElements.whenDefined(tag).catch(() => null));
     await Promise.all(definitionPromises);
