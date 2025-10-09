@@ -71,8 +71,7 @@ Framework.component('x-counter', ({ props }) => {
 - [x] useQuery  (@preact-signals/query)
 - [x] components get (el)=> ref
 - [x] forms - some easyinput validations
-- [ ] replace zod with valibot
-- [ ] forms - conditional logic to hide inputs / sections ? form , on update callback, (form,el)=> then just get by name/id
+- [x] replace zod with valibot
 - [ ] turbolinks
 - [ ] view transitions compatibility
 - [ ] intersection api
@@ -82,4 +81,4 @@ Framework.component('x-counter', ({ props }) => {
 
 ## bummers / open questions
 - [ ] i tried unwrapping all signals so dont have to use signal.value inside html attributes, but there was some issues
-
+- [ ] maybe forms should have more features and be separate package

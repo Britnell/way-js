@@ -1,11 +1,37 @@
 .for-list {
   list-style: none;
   display: flex;
+  flex-wrap: wrap;
   gap: 2px;
+  margin: 0;
+  padding: 0;
 }
 
 pre {
   background: #ccc;
   padding: 0.5rem;
   white-space: pre;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  & > * {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+  }
+}
+
+form .err {
+  color: rgb(172, 8, 8);
+  font-style: italic;
 }
