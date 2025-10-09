@@ -19,6 +19,6 @@
   },
   "dependencies": {
     "@preact/signals-core": "^1.12.1",
-    "zod": "^4.1.11"
+    "valibot": "^1.1.0"
   }
 }

@@ -1,4 +1,5 @@
 import { signal, effect, computed } from '@preact/signals-core';
+import { safeParse } from 'valibot';
 
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
@@ -529,7 +530,7 @@ function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSel
     return;
   }
 
-  const result = fields[inputName].safeParse(inputEl.value);
+  const result = safeParse(fields[inputName], inputEl.value);
   const errorId = inputEl.getAttribute('aria-describedby');
   let errorEl: HTMLElement | null = null;
 
@@ -540,7 +541,7 @@ function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSel
   if (result.success) {
     inputEl.setCustomValidity('');
   } else {
-    const firstError = result.error.issues[0]?.message || 'Invalid value';
+    const firstError = result.issues?.[0]?.message || 'Invalid value';
     inputEl.setCustomValidity(firstError);
   }
 

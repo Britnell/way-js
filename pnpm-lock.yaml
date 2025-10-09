@@ -11,9 +11,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
-      zod:
-        specifier: ^4.1.11
-        version: 4.1.11
+      valibot:
+        specifier: ^1.1.0
+        version: 1.1.0(typescript@5.8.3)
     devDependencies:
       '@rollup/plugin-terser':
         specifier: ^0.4.4
@@ -478,6 +478,14 @@ packages:
   undici-types@7.13.0:
     resolution: {integrity: sha512-Ov2Rr9Sx+fRgagJ5AX0qvItZG/JKKoBRAVITs1zk7IqZGTJUwgUr7qoYBpWwakpWilTZFM98rG/AFRocu10iIQ==}
 
+  valibot@1.1.0:
+    resolution: {integrity: sha512-Nk8lX30Qhu+9txPYTwM0cFlWLdPFsFr6LblzqIySfbZph9+BFsAHsNvHOymEviUepeIW6KFHzpX8TKhbptBXXw==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   vite@6.3.6:
     resolution: {integrity: sha512-0msEVHJEScQbhkbVTb/4iHZdJ6SXp/AvxL2sjwYQFfBqleHtnCqv1J3sa9zbWz/6kW1m9Tfzn92vW+kZ1WV6QA==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
@@ -517,9 +525,6 @@ packages:
         optional: true
       yaml:
         optional: true
-
-  zod@4.1.11:
-    resolution: {integrity: sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==}
 
 snapshots:
 
@@ -864,6 +869,10 @@ snapshots:
   undici-types@7.13.0:
     optional: true
 
+  valibot@1.1.0(typescript@5.8.3):
+    optionalDependencies:
+      typescript: 5.8.3
+
   vite@6.3.6(@types/node@24.6.0)(terser@5.44.0):
     dependencies:
       esbuild: 0.25.10
@@ -876,5 +885,3 @@ snapshots:
       '@types/node': 24.6.0
       fsevents: 2.3.3
       terser: 5.44.0
-
-  zod@4.1.11: {}
