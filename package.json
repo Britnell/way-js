@@ -9,10 +9,18 @@
     ".": {
       "types": "./src/framework.ts",
       "import": "./src/framework.ts"
+    },
+    "./dist": {
+      "import": "./framework.min.js"
+    },
+    "./loader": {
+      "import": "./public/framework-load.js"
     }
   },
   "files": [
-    "src/framework.ts"
+    "src/framework.ts",
+    "framework.min.js",
+    "public/framework-load.js"
   ],
   "scripts": {
     "dev": "vite",
