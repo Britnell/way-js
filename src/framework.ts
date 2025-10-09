@@ -329,7 +329,7 @@ function bindTextInterpolation(node: Text, context: any) {
     return;
   }
 
-  const parts = txt.split(/(\{[\s\S]*?\})/g);
+  const parts = txt.split(/(\{[^{}]*\})/g);
 
   effect(() => {
     node.textContent = parts
