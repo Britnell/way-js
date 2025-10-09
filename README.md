@@ -1,5 +1,161 @@
 # Framework
 
+A reactive web framework combining the best of Alpine.js, Web Components, and Signals.
+
+## Installation
+
+```bash
+npm install framework
+```
+
+## Quick Start
+
+```typescript
+import way from 'framework';
+
+// Define a component
+way.comp('x-counter', ({ props }) => {
+  const count = way.signal(props.start || 0);
+  
+  const increment = () => count.value++;
+  
+  return { count, increment };
+});
+
+// Render the app
+way.render(document.getElementById('app'));
+```
+
+```html
+<div id="app">
+  <x-counter x-props="{start: 5}"></x-counter>
+</div>
+
+<template id="x-counter">
+  <p>Count: <span x-text="count"></span></p>
+  <button @click="increment">+1</button>
+</template>
+```
+
+## Features
+
+- **Alpine.js-like directives** - Add interactivity directly in HTML
+- **Web Components** - Native reusable components with props
+- **Signals** - Fine-grained reactivity using @preact/signals-core
+- **Form validation** - Built-in form handling with Valibot schemas
+- **TypeScript support** - Full TypeScript support with distributed source files
+
+## Directives
+
+### Text Binding
+```html
+<span x-text="message"></span>
+```
+
+### Conditional Rendering
+```html
+<template x-if="showContent">
+  <div>Content here</div>
+</template>
+
+<template x-else-if="showAlternative">
+  <div>Alternative content</div>
+</template>
+
+<template x-else>
+  <div>Fallback content</div>
+</template>
+```
+
+### List Rendering
+```html
+<template x-for="item in items">
+  <div x-text="item.name"></div>
+</template>
+```
+
+### Two-way Binding
+```html
+<input x-model="username" type="text">
+```
+
+### Event Handling
+```html
+<button @click="handleClick">Click me</button>
+<button @click.outside="handleOutsideClick">Click outside</button>
+```
+
+### Property Binding
+```html
+<div :class="{ active: isActive }"></div>
+<div :style="{ color: 'red' }"></div>
+```
+
+## Forms
+
+```typescript
+import { object, string } from 'valibot';
+
+way.form('contact', {
+  name: string(),
+  email: string(),
+}, (event, data) => {
+  console.log('Form submitted:', data);
+});
+```
+
+```html
+<form x-form="contact">
+  <input name="name" type="text">
+  <input name="email" type="email">
+  <button type="submit">Submit</button>
+</form>
+```
+
+## Stores
+
+```typescript
+way.store('cart', () => {
+  const items = way.signal([]);
+  
+  const addItem = (item) => {
+    items.value = [...items.value, item];
+  };
+  
+  return { items, addItem };
+});
+```
+
+## API Reference
+
+### way.comp(tag, setup)
+Define a reusable component.
+
+### way.render(root, initial?)
+Render the framework on a DOM element.
+
+### way.form(name, fields, onSubmit?)
+Define a form validation schema.
+
+### way.store(name, setup)
+Create a global store.
+
+### way.signal(initial)
+Create a reactive signal.
+
+### way.effect(fn)
+Create an effect that runs when dependencies change.
+
+### way.computed(fn)
+Create a computed signal.
+
+## License
+
+MIT
+
+
+# Framework
+
 this is my first own web framework combining all the best of :
 - alpine
 - web components
