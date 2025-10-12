@@ -4,3 +4,9 @@ window.way.comp = function (tag, setup) {
     window.way.comp(tag, setup);
   });
 };
+
+window.way.form = function (name, setup) {
+  document.addEventListener('way:init', () => {
+    window.way.form(name, setup);
+  });
+};

@@ -356,6 +356,9 @@ function bindProperty(element: Element, propName: string, expression: string, co
     const value = evaluateExpression(expression, context);
 
     if (propName === 'class') {
+      if (!value) {
+        return;
+      }
       if (typeof value === 'string') {
         (element as HTMLElement).className = value;
       } else if (Array.isArray(value)) {
@@ -474,7 +477,9 @@ function comp<T = any>(
       createWebComponent(tag, template);
       registeredWebComponents.add(tag);
     } else {
-      console.error(`Web component "${tag}" has a hyphen in its name but no matching template found. The component will not be registered.`);
+      console.error(
+        `Web component "${tag}" has a hyphen in its name but no matching template found. The component will not be registered.`,
+      );
     }
   }
 }
