@@ -301,7 +301,7 @@ function hydrateWebComponent(element: Element, context: any): any {
   if (!element.tagName.includes('-')) return context;
 
   const componentName = element.tagName.toLowerCase();
-  if (!components[componentName] || element._data) return context;
+  if (!components[componentName]) return context;
 
   const props = parseProps(element, context);
   const emit = createEmit(element);
@@ -361,6 +361,7 @@ function bindTextInterpolation(node: Text, context: any) {
             const value = evaluateExpression(expression, context);
             return value === null || value === undefined ? part : String(value);
           } catch (e) {
+            console.error(`Template interpolation error for "${expression}":`, e);
             return part;
           }
         }
