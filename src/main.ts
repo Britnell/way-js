@@ -1,8 +1,8 @@
-import Way from './framework';
+import way from './framework';
 import './style.css';
 import * as v from 'valibot';
 
-Way.form(
+way.form(
   'login',
   {
     name: v.pipe(v.string(), v.minLength(1, 'Name is required')),
@@ -13,15 +13,20 @@ Way.form(
       v.regex(/\d/, 'Password must include at least one digit'),
     ),
   },
-  (ev, values) => {
-    ev.preventDefault();
-    console.log('submit', values);
+  () => {
+    const name = way.signal('foo');
+    const sub = (ev: CustomEvent) => {
+      ev.preventDefault();
+      console.log('Form submitted:', ev.detail);
+    };
+
+    return { name, sub };
   },
 );
 
-Way.store('theme', () => {
-  const color = Way.signal('red');
+way.store('theme', () => {
+  const color = way.signal('red');
   return { color };
 });
 
-Way.render(document.body, window.pageprops);
+way.render(document.body, window.pageprops);

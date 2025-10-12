@@ -102,14 +102,19 @@ function formDirective(el: Element, expression: string, _data: any) {
       return;
     }
 
-    if (formConfig.onSubmit) {
-      const formData = new FormData(formEl);
-      const formDataObj: Record<string, string> = {};
-      formData.forEach((value, key) => {
-        formDataObj[key] = value.toString();
-      });
-      formConfig.onSubmit(event, formDataObj);
-    }
+    event.preventDefault();
+
+    const formData = new FormData(formEl);
+    const formDataObj: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      formDataObj[key] = value.toString();
+    });
+    formEl.dispatchEvent(
+      new CustomEvent('onsubmit', {
+        detail: formDataObj,
+        bubbles: true,
+      }),
+    );
   });
 }
 
@@ -245,30 +250,44 @@ function hydrate(root: Element = document.body, initialContext = {}) {
 
 function hydrateData(element: Element, context: any): any {
   const dataAttr = element.getAttribute('x-comp');
-  if (!dataAttr) return context;
+  const formAttr = element.getAttribute('x-form');
 
   let elementData: any = {};
 
-  if (dataAttr.includes('{')) {
-    try {
-      const rawObject = evaluateExpression(dataAttr, {});
-      elementData = makeObjectReactive(rawObject);
-    } catch (e) {
-      console.error(`Failed to evaluate x-comp "${dataAttr}" as inline object`, e);
-      return context;
-    }
-  } else {
-    // Handle comma-separated component names or single component
-    const componentNames = dataAttr.split(',').map((name) => name.trim());
+  if (dataAttr) {
+    if (dataAttr.includes('{')) {
+      try {
+        const rawObject = evaluateExpression(dataAttr, {});
+        elementData = makeObjectReactive(rawObject);
+      } catch (e) {
+        console.error(`Failed to evaluate x-comp "${dataAttr}" as inline object`, e);
+        return context;
+      }
+    } else {
+      // Handle comma-separated component names or single component
+      const componentNames = dataAttr.split(',').map((name) => name.trim());
 
-    for (const componentName of componentNames) {
-      if (components[componentName]) {
-        const emit = createEmit(element);
-        const props = parseProps(element, context);
-        const componentData = components[componentName]({ emit, el: element }, props);
-        elementData = { ...elementData, ...componentData };
-      } else {
-        console.warn(`Component "${componentName}" not found in x-comp "${dataAttr}"`);
+      for (const componentName of componentNames) {
+        if (components[componentName]) {
+          const emit = createEmit(element);
+          const props = parseProps(element, context);
+          const componentData = components[componentName]({ emit, el: element }, props);
+          elementData = { ...elementData, ...componentData };
+        } else {
+          console.warn(`Component "${componentName}" not found in x-comp "${dataAttr}"`);
+        }
+      }
+    }
+  }
+
+  // Handle form setup functions
+  if (formAttr) {
+    const formConfig = validationSchemas[formAttr];
+    if (formConfig?.setup) {
+      const emit = createEmit(element);
+      const formData = formConfig.setup({ el: element, emit });
+      if (formData) {
+        elementData = { ...elementData, ...formData };
       }
     }
   }
@@ -459,10 +478,14 @@ function store(name: string, setup: () => any) {
   stores[name] = setup();
 }
 
-function form(name: string, fields: any, onSubmit?: (event: Event, values: Record<string, string>) => void) {
+function form(
+  name: string,
+  fields: any,
+  setup?: (context: { el: Element; emit: (eventName: string, arg?: any) => void }) => any,
+) {
   validationSchemas[name] = {
     fields,
-    onSubmit,
+    setup,
   };
 }
 
