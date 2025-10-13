@@ -722,8 +722,6 @@ function evaluateExpression(expression: string, data: any) {
   try {
     return new Function("data", `with(data) { return (${expression}) }`)(data);
   } catch (e) {
-    console.log(e);
-
     return null;
   }
 }

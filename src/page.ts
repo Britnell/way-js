@@ -1,5 +1,4 @@
 import way from "./framework";
-import "./style.css";
 import * as v from "valibot";
 
 way.form(

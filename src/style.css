@@ -1,3 +1,36 @@
+/* View Transitions */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.8s;
+}
+
+::view-transition-old(root) {
+  animation: fade-out 0.8s ease-out;
+}
+
+::view-transition-new(root) {
+  animation: fade-in 0.8s ease-out;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .for-list {
   list-style: none;
   display: flex;
