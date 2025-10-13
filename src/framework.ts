@@ -1,33 +1,41 @@
-import { signal, effect, computed } from '@preact/signals-core';
-import { safeParse } from 'valibot';
+import { signal, effect, computed } from "@preact/signals-core";
+import { safeParse } from "valibot";
 
 const components: Record<string, any> = {};
 const validationSchemas: Record<string, any> = {};
 const stores: Record<string, any> = {};
 const registeredWebComponents: Set<string> = new Set();
 
-const directives: Record<string, (el: Element, expression: string, data: any) => void> = {
-  'x-text': (el, expression, data) => {
+const directives: Record<
+  string,
+  (el: Element, expression: string, data: any) => void
+> = {
+  "x-text": (el, expression, data) => {
     effect(() => {
       el.textContent = evaluateExpression(expression, data);
     });
   },
-  'x-show': (el, expression, data) => {
+  "x-show": (el, expression, data) => {
     effect(() => {
       const shouldShow = evaluateExpression(expression, data);
-      (el as HTMLElement).style.display = shouldShow ? '' : 'none';
+      (el as HTMLElement).style.display = shouldShow ? "" : "none";
       // x-else
       const nextEl = el.nextElementSibling;
-      if (nextEl?.hasAttribute('x-else')) {
-        (nextEl as HTMLElement).style.display = shouldShow ? 'none' : '';
+      if (nextEl?.hasAttribute("x-else")) {
+        (nextEl as HTMLElement).style.display = shouldShow ? "none" : "";
       }
     });
   },
-  'x-model': (el, expression, data) => {
-    const inputEl = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  "x-model": (el, expression, data) => {
+    const inputEl = el as
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement;
     const field = objectGet(data, expression);
     if (!isSignal(field)) {
-      console.error(`[x-model] Expression "${expression}" does not resolve to a signal. x-model requires a signal.`);
+      console.error(
+        `[x-model] Expression "${expression}" does not resolve to a signal. x-model requires a signal.`
+      );
       return;
     }
 
@@ -40,17 +48,17 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       setInputValue(inputEl, field.value);
     });
 
-    inputEl.addEventListener('input', () => {
+    inputEl.addEventListener("input", () => {
       field.value = getInputValue(inputEl);
     });
   },
-  'x-form': formDirective,
-  'x-if': ifDirective,
-  'x-for': forLoopDirective,
-  'x-load': (el, _expression, _data) => {
-    (el as HTMLElement).style.display = 'block';
+  "x-form": formDirective,
+  "x-if": ifDirective,
+  "x-for": forLoopDirective,
+  "x-load": (el, _expression, _data) => {
+    (el as HTMLElement).style.display = "block";
   },
-  'x-temp': (el, expression, _data) => {
+  "x-temp": (el, expression, _data) => {
     const templateId = expression;
     const template = document.getElementById(templateId) as HTMLTemplateElement;
 
@@ -64,8 +72,10 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
       slotFragment.appendChild(el.firstChild);
     }
 
-    const templateContent = template.content.cloneNode(true) as DocumentFragment;
-    const slot = templateContent.querySelector('slot');
+    const templateContent = template.content.cloneNode(
+      true
+    ) as DocumentFragment;
+    const slot = templateContent.querySelector("slot");
 
     if (slot) {
       slot.replaceWith(slotFragment);
@@ -77,7 +87,7 @@ const directives: Record<string, (el: Element, expression: string, data: any) =>
 
 function formDirective(el: Element, expression: string, _data: any) {
   if (!(el instanceof HTMLFormElement)) {
-    console.error('x-form directive can only be used on form elements.');
+    console.error("x-form directive can only be used on form elements.");
     return;
   }
 
@@ -90,12 +100,15 @@ function formDirective(el: Element, expression: string, _data: any) {
     return;
   }
 
-  formEl.addEventListener('input', (event) => {
-    const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  formEl.addEventListener("input", (event) => {
+    const target = event.target as
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement;
     validateField(target, formConfig);
   });
 
-  formEl.addEventListener('submit', (event) => {
+  formEl.addEventListener("submit", (event) => {
     const isValid = validateForm(formEl, formConfig);
     if (!isValid) {
       event.preventDefault();
@@ -110,22 +123,22 @@ function formDirective(el: Element, expression: string, _data: any) {
       formDataObj[key] = value.toString();
     });
     formEl.dispatchEvent(
-      new CustomEvent('onsubmit', {
+      new CustomEvent("onsubmit", {
         detail: formDataObj,
         bubbles: true,
-      }),
+      })
     );
   });
 }
 
 function forLoopDirective(templateEl: Element, expression: string, data: any) {
   if (!(templateEl instanceof HTMLTemplateElement)) {
-    console.error('x-for directive must be used on a <template> element.');
+    console.error("x-for directive must be used on a <template> element.");
     return;
   }
 
-  const wrapper = document.createElement('div');
-  wrapper.style.display = 'contents';
+  const wrapper = document.createElement("div");
+  wrapper.style.display = "contents";
   templateEl.parentNode!.insertBefore(wrapper, templateEl);
 
   const [itemVar, indexVar, arrayExpr] = parseForExpression(expression);
@@ -134,12 +147,18 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
     const rawResult = evaluateExpression(arrayExpr, data);
     const unwrappedArray = isSignal(rawResult) ? rawResult.value : rawResult;
 
-    wrapper.innerHTML = '';
+    wrapper.innerHTML = "";
 
     if (Array.isArray(unwrappedArray)) {
       for (let index = 0; index < unwrappedArray.length; index++) {
         const item = unwrappedArray[index];
-        const itemScope = createItemContext(data, itemVar, indexVar, item, index);
+        const itemScope = createItemContext(
+          data,
+          itemVar,
+          indexVar,
+          item,
+          index
+        );
 
         const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
         for (const node of Array.from(fragment.childNodes)) {
@@ -157,22 +176,32 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
 
 function ifDirective(templateEl: Element, expression: string, data: any) {
   if (!(templateEl instanceof HTMLTemplateElement)) {
-    console.error('x-if directive must be used on a <template> element.');
+    console.error("x-if directive must be used on a <template> element.");
     return;
   }
 
-  const wrapper = document.createElement('div');
-  wrapper.style.display = 'contents';
+  const wrapper = document.createElement("div");
+  wrapper.style.display = "contents";
   templateEl.parentNode!.insertBefore(wrapper, templateEl);
 
-  const chain: { template: HTMLTemplateElement; expression: string | null }[] = [];
+  const chain: { template: HTMLTemplateElement; expression: string | null }[] =
+    [];
   chain.push({ template: templateEl as HTMLTemplateElement, expression });
 
   let nextEl = templateEl.nextElementSibling;
   while (nextEl) {
-    if (nextEl instanceof HTMLTemplateElement && nextEl.hasAttribute('x-else-if')) {
-      chain.push({ template: nextEl, expression: nextEl.getAttribute('x-else-if')! });
-    } else if (nextEl instanceof HTMLTemplateElement && nextEl.hasAttribute('x-else')) {
+    if (
+      nextEl instanceof HTMLTemplateElement &&
+      nextEl.hasAttribute("x-else-if")
+    ) {
+      chain.push({
+        template: nextEl,
+        expression: nextEl.getAttribute("x-else-if")!,
+      });
+    } else if (
+      nextEl instanceof HTMLTemplateElement &&
+      nextEl.hasAttribute("x-else")
+    ) {
       chain.push({ template: nextEl, expression: null });
       break;
     } else {
@@ -197,10 +226,12 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
       return;
     }
 
-    wrapper.innerHTML = '';
+    wrapper.innerHTML = "";
 
     if (activeTemplate) {
-      const fragment = activeTemplate.content.cloneNode(true) as DocumentFragment;
+      const fragment = activeTemplate.content.cloneNode(
+        true
+      ) as DocumentFragment;
       const children = Array.from(fragment.children);
 
       for (const child of children) {
@@ -219,14 +250,18 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 //  * Hydration
 
 async function render(root: Element, initial?: any) {
-  document.dispatchEvent(new CustomEvent('way:init'));
+  document.dispatchEvent(new CustomEvent("way:init"));
   await waitForWebComponents(registeredWebComponents);
 
   hydrate(root, initial);
 }
 
 function hydrate(root: Element = document.body, initialContext = {}) {
-  const contextWithStores = { ...stores, ...window.pageprops, ...initialContext };
+  const contextWithStores = {
+    ...stores,
+    ...window.pageprops,
+    ...initialContext,
+  };
   traverseDOM(root, contextWithStores, (node, ctx) => {
     let newContext = { ...ctx };
 
@@ -249,32 +284,40 @@ function hydrate(root: Element = document.body, initialContext = {}) {
 }
 
 function hydrateData(element: Element, context: any): any {
-  const dataAttr = element.getAttribute('x-comp');
-  const formAttr = element.getAttribute('x-form');
+  const dataAttr = element.getAttribute("x-comp");
+  const formAttr = element.getAttribute("x-form");
 
   let elementData: any = {};
 
   if (dataAttr) {
-    if (dataAttr.includes('{')) {
+    if (dataAttr.includes("{")) {
       try {
         const rawObject = evaluateExpression(dataAttr, {});
         elementData = makeObjectReactive(rawObject);
       } catch (e) {
-        console.error(`Failed to evaluate x-comp "${dataAttr}" as inline object`, e);
+        console.error(
+          `Failed to evaluate x-comp "${dataAttr}" as inline object`,
+          e
+        );
         return context;
       }
     } else {
       // Handle comma-separated component names or single component
-      const componentNames = dataAttr.split(',').map((name) => name.trim());
+      const componentNames = dataAttr.split(",").map((name) => name.trim());
 
       for (const componentName of componentNames) {
         if (components[componentName]) {
           const emit = createEmit(element);
           const props = parseProps(element, context);
-          const componentData = components[componentName]({ emit, el: element }, props);
+          const componentData = components[componentName](
+            { emit, el: element },
+            props
+          );
           elementData = { ...elementData, ...componentData };
         } else {
-          console.warn(`Component "${componentName}" not found in x-comp "${dataAttr}"`);
+          console.warn(
+            `Component "${componentName}" not found in x-comp "${dataAttr}"`
+          );
         }
       }
     }
@@ -298,7 +341,7 @@ function hydrateData(element: Element, context: any): any {
 }
 
 function hydrateWebComponent(element: Element, context: any): any {
-  if (!element.tagName.includes('-')) return context;
+  if (!element.tagName.includes("-")) return context;
 
   const componentName = element.tagName.toLowerCase();
   if (!components[componentName]) return context;
@@ -320,24 +363,24 @@ function hydrateBindings(node: Element | Text, context: any): void {
   Object.keys(directives).forEach((dir) => {
     if (node.hasAttribute(dir)) {
       const expression = node.getAttribute(dir);
-      if (expression || dir === 'x-load') {
-        directives[dir](node, expression || '', context);
+      if (expression || dir === "x-load") {
+        directives[dir](node, expression || "", context);
       }
     }
   });
 
   // @events, :properties
   const specialAttrs = Array.from(node.attributes).filter(
-    (attr) => attr.name.startsWith('@') || attr.name.startsWith(':'),
+    (attr) => attr.name.startsWith("@") || attr.name.startsWith(":")
   );
   specialAttrs.forEach((attr) => {
     const expression = attr.value;
     if (!expression) return;
 
-    if (attr.name.startsWith('@')) {
+    if (attr.name.startsWith("@")) {
       const eventName = attr.name.substring(1);
       bindEvent(node, eventName, expression, context);
-    } else if (attr.name.startsWith(':')) {
+    } else if (attr.name.startsWith(":")) {
       const propName = attr.name.substring(1);
       bindProperty(node, propName, expression, context);
     }
@@ -346,7 +389,7 @@ function hydrateBindings(node: Element | Text, context: any): void {
 
 function bindTextInterpolation(node: Text, context: any) {
   const txt = node.textContent;
-  if (!txt?.trim() || !txt.includes('{')) {
+  if (!txt?.trim() || !txt.includes("{")) {
     return;
   }
 
@@ -355,45 +398,53 @@ function bindTextInterpolation(node: Text, context: any) {
   effect(() => {
     node.textContent = parts
       .map((part) => {
-        if (part.startsWith('{') && part.endsWith('}')) {
+        if (part.startsWith("{") && part.endsWith("}")) {
           const expression = part.slice(1, -1);
           try {
             const value = evaluateExpression(expression, context);
             return value === null || value === undefined ? part : String(value);
           } catch (e) {
-            console.error(`Template interpolation error for "${expression}":`, e);
+            console.error(
+              `Template interpolation error for "${expression}":`,
+              e
+            );
             return part;
           }
         }
         return part;
       })
-      .join('');
+      .join("");
   });
 }
 
-function bindProperty(element: Element, propName: string, expression: string, context: any) {
+function bindProperty(
+  element: Element,
+  propName: string,
+  expression: string,
+  context: any
+) {
   effect(() => {
     const value = evaluateExpression(expression, context);
 
-    if (propName === 'class') {
+    if (propName === "class") {
       if (!value) {
         return;
       }
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         (element as HTMLElement).className = value;
       } else if (Array.isArray(value)) {
-        (element as HTMLElement).className = value.join(' ');
-      } else if (typeof value === 'object') {
+        (element as HTMLElement).className = value.join(" ");
+      } else if (typeof value === "object") {
         const classes = Object.entries(value)
           .filter(([_, active]) => active)
           .map(([className]) => className)
-          .join(' ');
+          .join(" ");
         (element as HTMLElement).className = classes;
       }
-    } else if (propName === 'style') {
-      if (typeof value === 'string') {
+    } else if (propName === "style") {
+      if (typeof value === "string") {
         (element as HTMLElement).style.cssText = value;
-      } else if (typeof value === 'object') {
+      } else if (typeof value === "object") {
         Object.entries(value).forEach(([key, val]) => {
           (element as HTMLElement).style.setProperty(key, String(val));
         });
@@ -408,7 +459,10 @@ function bindProperty(element: Element, propName: string, expression: string, co
   });
 }
 
-const eventModifiers: Record<string, (element: Element, event: Event) => boolean | void> = {
+const eventModifiers: Record<
+  string,
+  (element: Element, event: Event) => boolean | void
+> = {
   prevent: (_element, event) => {
     event.preventDefault();
   },
@@ -430,19 +484,29 @@ const eventModifiers: Record<string, (element: Element, event: Event) => boolean
   },
 };
 
-function parseEventModifiers(eventName: string): { event: string; modifiers: string[] } {
-  const parts = eventName.split('.');
+function parseEventModifiers(eventName: string): {
+  event: string;
+  modifiers: string[];
+} {
+  const parts = eventName.split(".");
   return {
     event: parts[0],
     modifiers: parts.slice(1),
   };
 }
 
-function bindEvent(element: Element, eventName: string, expression: string, context: any) {
+function bindEvent(
+  element: Element,
+  eventName: string,
+  expression: string,
+  context: any
+) {
   const { event: baseEvent, modifiers } = parseEventModifiers(eventName);
 
   // Find emit function from nearest web component parent
-  const findEmit = (el: Element): ((eventName: string, ...args: any[]) => void) | null => {
+  const findEmit = (
+    el: Element
+  ): ((eventName: string, ...args: any[]) => void) | null => {
     if (el?._data) {
       return createEmit(el);
     }
@@ -471,7 +535,7 @@ function bindEvent(element: Element, eventName: string, expression: string, cont
     evaluateExpression(expression, eventContext);
   };
 
-  const options = modifiers.includes('once') ? { once: true } : {};
+  const options = modifiers.includes("once") ? { once: true } : {};
   element.addEventListener(baseEvent, handler, options);
 }
 
@@ -482,7 +546,10 @@ function store(name: string, setup: () => any) {
 function form(
   name: string,
   fields: any,
-  setup?: (context: { el: Element; emit: (eventName: string, arg?: any) => void }) => any,
+  setup?: (context: {
+    el: Element;
+    emit: (eventName: string, arg?: any) => void;
+  }) => any
 ) {
   validationSchemas[name] = {
     fields,
@@ -492,28 +559,31 @@ function form(
 
 function comp<T = any>(
   tag: string,
-  setup?: (context: { el: Element; emit: (eventName: string, arg?: any) => void }, props?: T) => any,
+  setup?: (
+    context: { el: Element; emit: (eventName: string, arg?: any) => void },
+    props?: T
+  ) => any
 ) {
   components[tag] = setup || ((_context: any, props: T) => props);
   const template = document.getElementById(tag) as HTMLTemplateElement;
-  if (tag.includes('-')) {
+  if (tag.includes("-")) {
     if (template) {
       createWebComponent(tag, template);
       registeredWebComponents.add(tag);
     } else {
       console.error(
-        `Web component "${tag}" has a hyphen in its name but no matching template found. The component will not be registered.`,
+        `Web component "${tag}" has a hyphen in its name but no matching template found. The component will not be registered.`
       );
     }
   }
 }
 
 function isSignal(val: any): boolean {
-  return !!(val && typeof val === 'object' && typeof val.peek === 'function');
+  return !!(val && typeof val === "object" && typeof val.peek === "function");
 }
 
 function makeObjectReactive(obj: any): any {
-  if (typeof obj !== 'object' || obj === null || isSignal(obj)) {
+  if (typeof obj !== "object" || obj === null || isSignal(obj)) {
     return obj;
   }
 
@@ -524,9 +594,13 @@ function makeObjectReactive(obj: any): any {
 
     if (isSignal(value)) {
       reactive[key] = value;
-    } else if (typeof value === 'function') {
+    } else if (typeof value === "function") {
       reactive[key] = value.bind(reactive);
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    } else if (
+      typeof value === "object" &&
+      value !== null &&
+      !Array.isArray(value)
+    ) {
       reactive[key] = makeObjectReactive(value);
     } else {
       reactive[key] = signal(value);
@@ -537,17 +611,20 @@ function makeObjectReactive(obj: any): any {
 }
 
 function parseProps(el: Element, parentData: any) {
-  const propsAttr = el.getAttribute('x-props');
+  const propsAttr = el.getAttribute("x-props");
   if (!propsAttr) return {};
   try {
     return evaluateExpression(propsAttr, parentData);
   } catch (e) {
-    console.error('Error parsing props:', e);
+    console.error("Error parsing props:", e);
     return {};
   }
 }
 
-function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, formConfig: any): void {
+function validateField(
+  inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
+  formConfig: any
+): void {
   const inputName = inputEl.name;
   if (!inputName) return;
 
@@ -555,19 +632,19 @@ function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSel
   const { fields } = formConfig;
   if (!fields || !fields[inputName]) {
     // No validation schema for this field - clear any existing validation
-    inputEl.setCustomValidity('');
-    const errorId = inputEl.getAttribute('aria-describedby');
+    inputEl.setCustomValidity("");
+    const errorId = inputEl.getAttribute("aria-describedby");
     if (errorId) {
       const errorEl = document.getElementById(errorId);
       if (errorEl) {
-        errorEl.textContent = '';
+        errorEl.textContent = "";
       }
     }
     return;
   }
 
   const result = safeParse(fields[inputName], inputEl.value);
-  const errorId = inputEl.getAttribute('aria-describedby');
+  const errorId = inputEl.getAttribute("aria-describedby");
   let errorEl: HTMLElement | null = null;
 
   if (errorId) {
@@ -575,9 +652,9 @@ function validateField(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSel
   }
 
   if (result.success) {
-    inputEl.setCustomValidity('');
+    inputEl.setCustomValidity("");
   } else {
-    const firstError = result.issues?.[0]?.message || 'Invalid value';
+    const firstError = result.issues?.[0]?.message || "Invalid value";
     inputEl.setCustomValidity(firstError);
   }
 
@@ -595,8 +672,11 @@ function validateForm(formEl: HTMLFormElement, formConfig: any): boolean {
     formDataObj[key] = value.toString();
   });
 
-  formEl.querySelectorAll('input, textarea, select').forEach((input) => {
-    const inputEl = input as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  formEl.querySelectorAll("input, textarea, select").forEach((input) => {
+    const inputEl = input as
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement;
     validateField(inputEl, formConfig);
 
     if (!inputEl.checkValidity()) {
@@ -622,7 +702,7 @@ declare global {
   }
 }
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.way = way;
 }
 export default way;
@@ -630,7 +710,7 @@ export default way;
 //  *** helpers
 
 function objectGet(obj: any, path: string): any {
-  const keys = path.split('.');
+  const keys = path.split(".");
   let field = obj;
   for (const key of keys) {
     field = field[key];
@@ -640,20 +720,24 @@ function objectGet(obj: any, path: string): any {
 
 function evaluateExpression(expression: string, data: any) {
   try {
-    return new Function('data', `with(data) { return (${expression}) }`)(data);
-  } catch {
+    return new Function("data", `with(data) { return (${expression}) }`)(data);
+  } catch (e) {
+    console.log(e);
+
     return null;
   }
 }
 
-function getInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): any {
+function getInputValue(
+  inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+): any {
   if (inputEl instanceof HTMLInputElement) {
-    if (inputEl.type === 'checkbox') {
+    if (inputEl.type === "checkbox") {
       return inputEl.checked;
-    } else if (inputEl.type === 'radio') {
+    } else if (inputEl.type === "radio") {
       return inputEl.checked ? inputEl.value : null;
-    } else if (inputEl.type === 'number') {
-      return inputEl.value === '' ? null : Number(inputEl.value);
+    } else if (inputEl.type === "number") {
+      return inputEl.value === "" ? null : Number(inputEl.value);
     } else {
       return inputEl.value;
     }
@@ -662,17 +746,20 @@ function getInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSel
   }
 }
 
-function setInputValue(inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: any): void {
+function setInputValue(
+  inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
+  value: any
+): void {
   if (inputEl instanceof HTMLInputElement) {
-    if (inputEl.type === 'checkbox') {
+    if (inputEl.type === "checkbox") {
       inputEl.checked = Boolean(value);
       return;
-    } else if (inputEl.type === 'radio') {
+    } else if (inputEl.type === "radio") {
       inputEl.checked = inputEl.value === String(value);
       return;
     }
   }
-  inputEl.value = String(value ?? '');
+  inputEl.value = String(value ?? "");
 }
 
 class wayComponent extends HTMLElement {
@@ -691,7 +778,7 @@ class wayComponent extends HTMLElement {
     }
 
     const content = this.template.content.cloneNode(true) as DocumentFragment;
-    const slot = content.querySelector('slot');
+    const slot = content.querySelector("slot");
 
     if (slot) {
       slot.replaceWith(slotFragment);
@@ -720,7 +807,9 @@ function createWebComponent(tag: string, template: HTMLTemplateElement) {
   customElements.define(tag, WebComponent);
 }
 
-function parseForExpression(expression: string): [string, string | null, string] {
+function parseForExpression(
+  expression: string
+): [string, string | null, string] {
   const withIndex = expression.match(/^\((\w+),\s*(\w+)\)\s+in\s+(.+)$/);
   if (withIndex) {
     return [withIndex[1], withIndex[2], withIndex[3].trim()];
@@ -739,7 +828,7 @@ function createItemContext(
   itemVar: string,
   indexVar: string | null,
   itemValue: any,
-  index: number,
+  index: number
 ): any {
   const context: any = {
     ...baseContext,
@@ -758,12 +847,12 @@ function createItemContext(
 function traverseDOM(
   root: Element,
   initialContext: any = {},
-  callback: (node: Element | Text, context: any) => any,
+  callback: (node: Element | Text, context: any) => any
 ): void {
   function traverseNode(node: Element | Text, currentContext: any): void {
     if (node instanceof Element) {
-      const dontparse = ['SCRIPT', 'STYLE'].includes(node.tagName);
-      const componentTemplate = node.tagName === 'TEMPLATE' && node.id;
+      const dontparse = ["SCRIPT", "STYLE"].includes(node.tagName);
+      const componentTemplate = node.tagName === "TEMPLATE" && node.id;
       if (dontparse || componentTemplate) {
         return;
       }
@@ -784,9 +873,11 @@ function traverseDOM(
 }
 
 async function waitForWebComponents(names: Set<string>): Promise<void> {
-  const potentialTags = Array.from(names).filter((tag) => tag.includes('-'));
+  const potentialTags = Array.from(names).filter((tag) => tag.includes("-"));
   if (potentialTags.length > 0) {
-    const definitionPromises = potentialTags.map((tag) => customElements.whenDefined(tag).catch(() => null));
+    const definitionPromises = potentialTags.map((tag) =>
+      customElements.whenDefined(tag).catch(() => null)
+    );
     await Promise.all(definitionPromises);
   }
 }
@@ -797,7 +888,7 @@ function createEmit(component: Element) {
       new CustomEvent(eventName, {
         detail: arg,
         bubbles: true,
-      }),
+      })
     );
   };
 }

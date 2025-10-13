@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+    <script src="/framework-load.js"></script>
+    <script type="module" src="/src/page.ts"></script>
+  </head>
+
+  <body>
+    <script>
+      window.pageprops = { name: "Tommy" };
+    </script>
+
+    <header class="">
+      <h1>Page</h1>
+      <a href="/">home</a>
+    </header>
+
+    <div x-comp="todo">
+      <h2>todo app</h2>
+
+      <ul>
+        <template x-for="todo in list.value">
+          <li :key="todo.i">
+            <input type="checkbox" :checked="todo.done" />
+            <input :value="todo.name" @input="oninput($event,todo)" />
+            {todo.name}
+          </li>
+        </template>
+      </ul>
+    </div>
+    <script>
+      way.comp("todo", () => {
+        const list = way.signal([
+          {
+            i: 0,
+            name: way.signal("one"),
+            done: way.signal(true),
+          },
+        ]);
+
+        const oninput = (ev, item) => {
+          const val = ev.target.value;
+          console.log(item, val);
+          list.value = list.value.map((it) => {
+            if (it.i === item.i) return { ...it, name: val };
+            return it;
+          });
+        };
+
+        way.effect(() => {
+          console.log("/", list.value);
+        });
+        return {
+          list,
+          oninput,
+        };
+      });
+    </script>
+    <style>
+      [x-load] {
+        display: none;
+      }
+    </style>
+  </body>
+</html>
