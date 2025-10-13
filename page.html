@@ -24,39 +24,73 @@
 
       <ul>
         <template x-for="todo in list.value">
-          <li :key="todo.i">
-            <input type="checkbox" :checked="todo.done" />
-            <input :value="todo.name" @input="oninput($event,todo)" />
-            {todo.name}
+          <li :key="todo.id">
+            <input
+              type="checkbox"
+              :checked="todo.done"
+              @input="oncheck($event,todo)"
+            />
+            <input :value="todo.name" @change="oninput($event,todo)" />
+            <!-- {todo.name} -->
           </li>
         </template>
       </ul>
+      <button @click="create()">new</button>
     </div>
     <script>
       way.comp("todo", () => {
-        const list = way.signal([
-          {
-            i: 0,
-            name: way.signal("one"),
-            done: way.signal(true),
-          },
-        ]);
+        const key = "todo";
+
+        let initial = [];
+        try {
+          const str = localStorage.getItem(key);
+          if (!str) throw new Error("x");
+          const x = JSON.parse(str);
+          if (Array.isArray(x)) {
+            initial = x;
+          }
+        } catch {
+          initial = [
+            {
+              id: 0,
+              name: "one",
+              done: true,
+            },
+          ];
+        }
+
+        const list = way.signal(initial);
 
         const oninput = (ev, item) => {
           const val = ev.target.value;
-          console.log(item, val);
-          list.value = list.value.map((it) => {
-            if (it.i === item.i) return { ...it, name: val };
-            return it;
-          });
+          list.value = list.value.map((it) =>
+            it.id === item.id ? { ...it, name: val } : it
+          );
+        };
+
+        const oncheck = (ev, item) => {
+          const val = ev.target.checked;
+          list.value = list.value.map((it) =>
+            it.id === item.id ? { ...it, done: val } : it
+          );
         };
 
         way.effect(() => {
-          console.log("/", list.value);
+          if (list.value?.length) {
+            localStorage.setItem(key, JSON.stringify(list.value));
+          }
         });
+
+        const create = () => {
+          const ids = list.value.map((it) => it.id).sort((a, b) => b - a);
+          const lastid = (ids[0] ?? 0) + 1;
+          list.value = [...list.value, { id: lastid, name: "", done: false }];
+        };
         return {
           list,
           oninput,
+          oncheck,
+          create,
         };
       });
     </script>
