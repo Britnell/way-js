@@ -1,5 +1,6 @@
 import way from "./framework";
 import * as v from "valibot";
+import "./spa";
 
 way.form(
   "login",
