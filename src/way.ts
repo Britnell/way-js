@@ -309,10 +309,11 @@ function hydrateData(element: Element, context: any): any {
         if (components[componentName]) {
           const emit = createEmit(element);
           const props = parseProps(element, context);
-          const componentData = components[componentName](
-            { emit, el: element },
-            props
-          );
+          const componentData = components[componentName]({
+            props,
+            emit,
+            el: element,
+          });
           elementData = { ...elementData, ...componentData };
         } else {
           console.warn(
@@ -348,7 +349,7 @@ function hydrateWebComponent(element: Element, context: any): any {
 
   const props = parseProps(element, context);
   const emit = createEmit(element);
-  element._data = components[componentName]({ el: element, emit }, props);
+  element._data = components[componentName]({ props, el: element, emit });
 
   return { ...context, ...element._data };
 }
@@ -559,12 +560,13 @@ function form(
 
 function comp<T = any>(
   tag: string,
-  setup?: (
-    context: { el: Element; emit: (eventName: string, arg?: any) => void },
-    props?: T
-  ) => any
+  setup?: (context: {
+    props: T;
+    el: Element;
+    emit: (eventName: string, arg?: any) => void;
+  }) => any
 ) {
-  components[tag] = setup || ((_context: any, props: T) => props);
+  components[tag] = setup || (({ props }: { props: T }) => props);
   const template = document.getElementById(tag) as HTMLTemplateElement;
   if (tag.includes("-")) {
     if (template) {
@@ -610,7 +612,7 @@ function makeObjectReactive(obj: any): any {
   return reactive;
 }
 
-function parseProps(el: Element, parentData: any) {
+function parseProps(el: Element, parentData: object) {
   const propsAttr = el.getAttribute("x-props");
   if (!propsAttr) return {};
   try {

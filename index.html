@@ -89,7 +89,7 @@
       <p>The time is {time}</p>
     </template>
     <script>
-      way.comp("my-clock", ({}, props) => {
+      way.comp("my-clock", ({ props }) => {
         const time = way.signal(gettime());
 
         function gettime() {
@@ -116,7 +116,7 @@
     </template>
 
     <script>
-      way.comp("count-down", ({}, props) => {
+      way.comp("count-down", ({ props }) => {
         const start = props.start;
         const countdown = way.signal(start.value);
         let intvl;
