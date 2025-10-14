@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+    <script src="/way-loader.js"></script>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+
+  <body>
+    <script type="module" src="/src/main.ts"></script>
+    <script>
+      window.pageprops = { name: "Tommy" };
+    </script>
+
+    <header class="">
+      <h1>Test</h1>
+      <a href="/todo">todo</a>
+    </header>
+
+    <main id="app" x-load>
+      <div class="grid">
+        <script>
+          way.comp("counter", () => {
+            const count = way.signal(1);
+            const double = way.computed(() => count.value * 2);
+            way.effect(() => {
+              console.log(` the count is ${count.value}`);
+            });
+            const incr = () => count.value++;
+            const decr = () => count.value--;
+            return { count, double, incr, decr };
+          });
+        </script>
+
+        <div x-comp="counter">
+          <h3>counter</h3>
+          <p :style="{'--x': count}">count A : {count} x 2 = {double}</p>
+          <button @click="incr()">+</button>
+          <button @click="decr()">-</button>
+
+          <ul
+            class="for-list"
+            :style="{'font-size': `${Math.max(6,28-count.value*0.5)}px`}"
+          >
+            <template x-for="(x,i) in Array(count.value).fill(0)">
+              <li :key="i" :class="">{i+1}</li>
+            </template>
+          </ul>
+        </div>
+
+        <div x-comp="counter">
+          <h3>reuse for another counter</h3>
+          <p>Counter B : {count}</p>
+          <button @click="incr()">+1</button>
+        </div>
+
+        <my-clock x-props="{seconds:true}"></my-clock>
+
+        <div x-comp="counter">
+          <h3>Component props</h3>
+          <p>Counter C : {count}</p>
+          <button @click="incr()">+1</button>
+          <count-down x-props="{start: count}" />
+        </div>
+
+        <form x-form="login" @onsubmit="onsubmit($event)">
+          <h3>Forms</h3>
+          <p>Hi "{name}"</p>
+          <label>
+            Name:
+            <input x-model="name" name="name" aria-describedby="nameerror" />
+          </label>
+          <p class="err" id="nameerror"></p>
+
+          <label>
+            password:
+            <input name="password" aria-describedby="passworderror" />
+          </label>
+          <p class="err" id="passworderror"></p>
+          <button>Submit</button>
+        </form>
+      </div>
+    </main>
+
+    <template id="my-clock">
+      <p>The time is {time}</p>
+    </template>
+    <script>
+      way.comp("my-clock", ({ props }) => {
+        const time = way.signal(gettime());
+
+        function gettime() {
+          const d = new Date();
+          const h = d.getHours().toString();
+          const m = d.getMinutes().toString().padStart(2, "0");
+          const s = d.getSeconds().toString().padStart(2, "0");
+          let t = `${h}:${m}`;
+          if (props.seconds) t += `:${s}`;
+          return t;
+        }
+
+        setInterval(() => {
+          time.value = gettime();
+        }, 1000);
+        return {
+          time,
+        };
+      });
+    </script>
+
+    <template id="count-down">
+      <p>countdown! : {countdown}</p>
+    </template>
+
+    <script>
+      way.comp("count-down", ({ props }) => {
+        const start = props.start;
+        const countdown = way.signal(start.value);
+        let intvl;
+
+        const runcountdown = () => {
+          if (intvl) clearInterval(intvl);
+          countdown.value = start.value;
+          intvl = setInterval(() => {
+            if (countdown.value > 0) {
+              countdown.value -= 1;
+            } else {
+              clearInterval(intvl);
+            }
+          }, 500);
+        };
+
+        way.effect(() => {
+          runcountdown();
+        });
+
+        return { countdown };
+      });
+    </script>
+
+    <template id="card">
+      <div style="border: 1px solid #ccc; padding: 16px; margin: 16px 0">
+        <h3>Card</h3>
+        <slot></slot>
+      </div>
+    </template>
+    <!-- 
+  <div x-temp="card">
+    <p>This is the content that will be slotted into the card.</p>
+  </div> -->
+
+    <style>
+      [x-load] {
+        display: none;
+      }
+    </style>
+  </body>
+</html>
