@@ -1,4 +1,4 @@
-import { signal, effect, computed } from "@preact/signals-core";
+import { signal, effect, computed } from "./signal";
 import { safeParse } from "valibot";
 
 const components: Record<string, any> = {};
@@ -43,7 +43,6 @@ const directives: Record<
     setTimeout(() => {
       setInputValue(inputEl, field.value);
     }, 0);
-
     effect(() => {
       setInputValue(inputEl, field.value);
     });
@@ -581,7 +580,12 @@ function comp<T = any>(
 }
 
 function isSignal(val: any): boolean {
-  return !!(val && typeof val === "object" && typeof val.peek === "function");
+  return !!(
+    val &&
+    typeof val === "object" &&
+    typeof val.peek === "function" &&
+    "value" in val
+  );
 }
 
 function makeObjectReactive(obj: any): any {
@@ -717,12 +721,18 @@ function objectGet(obj: any, path: string): any {
   for (const key of keys) {
     field = field[key];
   }
-  return field;
+  // return field;
+  return isSignal(field) ? field.value : field;
 }
 
 function evaluateExpression(expression: string, data: any) {
   try {
-    return new Function("data", `with(data) { return (${expression}) }`)(data);
+    const result = new Function(
+      "data",
+      `with(data) { return (${expression}) }`
+    )(data);
+    // Auto-unwrap signals
+    return isSignal(result) ? result.value : result;
   } catch (e) {
     return null;
   }
