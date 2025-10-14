@@ -5,13 +5,13 @@ A reactive web framework combining the best of Alpine.js, Web Components, and Si
 ## Installation
 
 ```bash
-npm install framework
+npm install way
 ```
 
 ## Quick Start
 
 ```typescript
-import way from "framework";
+import way from "way";
 
 // Define a component
 way.comp("x-counter", ({ props }) => {
@@ -209,7 +209,7 @@ The important part for reusable components is passing **props**, which finally l
 </template>
 
 <script>
-Framework.component('x-counter', ({ props }) => {
+way.component('x-counter', ({ props }) => {
   const x = signal(props.start);
   const double = computed(() => count.value * 2);
 

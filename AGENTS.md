@@ -2,7 +2,7 @@
 
 ## npm scripts
 
-- `npm run bundle` - build framework.ts into framework.min.js
+- `npm run bundle` - build way.ts into way.min.js
 - Don't run `npm run dev` i already have a dev server running and am testing the app
 
 ## Code Style Guidelines

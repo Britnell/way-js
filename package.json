@@ -1,26 +1,26 @@
 {
-  "name": "framework",
+  "name": "way",
   "version": "0.1.0",
   "description": "A reactive web framework with Alpine.js-like directives",
   "type": "module",
-  "main": "./src/framework.ts",
-  "types": "./src/framework.ts",
+  "main": "./src/way.ts",
+  "types": "./src/way.ts",
   "exports": {
     ".": {
-      "types": "./src/framework.ts",
-      "import": "./src/framework.ts"
+      "types": "./src/way.ts",
+      "import": "./src/way.ts"
     },
     "./dist": {
-      "import": "./framework.min.js"
+      "import": "./way.min.js"
     },
     "./loader": {
-      "import": "./public/framework-load.js"
+      "import": "./public/way-loader.js"
     }
   },
   "files": [
-    "src/framework.ts",
-    "framework.min.js",
-    "public/framework-load.js"
+    "src/way.ts",
+    "way.min.js",
+    "public/way-loader.js"
   ],
   "scripts": {
     "dev": "vite",
@@ -29,7 +29,7 @@
     "bundle": "rollup -c"
   },
   "keywords": [
-    "framework",
+    "way",
     "reactive",
     "alpine",
     "signals",

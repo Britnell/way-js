@@ -1,13 +1,13 @@
-import { defineConfig } from 'rollup';
-import typescript from '@rollup/plugin-typescript';
-import terser from '@rollup/plugin-terser';
+import { defineConfig } from "rollup";
+import typescript from "@rollup/plugin-typescript";
+import terser from "@rollup/plugin-terser";
 
 export default defineConfig({
-  input: 'src/framework.ts',
+  input: "src/way.ts",
   output: {
-    file: 'framework.min.js',
-    format: 'iife',
-    name: 'Framework',
+    file: "way.min.js",
+    format: "iife",
+    name: "wayjs",
     sourcemap: false,
   },
   plugins: [typescript(), terser()],
