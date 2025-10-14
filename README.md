@@ -258,3 +258,18 @@ Framework.component('x-counter', ({ props }) => {
 - [ ] maybe forms should have more features and be separate package
 
 - view transitions https://developer.chrome.com/docs/web-platform/view-transitions
+
+# turbo links
+
+### rel=prefetch
+
+https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel/prefetch
+
+is used for same-site navigation resources, user is likely to need the target resource for future navigations
+
+<link rel="prefetch"> is functionally equivalent to a fetch() call with a priority: "low"
+
+### speculation rules
+
+https://developer.mozilla.org/en-US/docs/Web/API/Speculation_Rules_API
+https://developer.chrome.com/docs/web-platform/implementing-speculation-rules

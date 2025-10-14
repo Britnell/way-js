@@ -5,15 +5,15 @@
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.8s;
+  animation-duration: 0.3s;
 }
 
 ::view-transition-old(root) {
-  animation: fade-out 0.8s ease-out;
+  animation: fade-out 0.3s ease-out;
 }
 
 ::view-transition-new(root) {
-  animation: fade-in 0.8s ease-out;
+  animation: fade-in 0.3s ease-out;
 }
 
 @keyframes fade-out {
