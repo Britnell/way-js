@@ -20,9 +20,9 @@ function turbolinks() {
     return speculate();
   }
 
-  //   if (supportsPrefetch()) {
-  //     return prefetch();
-  //   }
+  if (supportsPrefetch()) {
+    return prefetch();
+  }
 
   cacheFetch();
 }
@@ -69,21 +69,29 @@ function prefetch() {
 function cacheFetch() {
   document.body.addEventListener("mouseover", (ev) => {
     const target = ev.target as Element;
-    const href = getHref(target);
+    const href = getSameOriginHref(target);
     if (!href) return;
     if (prefetched.has(href)) return;
     prefetched.add(href);
-    fetch(href, { priority: "low" });
+    fetch(href, { priority: "low" }).catch(() => null);
   });
 }
 
-const getHref = (el: Element) => {
-  if (el.tagName === "A") return el.getAttribute("href");
-  if (el.parentElement?.tagName === "A")
-    return el.parentElement.getAttribute("href");
-  if (el.parentElement?.parentElement?.tagName === "A")
-    return el.parentElement.parentElement.getAttribute("href");
-  return null;
+const getSameOriginHref = (el: Element) => {
+  let anchor;
+  if (el.tagName === "A") {
+    anchor = el as HTMLAnchorElement;
+  } else if (el.parentElement?.tagName === "A") {
+    anchor = el.parentElement as HTMLAnchorElement;
+  } else if (el.parentElement?.parentElement?.tagName === "A") {
+    anchor = el.parentElement.parentElement as HTMLAnchorElement;
+  }
+  const sameOrigin = anchor && anchor.origin === location.origin;
+  if (sameOrigin) {
+    return anchor?.href;
+  } else {
+    return;
+  }
 };
 
 function supportsPrefetch() {

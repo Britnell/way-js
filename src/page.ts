@@ -1,4 +1,4 @@
 import way from "./framework";
-import "./spa";
+import "./turbo";
 
 way.render(document.body, window.pageprops);

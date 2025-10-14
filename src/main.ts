@@ -1,6 +1,6 @@
 import way from "./framework";
 import * as v from "valibot";
-import "./spa";
+import "./turbo";
 
 way.form(
   "login",
@@ -19,7 +19,6 @@ way.form(
       ev.preventDefault();
       console.log("Form submitted:", ev.detail);
     };
-
     return { name, sub };
   }
 );
