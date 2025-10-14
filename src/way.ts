@@ -114,20 +114,20 @@ function formDirective(el: Element, expression: string, _data: any) {
       event.preventDefault();
       return;
     }
-
+    // use custom submit
+    const customSubmit = formEl.getAttribute("@onsubmit");
+    if (!customSubmit) return;
     event.preventDefault();
-
     const formData = new FormData(formEl);
     const formDataObj: Record<string, string> = {};
     formData.forEach((value, key) => {
       formDataObj[key] = value.toString();
     });
-    formEl.dispatchEvent(
-      new CustomEvent("onsubmit", {
-        detail: formDataObj,
-        bubbles: true,
-      })
-    );
+    const onsubmit = new CustomEvent("onsubmit", {
+      detail: formDataObj,
+      bubbles: true,
+    });
+    formEl.dispatchEvent(onsubmit);
   });
 }
 

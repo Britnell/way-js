@@ -15,11 +15,10 @@ way.form(
   },
   () => {
     const name = way.signal("foo");
-    const sub = (ev: CustomEvent) => {
-      ev.preventDefault();
-      console.log("Form submitted:", ev.detail);
+    const onsubmit = (ev: CustomEvent) => {
+      console.log("Form :", ev, ev.detail);
     };
-    return { name, sub };
+    return { name, onsubmit };
   }
 );
 
