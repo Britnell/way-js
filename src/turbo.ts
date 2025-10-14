@@ -30,8 +30,6 @@ function turbolinks() {
 const prefetched = new Set<string>();
 
 function speculate() {
-  console.log("specul!");
-
   const speclt = document.createElement("script");
   speclt.type = "speculationrules";
   speclt.textContent = JSON.stringify({
@@ -52,7 +50,6 @@ function speculate() {
 }
 
 function prefetch() {
-  console.log(" prefetch");
   document.body.addEventListener("mouseover", (ev) => {
     const target = ev.target as Element;
     const href = getHref(target);
@@ -69,7 +66,7 @@ function prefetch() {
 function cacheFetch() {
   document.body.addEventListener("mouseover", (ev) => {
     const target = ev.target as Element;
-    const href = getSameOriginHref(target);
+    const href = getHref(target);
     if (!href) return;
     if (prefetched.has(href)) return;
     prefetched.add(href);
@@ -77,7 +74,7 @@ function cacheFetch() {
   });
 }
 
-const getSameOriginHref = (el: Element) => {
+const getHref = (el: Element) => {
   let anchor;
   if (el.tagName === "A") {
     anchor = el as HTMLAnchorElement;
