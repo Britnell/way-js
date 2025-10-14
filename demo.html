@@ -9,16 +9,19 @@
     <link rel="stylesheet" href="/src/style.css" />
   </head>
 
-  <body>
-    <script type="module" src="/src/test.ts"></script>
+  <body class="content-grid">
+    <script type="module" src="/src/demo.ts"></script>
     <script>
       window.pageprops = { name: "Tommy" };
     </script>
 
-    <header class="">
-      <h1>Test</h1>
-      <a href="/todo">todo</a>
+    <header class="flex gap-4 py-2">
+      <a href="/">Way js</a>
+      <a href="/demo" class="underline ml-auto">demos</a>
+      <a href="/todo" class="underline">todo</a>
     </header>
+
+    <h1 class="text-3xl font-bold my-10">Tests / demos</h1>
 
     <main id="app" x-load>
       <div class="demo-grid">

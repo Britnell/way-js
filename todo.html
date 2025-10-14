@@ -9,22 +9,21 @@
     <link rel="stylesheet" href="/src/style.css" />
   </head>
 
-  <body>
+  <body class="content-grid">
     <script type="module" src="/src/todo.ts"></script>
     <script>
       window.pageprops = { name: "Tommy" };
     </script>
 
-    <header class="">
-      <h1>Page</h1>
-      <a href="/">
-        <span>(i)</span>
-        <span> home </span>
-      </a>
+    <header class="flex gap-4 py-2">
+      <a href="/">Way js</a>
+      <a href="/demo" class="underline ml-auto">demos</a>
+      <a href="/todo" class="underline">todo</a>
     </header>
 
+    <h1 class="text-3xl font-bold my-10">Example Todo app</h1>
     <div x-comp="todo">
-      <h2>todo app</h2>
+      <p>Because that's always the example</p>
 
       <ul>
         <template x-for="todo in list.value">

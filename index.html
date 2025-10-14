@@ -72,12 +72,12 @@
   <body>
     <div id="app" x-load>
       <header class="content-grid">
-        <div class="flex justify-between">
+        <div class="flex justify-between py-2">
           <span>Way js</span>
           <nav>
             <ul>
               <li>
-                <a href="/docs">Docs</a>
+                <a href="/demo">Demos</a>
               </li>
             </ul>
           </nav>
@@ -391,8 +391,6 @@
           </div>
         </div>
 
-        <!-- <x-clock x-props="{seconds:true}"></x-clock> -->
-
         <!-- 
     *******************************************************************************
      -->
@@ -428,32 +426,6 @@
         });
       </script>
     </div>
-
-    <template id="x-clock">
-      <p>The time is {time}</p>
-    </template>
-    <script>
-      way.comp("x-clock", ({ props }) => {
-        const time = way.signal(gettime());
-
-        function gettime() {
-          const d = new Date();
-          const h = d.getHours().toString();
-          const m = d.getMinutes().toString().padStart(2, "0");
-          const s = d.getSeconds().toString().padStart(2, "0");
-          let t = `${h}:${m} `;
-          if (props.seconds) t += `:${s}`;
-          return t;
-        }
-
-        setInterval(() => {
-          time.value = gettime();
-        }, 1000);
-        return {
-          time,
-        };
-      });
-    </script>
 
     <template id="syn-tax">
       <pre>
