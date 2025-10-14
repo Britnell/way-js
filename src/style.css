@@ -1,5 +1,145 @@
 @import "tailwindcss";
 
+@theme {
+  --font-monocode: "Nimbus Mono PS", "Courier New", monospace;
+  --font-sans: system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background: rgb(47, 41, 39);
+    color: white;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo,
+      Consolas, "DejaVu Sans Mono", monospace;
+  }
+
+  button {
+    @apply px-2 border border-white;
+  }
+  input {
+    @apply px-1;
+  }
+
+  p a {
+    @apply underline;
+  }
+}
+
+@layer components {
+  /*  */
+
+  .demo {
+    @apply p-3  w-[280px]  mx-auto bg-[#fff2];
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.c-diag {
+  --c-rad: 80px;
+  --c-dist: 50px;
+  --cop: 0.5;
+
+  padding-bottom: calc(var(--c-rad) * 1.5);
+  display: grid;
+  place-items: center;
+
+  animation: spin 16s linear infinite;
+
+  & .c-circ {
+    grid-column: 1;
+    grid-row: 1;
+    border-radius: 100%;
+
+    width: calc(var(--c-rad) * 2);
+    height: calc(var(--c-rad) * 2);
+    transform-origin: 50% 94%;
+
+    &.a {
+      transform: rotate(0deg);
+      background: rgba(230, 120, 220, var(--cop));
+    }
+    &.b {
+      transform: rotate(120deg);
+      background: rgba(200, 255, 60, var(--cop));
+    }
+    &.c {
+      transform: rotate(240deg);
+      background: rgba(50, 200, 255, var(--cop));
+    }
+  }
+}
+
+/* CSS Kevin content grid  */
+
+.content-grid {
+  --padding-inline: 1rem;
+  --content-max-width: 60ch;
+  --breakout-max-width: 1200px;
+
+  --breakout-size: calc(
+    (var(--breakout-max-width) - var(--content-max-width)) / 2
+  );
+
+  display: grid;
+  grid-template-columns:
+    [full-width-start] minmax(var(--padding-inline), 1fr)
+    [breakout-start] minmax(0, var(--breakout-size))
+    [content-start] min(
+      100% - (var(--padding-inline) * 2),
+      var(--content-max-width)
+    )
+    [content-end]
+    minmax(0, var(--breakout-size)) [breakout-end]
+    minmax(var(--padding-inline), 1fr) [full-width-end];
+}
+
+.content-grid > :not(.breakout, .fullwidth),
+.fullwidth > :not(.breakout, .fullwidth) {
+  grid-column: content;
+}
+
+.content-grid > .breakout {
+  grid-column: breakout;
+}
+
+.content-grid > .fullwidth {
+  grid-column: full-width;
+
+  display: grid;
+  grid-template-columns: inherit;
+}
+
+.for-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  & > * {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+  }
+}
+
+form .err {
+  color: rgb(172, 8, 8);
+  font-style: italic;
+}
+
+/* View Transitions */
+
 /* View Transitions */
 @view-transition {
   navigation: auto;
@@ -31,42 +171,4 @@
   to {
     opacity: 1;
   }
-}
-
-.for-list {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-}
-
-pre {
-  background: #ccc;
-  padding: 0.5rem;
-  white-space: pre;
-}
-
-h1,
-h2,
-h3,
-h4,
-p {
-  margin: 0;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-
-  & > * {
-    border: 1px solid #ccc;
-    padding: 0.5rem;
-  }
-}
-
-form .err {
-  color: rgb(172, 8, 8);
-  font-style: italic;
 }

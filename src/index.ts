@@ -14,11 +14,17 @@ way.form(
     ),
   },
   () => {
-    const name = way.signal("foo");
-    const onsubmit = (ev: CustomEvent) => {
-      console.log("Form :", ev, ev.detail);
+    const data = way.signal(null);
+    const name = way.signal("");
+
+    return {
+      name,
+      data,
+      onsubmit: (ev: CustomEvent) => {
+        console.log(ev.detail);
+        data.value = ev.detail;
+      },
     };
-    return { name, onsubmit };
   }
 );
 

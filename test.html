@@ -10,7 +10,7 @@
   </head>
 
   <body>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/test.ts"></script>
     <script>
       window.pageprops = { name: "Tommy" };
     </script>
@@ -21,7 +21,7 @@
     </header>
 
     <main id="app" x-load>
-      <div class="grid">
+      <div class="demo-grid">
         <script>
           way.comp("counter", () => {
             const count = way.signal(1);
@@ -73,13 +73,13 @@
             Name:
             <input x-model="name" name="name" aria-describedby="nameerror" />
           </label>
-          <p class="err" id="nameerror"></p>
+          <p class="text-red-900" id="nameerror"></p>
 
           <label>
             password:
             <input name="password" aria-describedby="passworderror" />
           </label>
-          <p class="err" id="passworderror"></p>
+          <p class="text-red-900" id="passworderror"></p>
           <button>Submit</button>
         </form>
       </div>
