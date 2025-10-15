@@ -1,5 +1,5 @@
 {
-  "name": "way",
+  "name": "wayy",
   "version": "0.1.0",
   "description": "A reactive web framework with Alpine.js-like directives",
   "type": "module",
@@ -35,7 +35,7 @@
     "signals",
     "typescript"
   ],
-  "author": "",
+  "author": "T.B.",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
