@@ -23,7 +23,7 @@ way.form(
 );
 
 way.store("theme", () => {
-  const color = way.signal("red");
+  const color = way.signal("#aac");
   return { color };
 });
 

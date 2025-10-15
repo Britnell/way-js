@@ -5,10 +5,13 @@
   --font-sans: system-ui, sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 @layer base {
   body {
     background: #212334;
-    /* background: rgb(47, 41, 39); */
     color: white;
     font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo,
       Consolas, "DejaVu Sans Mono", monospace;
@@ -18,7 +21,7 @@
     @apply px-2 border border-white;
   }
   input {
-    @apply px-1;
+    @apply px-1 border border-white;
   }
 
   p a {

@@ -1,6 +1,6 @@
-# Framework
+# Way.js
 
-A reactive web framework combining the best of Alpine.js, Web Components, and Signals.
+A reactive web framework combining the best of Signals, Web Components and HTML.
 
 ## Installation
 
@@ -15,26 +15,25 @@ import way from "way";
 
 // Define a component
 way.comp("x-counter", ({ props }) => {
-  const count = way.signal(props.start || 0);
+  const count = way.signal(props.start ?? 0);
 
   const increment = () => count.value++;
 
   return { count, increment };
 });
-
-// Render the app
-way.render(document.getElementById("app"));
 ```
 
 ```html
-<div id="app">
-  <x-counter x-props="{start: 5}"></x-counter>
-</div>
-
+<!-- define markup -->
 <template id="x-counter">
   <p>Count: <span x-text="count"></span></p>
   <button @click="increment">+1</button>
 </template>
+
+<!-- use as component -->
+<div id="app">
+  <x-counter x-props="{start: 5}"></x-counter>
+</div>
 ```
 
 ## Features

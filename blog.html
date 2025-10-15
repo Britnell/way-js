@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/pages/style.css" />
   </head>
 
-  <body class="content-grid">
+  <body class="content-grid lg:ml-[200px]">
     <!-- <script type="module" src="/pages/todo.ts"></script> -->
     <!-- <script>
       window.pageprops = { name: "Tommy" };
@@ -24,12 +24,46 @@
     </header>
 
     <h1 class="text-3xl font-bold my-10">Blog</h1>
-    <!-- <p>blabla</p> -->
+
+    <aside class="fixed left-0 w-[200px] px-2 py-4">
+      <h2 class="font-bold mb-4">Posts</h2>
+      <ul>
+        <li><a class="hover:underline" href="#01"># v0.1.0</a></li>
+        <li><a class="hover:underline" href="#jsx"># JSX was a mistake</a></li>
+        <li><a class="hover:underline" href="#why"># WHYYYY</a></li>
+      </ul>
+    </aside>
+    <article id="01">
+      <div class="x flex justify-between items-center mb-3 mt-6">
+        <h2>
+          <a href="#01" class="hover:underline">#</a>
+          v0.1.0
+        </h2>
+        <p class="x text-sm text-slate-400">15.10.25</p>
+      </div>
+      <p>
+        v0! - really this is the first botched together version, I'm curious
+        about feedback. It's kind of a combination of all the best things I like
+        about alpine, vue, solid etc. <br />
+        Seeing what is possible with using minimal libs and as much of browser
+        features as possible. Just trying things out, more concerned with how
+        the framework looks than the performance for now. Plenty optimisation to
+        be done of different directives.
+        <br />
+        Also trying to integrate forms into the framework but maybe that should
+        be a separate module for when its not needed. Same thing with extra
+        turbo lib for MPAs.
+        <br />
+        Still fiddling with how signals are used in markup, currently need to
+        use signal.value in dynamic directives etc, but looking to see if that
+        can be simplified.
+      </p>
+    </article>
 
     <article id="jsx">
       <div class="x flex justify-between items-center mb-3 mt-6">
         <h2>
-          <a href="#jsx hover:underline">#</a>
+          <a href="#jsx" class="hover:underline">#</a>
           JSX was a mistake
         </h2>
         <p class="x text-sm text-slate-400">15.10.25</p>
@@ -41,31 +75,39 @@
         <br />
         And building this im really not sure why we NEEDED jsx in the first
         place. A new language, that needs to be compiled in an extra step,
-        meaning our framework doesnt actually work vanilla in the browser, and
-        then instead of sending a &lt;div class="big"> to the server were now
-        sending document.createElement('div').class='big' etc.
+        meaning our frameworks don't work vanilla in the browser, and then
+        instead of sending a &lt;div class="big"> to the server were now sending
+        document.createElement('div').class='big' etc. Meaning we're sending
+        loads of extra js, which should be just our code, to transfer what
+        should be html.
       </p>
       <p>
-        And then came next js, which would PRE-RENDER your jsx into static html,
+        And then came next.js, which would PRE-RENDER your jsx into static html,
         which can look pretty while all the js loads, but its just a big loading
         screen to be replaced by the render output, which means we are sending
-        everything TWICE. the &lt;div> AND the jsx document.createElement()...
+        everything TWICE. the &lt;div> AND the jsx document.createElement ...
         All the while leading to the most pointless error of all, the HYDRATION
-        ERROR, forcing you to move logic into useEffect()...
+        ERROR, forcing you to move logic into useEffect() yada yada...
       </p>
       <p>
         But then look at vue, it looks more like html than jsx magic, &lt;div
         v-if="show" :class="{'big': big}">, and using &lt;template> elements.
+        But jsx seems like pure overhead to me, why can't our framework tie in
+        directly with actual html? Work with the dom, and the actual elements.
+        And this also means we can use all other vanilla js libraries and web
+        components.
+        <br />
+        'Way' is
 
         <span class="block my-4 text-center font-bold text-xl">
-          This is essentially just vue without the jsx
+          essentially just vue without the jsx
         </span>
 
-        But loose the jsx, and we can still have nice things! We have the
-        ability for components in html with web-components, and sure they don't
-        have reactivity, but we have signals now. It's all already there.
-        building this though I'm surprised how easy and quick this was, just had
-        to put the pieces together in the right way.
+        (Or alpine with components). But loose the jsx, and we can still have
+        nice things! We have the ability for components in html with
+        web-components, and sure they don't have reactivity, but we have signals
+        now. It's all already there. I'm surprised how easy and quick this was,
+        just had to put all these existing pieces together in the right way.
       </p>
     </article>
 
@@ -79,8 +121,10 @@
       </div>
 
       <p>
-        Our js frameworks are so bloated, we need to get back closer to html,
-        web standards and browser api - as such, I LOVE ALPINE.
+        WHYYY another framework you ask? Well I almost argue if this even counts
+        a js framework. Well anyway, our js frameworks are so bloated, we need
+        to get back closer to html, web standards and browser api - as such, I
+        LOVE ALPINE.
       </p>
 
       <h3>Alpine.js</h3>

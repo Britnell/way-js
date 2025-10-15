@@ -24,22 +24,10 @@
     </header>
 
     <h1 class="text-3xl font-bold my-10">Tests / demos</h1>
+    <p>To look at the source, just inspect the page!</p>
 
     <main id="app" x-load>
       <div class="demo-grid">
-        <script>
-          way.comp("counter", () => {
-            const count = way.signal(1);
-            const double = way.computed(() => count.value * 2);
-            way.effect(() => {
-              console.log(` the count is ${count.value}`);
-            });
-            const incr = () => count.value++;
-            const decr = () => count.value--;
-            return { count, double, incr, decr };
-          });
-        </script>
-
         <div x-comp="counter">
           <h3>counter</h3>
           <p :style="{'--x': count}">count A : {count} x 2 = {double}</p>
@@ -90,13 +78,28 @@
 
         <div>
           <h2>Themes</h2>
+          <input type="color" x-model="theme.color" />
+          col: {theme.color.value}
           <!-- <input  TODO -->
         </div>
       </div>
     </main>
 
+    <script>
+      way.comp("counter", () => {
+        const count = way.signal(1);
+        const double = way.computed(() => count.value * 2);
+        way.effect(() => {
+          console.log(` the count is ${count.value}`);
+        });
+        const incr = () => count.value++;
+        const decr = () => count.value--;
+        return { count, double, incr, decr };
+      });
+    </script>
+
     <template id="my-clock">
-      <p>The time is {time}</p>
+      <p :style="{color: theme.color.value}">The time is {time}</p>
     </template>
     <script>
       way.comp("my-clock", ({ props }) => {

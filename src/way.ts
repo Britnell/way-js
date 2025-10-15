@@ -721,8 +721,7 @@ function objectGet(obj: any, path: string): any {
   for (const key of keys) {
     field = field[key];
   }
-  // return field;
-  return isSignal(field) ? field.value : field;
+  return field;
 }
 
 function evaluateExpression(expression: string, data: any) {

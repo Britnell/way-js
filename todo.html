@@ -27,7 +27,7 @@
     <div x-comp="todo">
       <p>Because that's always the example</p>
 
-      <ul>
+      <ul class="flex flex-col gap-2 mb-4">
         <template x-for="todo in list.value">
           <li :key="todo.id">
             <input
