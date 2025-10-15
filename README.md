@@ -2,9 +2,9 @@
 
 A reactive web framework combining the best of HTML, Signals, and Web Components.
 
-[Website](https://britnell.github.io/way-js/)
-
-[npm](https://www.npmjs.com/package/wayy)
+- [Website](https://britnell.github.io/way-js/)
+- [git](https://github.com/Britnell/way-js)
+- [npm](https://www.npmjs.com/package/wayy)
 
 ## usage
 
