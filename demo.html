@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + TS</title>
-    <script src="/way-loader.js"></script>
+    <script src="/way-inline.js"></script>
     <link rel="stylesheet" href="/pages/style.css" />
   </head>
 
@@ -54,9 +54,17 @@
 
         <div x-comp="counter">
           <h3>Component props</h3>
+          <p>
+            pass in other signals into components via props. also you can use
+            components as web-components with templating or also jsut use their
+            state with x-comp
+          </p>
           <p>Counter C : {count}</p>
           <button @click="incr()">+1</button>
-          <count-down x-props="{start: count}" />
+          <count-down x-props="{start: count}"></count-down>
+          <div x-comp="count-down" x-props="{start: count}">
+            <p>data only countdown = {countdown}</p>
+          </div>
         </div>
 
         <form x-form="login" @onsubmit="onsubmit($event)">
@@ -80,6 +88,7 @@
           <h2>Themes</h2>
           <label for="col">change theme col</label>
           <input id="col" type="color" x-model="theme.color" />
+          <p>{theme.color}</p>
         </div>
       </div>
     </main>

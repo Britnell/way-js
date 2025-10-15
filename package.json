@@ -13,14 +13,14 @@
     "./dist": {
       "import": "./way.min.js"
     },
-    "./loader": {
-      "import": "./public/way-loader.js"
+    "./inline": {
+      "import": "./public/way-inline.js"
     }
   },
   "files": [
     "pages/way.ts",
     "way.min.js",
-    "public/way-loader.js"
+    "public/way-inline.js"
   ],
   "scripts": {
     "dev": "vite",

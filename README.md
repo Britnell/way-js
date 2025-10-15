@@ -2,75 +2,90 @@
 
 A reactive web framework combining the best of HTML, Signals, and Web Components.
 
-## Installation
+[Website](https://britnell.github.io/way-js/)
 
-```bash
-npm install way
-```
+[npm](https://www.npmjs.com/package/wayy)
 
-## Quick Start
+## usage
 
-```typescript
-import way from "way";
-
-// Define a component
-way.comp("x-counter", ({ props }) => {
-  const count = way.signal(props.start ?? 0);
-
-  const increment = () => count.value++;
-
-  return { count, increment };
-});
-```
+### Basic
 
 ```html
-<!-- define markup -->
-<template id="x-counter">
-  <p>Count: <span x-text="count"></span></p>
-  <button @click="increment">+1</button>
-</template>
+<head>
+  ...
+  <script src="/way-inline.js"></script>
+  <script type="module" src="/main.ts"></script>
+</head>
+<body>
+  <div id="app">
+    <h1>Counter</h1>
+    <x-counter x-props="{start:3}"></x-counter>
+  </div>
+  <template id="x-counter">
+    <p>The count is {x}</p>
+    <p>{x} x 2 = {double}</p>
+    <button @click="add()">+1</button>
+  </template>
+  <script>
+    way.comp("x-counter", ({ props }) => {
+      const x = way.signal(props.start ?? 0);
+      const double = way.computed(() => x.value * 2);
+      return {
+        x,
+        double,
+        add: () => (x.value += 1),
+      };
+    });
+  </script>
+</body>
 
-<!-- use as component -->
-<div id="app">
-  <x-counter x-props="{start: 5}"></x-counter>
-</div>
+<!-- main.ts -->
+<script>
+  import way from "wayy";
+
+  way.comp('other',()=>{...})
+
+  way.render(document.body);
+</script>
 ```
 
-## Features
+- write components in ts module or in inline scripts
+- in order to use way.comp in inline < script tags, also load 'way-inline.js'
+- define logic with way.comp() and setup function
+- use on html element with x-comp. everything returned but the comp setup function will be available to use in dynamic attributes
 
-- **HTML first** - Write vanilla HTML again, no JSX, no virtual DOM
-- **Alpine.js-like directives** - Add interactivity directly in HTML attributes
-- **Web Components** - Native reusable components with props
-- **Signals** - Fine-grained reactivity for efficient DOM updates
-- **Form validation** - Built-in form handling with Valibot schemas
-- **TypeScript support** - Full TypeScript support with distributed source files
-- **View Transitions** - Build smooth MPAs that feel like SPAs
+read more on [dynamic attributes & directives here](#directives).
 
-## Philosophy
+## components
 
-### Look Mum, no JSX!
+define components with the setup function `way.comp('my-name',(props)=>{...})`
+The name will be used for the web-component, so it needs to have a hyphen in it.
+Define the markup for the component on a template with that id :
+`<template id="my-name">`
 
-I think these 3 technologies go so well together - as minimal as possible with all the power of a full framework.
+then use anywhere in your html as `<my-name x-props="{}"></my-name>`
 
-**HTML first** - Just write HTML again, no JSX, no virtual DOM. What you see is what you get. The framework just attaches itself to the DOM via custom HTML attributes. Write vanilla HTML & JS again, and work directly with the actual DOM.
+You can pass in static values and other signals as props, if the component needs to react to other components.
 
-**Web Components** - But we still want components, they are such a powerful way to compose your page or app. Write function components, and use them by their name like you would in JSX. Web components already let us do that. Pass in props etc. just like in any JS framework.
+### logic only
 
-**Signals** - But web components alone don't have any reactivity. With signals we get fine-grained reactivity, and can update just the relevant DOM nodes and their attributes.
+but components are flexible. if you dont want a full component you can also just apply it to any html element with x-comp (very much like alpine x-data).
 
-**DOM** - All state is automatically available to all child nodes, just like CSS variables, while custom events bubble up the DOM tree. Forget about prop drilling and passing callbacks around, use the DOM!
+```html
+<div x-comp="x-counter" x-props="{start: 100}">
+  X =  {x}
+  <button @click="add()">add</button>
+</x-counter>
+```
 
-### Why Another Framework?
+## Attributes and Directives
 
-**JSX was a mistake.** Why are we inventing a new language that needs an extra compile step, just to emulate HTML so your app code can attach to it? Vue already does so much in attributes like `v-if` to `:class`, the question really is, why can't we use HTML?
+So we have our signals in state, how do we use them? so this is mostly like vue and alpine.
 
-Alpine was genius to take this same system, bundle it in a super light framework and let us use those directives straight in HTML. But it doesn't scale nicely to building larger, more complex apps - I wanted templating & reusable components.
-
-Web components are the perfect fit - already built-in and HTML native. Write `<my-counter />` just like you're used to with other frameworks. It feels like JSX, but it isn't.
-
-So I thought of signals - their fine-grained reactivity is perfect for updating specific elements & their attributes. I started building my own version of Alpine with signals.
-
-## Directives
+show values with
+`x = <span x-text="x"></span>`
+or just text interpolation
+`x = {x}`
 
 ### Text Binding
 
@@ -78,23 +93,41 @@ So I thought of signals - their fine-grained reactivity is perfect for updating 
 <span x-text="message"></span>
 ```
 
-### Conditional Rendering
+### Attributes
+
+just like in vue, set any attribute dynamically with :attr="expression"
+`<div :class="x.value%2===0 ? 'odd' : 'even' " :style="{'font-size': x.value + 'px' }" >`
+
+### `x-show` and `x-if`
+
+#### x-show
+
+will automatically hide an element for you with `display: none / block;`
+it's more handy for day-to-day stuffs were hiding and showing
+
+#### x-if
+
+must be used with template tags, and only adds the elements to the dom when condition is true.
+use this for elements you dont want to render or even logic that might break when an element not defined or so
 
 ```html
-<template x-if="showContent">
-  <div>Content here</div>
-</template>
+<p x-show="list.value.length===0">List is empty!</p>
+<p x-else>{list.value.length} results</p>
 
-<template x-else-if="showAlternative">
-  <div>Alternative content</div>
+<template x-if="x.value % 2===0">
+  <p>Even</p>
 </template>
-
+<template x-else-if="x.value < 0">
+  <p>negative</p>
+</template>
 <template x-else>
-  <div>Fallback content</div>
+  <p>a number</p>
 </template>
 ```
 
-### List Rendering
+### x-for
+
+jsut like vue / alpine `x-for`
 
 ```html
 <template x-for="item in items">
@@ -102,7 +135,9 @@ So I thought of signals - their fine-grained reactivity is perfect for updating 
 </template>
 ```
 
-### Two-way Binding
+### Bind a signal to an input
+
+Binds the input.value to the signal. This handles different input types like checkbox where it el.checked not el.value
 
 ```html
 <input x-model="username" type="text" />
@@ -110,88 +145,30 @@ So I thought of signals - their fine-grained reactivity is perfect for updating 
 
 ### Event Handling
 
+listen for dom events or custom events, just like in vue.
+
 ```html
 <button @click="handleClick">Click me</button>
 <button @click.outside="handleOutsideClick">Click outside</button>
 ```
 
-### Property Binding
+Component setup functions receive an emit helper to emit custom events with event.detail
 
-```html
-<div :class="{ active: isActive }"></div>
-<div :style="{ color: 'red' }"></div>
-```
-
-## Components
-
-### Basic Component
-
-```html
-<div id="app">
-  <h1>Counter</h1>
-  <x-counter x-props="{start: count}"></x-counter>
-</div>
-
-<template id="x-counter">
-  <p>the count is: <span x-text="count"></span></p>
-  <button @click="incr">+1</button>
-</template>
-
-<script>
-way.comp('x-counter', ({ props }) => {
-  const count = way.signal(props.start);
-  const double = way.computed(() => count.value * 2);
-
-  const incr = () => count.value++;
-
-  way.effect(() => {
-    console.log('props changed: ', props.start);
-  });
-
-  return { count, double, incr };
+```typescript
+way.comp("submitbutton", ({ emit }) => {
+  return {
+    onclick: () => {
+      emit("submitted", { values: [] });
+    },
+  };
 });
-</script>
-```
-
-### Props Example
-
-```html
-<div x-comp="x-counter">
-  <p>
-    Counter: {count}
-    <button @click="count.value++" class="border ml-6">+1</button>
-  </p>
-
-  <count-down x-props="{start: count}"></count-down>
-</div>
-
-<template id="count-down">
-  <p>Countdown: {countdown}</p>
-</template>
-
-<script>
-way.comp("count-down", ({ props }) => {
-  const countdown = way.signal(props.start?.value);
-  let interval;
-
-  way.effect(() => {
-    countdown.value = props.start?.value;
-    const runcountdown = () => {
-      if (countdown.value > 0) countdown.value -= 1;
-      else clearInterval(interval);
-    };
-
-    if (interval) clearInterval(interval);
-    interval = setInterval(runcountdown, 300);
-  });
-  return { countdown };
-});
-</script>
 ```
 
 ## Forms
 
-Input and form validation is one of the main reasons that client-side interactivity is needed. This is built right into the framework. The error is automatically shown in the related aria-describedby element if there is one.
+Input and form validation is one of the main reasons that client-side interactivity is needed. This is built right into the framework. Validate form values with `valibot` schema, this was chosen because other packages like zod are HUGE! The error is automatically shown in the related aria-describedby element if there is one.
+
+it will submit the default form submit event, or if you add an @onsubmit event listener, then **the default submit event will be prevented** and 'onsubmit' custom event is emitted with values neatly in object.
 
 ```typescript
 import * as v from "valibot";
@@ -246,30 +223,32 @@ way.form(
   </label>
   <p id="passworderror" class="text-red-400"></p>
   <button>Submit</button>
-  <p x-show="data.value">
-    Hi {data.value.name} <br />
-    secret: "{data.value.password}"
-  </p>
 </form>
 ```
 
 ## Stores
 
+Stores are really identical to a comp with logic, `way.comp('data')`, but they are applied to the app root, so the entire app has access to them, and also they dont need to (and shouldn't) be applied to any dom node.
+
 ```typescript
-way.store("cart", () => {
-  const items = way.signal([]);
+way.store("user", () => {
+  const id = way.signal("abc");
 
-  const addItem = (item) => {
-    items.value = [...items.value, item];
-  };
-
-  return { items, addItem };
+  return { id, version: 0.123 };
 });
 ```
 
-## View Transitions
+currently need to use theme variables via
+`<p>userid : {user.id}</p>
 
-With ViewTransitions coming to Firefox your MPA feels like an SPA. Make your routes even faster with new speculation rules and a polyfill - our extra library.
+## MPA
+
+built to be compatible with browser native ViewTransitions.
+also working on an extra turbo.ts script to make MPAs faster with prefetching links on hover
+
+- using new 'speculationRules'
+- as backup `<link rel='prefetch' `
+- and for safari which doesnt support neither of those with manual prefetching with `fetch()`
 
 ## API Reference
 
@@ -277,34 +256,22 @@ With ViewTransitions coming to Firefox your MPA feels like an SPA. Make your rou
 
 Define a reusable component.
 
+### way.store(name, setup)
+
+Create a global store.
+
 ### way.render(root, initial?)
 
-Render the framework on a DOM element.
+Hydrate the DOM and render the app
 
 ### way.form(name, fields, onSubmit?)
 
 Define a form validation schema.
 
-### way.store(name, setup)
+### Signals
 
-Create a global store.
+the usual :
 
-### way.signal(initial)
-
-Create a reactive signal.
-
-### way.effect(fn)
-
-Create an effect that runs when dependencies change.
-
-### way.computed(fn)
-
-Create a computed signal.
-
-## Web Platform & HTML First
-
-Frameworks should be compatible with HTML, vanilla JS & web-components, so we can stop vendor lock-in. You shouldn't be stuck with a framework because of a component library. All libraries should be compatible with your stack, why are we rebuilding the same features in each framework?
-
-## License
-
-MIT
+- way.signal
+- way.computed
+- way.effect
