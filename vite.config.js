@@ -11,6 +11,7 @@ export default defineConfig({
         main: "index.html",
         demo: "demo.html",
         todo: "todo.html",
+        blog: "blog.html",
       },
     },
   },
