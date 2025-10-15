@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "description": "A reactive web framework with Alpine.js-like directives",
   "type": "module",
-  "main": "./src/way.ts",
-  "types": "./src/way.ts",
+  "main": "./pages/way.ts",
+  "types": "./pages/way.ts",
   "exports": {
     ".": {
-      "types": "./src/way.ts",
-      "import": "./src/way.ts"
+      "types": "./pages/way.ts",
+      "import": "./pages/way.ts"
     },
     "./dist": {
       "import": "./way.min.js"
@@ -18,7 +18,7 @@
     }
   },
   "files": [
-    "src/way.ts",
+    "pages/way.ts",
     "way.min.js",
     "public/way-loader.js"
   ],
