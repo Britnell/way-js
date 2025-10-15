@@ -11,7 +11,7 @@ html {
 
 @layer base {
   body {
-    background: #212334;
+    background: var(--color-slate-800);
     color: white;
     font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo,
       Consolas, "DejaVu Sans Mono", monospace;
@@ -33,7 +33,7 @@ html {
   /*  */
 
   .demo {
-    @apply p-3  w-[280px]  mx-auto bg-[#fff2];
+    @apply p-3  w-[280px]  mx-auto bg-slate-600;
   }
 }
 
@@ -183,7 +183,7 @@ html {
 /* Blog */
 
 article {
-  @apply mb-20;
+  @apply mb-20 px-6 p-4 bg-slate-700;
 
   h2 {
     @apply text-3xl font-bold;
