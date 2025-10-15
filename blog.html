@@ -97,7 +97,11 @@
         everything TWICE. the &lt;div> AND the jsx document.createElement ...
         All the while leading to the most pointless error of all, the HYDRATION
         ERROR, forcing you to move logic into useEffect() yada yada...
+        <br />
+        The javascript on a web page (or app) should only be used to describe
+        the logic, the shape should be in html... <br />
       </p>
+      <!-- Because in truth, half the time we are just changing classes on elements to hide and show things. -->
       <p>
         But then look at vue, it looks more like html than jsx magic, &lt;div
         v-if="show" :class="{'big': big}">, and using &lt;template> elements.
