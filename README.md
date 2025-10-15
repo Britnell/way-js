@@ -273,3 +273,7 @@ is used for same-site navigation resources, user is likely to need the target re
 
 https://developer.mozilla.org/en-US/docs/Web/API/Speculation_Rules_API
 https://developer.chrome.com/docs/web-platform/implementing-speculation-rules
+
+# browser signals
+
+https://github.com/proposal-signals/signal-polyfill

@@ -7,7 +7,8 @@
 
 @layer base {
   body {
-    background: rgb(47, 41, 39);
+    background: #212334;
+    /* background: rgb(47, 41, 39); */
     color: white;
     font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo,
       Consolas, "DejaVu Sans Mono", monospace;
