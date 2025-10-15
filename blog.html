@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+    <script src="/way-loader.js"></script>
+    <link rel="stylesheet" href="/pages/style.css" />
+  </head>
+
+  <body class="content-grid">
+    <!-- <script type="module" src="/pages/todo.ts"></script> -->
+    <!-- <script>
+      window.pageprops = { name: "Tommy" };
+    </script> -->
+
+    <header class="flex gap-4 py-2">
+      <a href="/way-js/" class="mr-auto">Way js</a>
+      <a href="/way-js/" class="underline">home</a>
+      <a href="/way-js/blog" class="">blog</a>
+      <a href="/way-js/demo" class="underline">demos</a>
+      <a href="/way-js/todo" class="underline">todo</a>
+    </header>
+
+    <h1 class="text-3xl font-bold my-10">Blog</h1>
+    <!-- <p>blabla</p> -->
+
+    <article id="jsx">
+      <div class="x flex justify-between items-center mb-3 mt-6">
+        <h2>
+          <a href="#jsx hover:underline">#</a>
+          JSX was a mistake
+        </h2>
+        <p class="x text-sm text-slate-400">15.10.25</p>
+      </div>
+      <p>
+        I don't think you need to be a web performance puritan to see the
+        benefits of less js & leaner apps.
+        <br />
+        <br />
+        And building this im really not sure why we NEEDED jsx in the first
+        place. A new language, that needs to be compiled in an extra step,
+        meaning our framework doesnt actually work vanilla in the browser, and
+        then instead of sending a &lt;div class="big"> to the server were now
+        sending document.createElement('div').class='big' etc.
+      </p>
+      <p>
+        And then came next js, which would PRE-RENDER your jsx into static html,
+        which can look pretty while all the js loads, but its just a big loading
+        screen to be replaced by the render output, which means we are sending
+        everything TWICE. the &lt;div> AND the jsx document.createElement()...
+        All the while leading to the most pointless error of all, the HYDRATION
+        ERROR, forcing you to move logic into useEffect()...
+      </p>
+      <p>
+        But then look at vue, it looks more like html than jsx magic, &lt;div
+        v-if="show" :class="{'big': big}">, and using &lt;template> elements.
+
+        <span class="block my-4 text-center font-bold text-xl">
+          This is essentially just vue without the jsx
+        </span>
+
+        But loose the jsx, and we can still have nice things! We have the
+        ability for components in html with web-components, and sure they don't
+        have reactivity, but we have signals now. It's all already there.
+        building this though I'm surprised how easy and quick this was, just had
+        to put the pieces together in the right way.
+      </p>
+    </article>
+
+    <article id="why">
+      <div class="x flex justify-between items-center mb-3 mt-6">
+        <h2>
+          <a href="#why" class="hover:underline">#</a>
+          WHYYYY
+        </h2>
+        <p class="x text-sm text-slate-400">15.10.25</p>
+      </div>
+
+      <p>
+        Our js frameworks are so bloated, we need to get back closer to html,
+        web standards and browser api - as such, I LOVE ALPINE.
+      </p>
+
+      <h3>Alpine.js</h3>
+      <p>
+        Way.js is obviously just alpine with components. that is 100% what this
+        is.
+        <br />
+        <br />
+        I love the concept of alpine, server render normal html, and the
+        framework interactivity is just sprinkled in with html attributes. i
+        think thats beautifully simple, and obviously super fast and efficient.
+        <br />
+        But in reality, we just do a lot of things on the client now, sadly not
+        every company will just switch to htmx overnight. So we have some task
+        to do client side, build any larger logic and doing EVERYTHING in html
+        attributes x-data="{...}" will get cramped. So in reality you will
+        always use Alpine.data('counter',()=>({ x: 123})).
+      </p>
+      <h3>Components</h3>
+      <p>
+        Which is great, this is a beautiful way to work to me. But let things
+        get a big bigger, and there is no easy way for re-usable logic (someone
+        will correct me on this). For all the flaws of React, its so nice
+        building and thinking in components, let me put the logic and markup for
+        one part in a re-usable piece.
+
+        <br />
+        and YES, i know thats not what alpine is intended for, i read somewhere
+        that components were intentionally not added as this was supposed to be
+        done through server-side templating. But its 2025 and here we are. I
+        came across some alpine extensions for components (probably
+        <a href="https://github.com/niconoclaste/alpinejs-web-components">
+          this one</a
+        >), but that was really just templating, and without a good way to pass
+        in props for reusable logic it just wasn't that useful. So i tried
+        making this work by writing my own web-components and alpine-extension,
+        but I just couldn't get it to work. (I'd love for someone to build this
+        for alpine).
+      </p>
+      <h3>Rebuild</h3>
+      <p>
+        So here we are, i thought I'd rebuild alpine with signals, because
+        fine-grained reactivity is perfect for these specific dom updates, and
+        see where it goes. And I'm surprisignly happy with the result. I think
+        all these pieces fit together really well and the result is small but
+        surprisignly powerful.
+        <br />
+        I also like the idea of building the NEXT framework on top of all the
+        powerful new APIs coming to browsers, with View Transitions, native
+        signals etc.
+      </p>
+    </article>
+
+    <style>
+      [x-load] {
+        display: none;
+      }
+    </style>
+  </body>
+</html>

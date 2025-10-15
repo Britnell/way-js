@@ -143,14 +143,8 @@
   }
 }
 
-form .err {
-  color: rgb(172, 8, 8);
-  font-style: italic;
-}
-
 /* View Transitions */
 
-/* View Transitions */
 @view-transition {
   navigation: auto;
 }
@@ -180,5 +174,21 @@ form .err {
   }
   to {
     opacity: 1;
+  }
+}
+
+/* Blog */
+
+article {
+  @apply mb-20;
+
+  h2 {
+    @apply text-3xl font-bold;
+  }
+  h3 {
+    @apply text-xl font-bold mb-3 mt-6;
+  }
+  p {
+    @apply my-4;
   }
 }
