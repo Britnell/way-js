@@ -1,4 +1,4 @@
-import way from "./way";
+import way from "../src/way";
 import * as v from "valibot";
 import "./turbo";
 
