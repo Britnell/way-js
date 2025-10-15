@@ -39,6 +39,14 @@
     transform: rotate(360deg);
   }
 }
+@keyframes inout {
+  from {
+    transform-origin: 50% 99%;
+  }
+  to {
+    transform-origin: 50% 65%;
+  }
+}
 
 .c-diag {
   --c-rad: 80px;
@@ -59,18 +67,19 @@
     width: calc(var(--c-rad) * 2);
     height: calc(var(--c-rad) * 2);
     transform-origin: 50% 94%;
+    animation: inout 20s linear infinite alternate;
 
     &.a {
       transform: rotate(0deg);
-      background: rgba(230, 120, 220, var(--cop));
+      background: rgba(120, 138, 230, 0.5);
     }
     &.b {
       transform: rotate(120deg);
-      background: rgba(200, 255, 60, var(--cop));
+      background: rgba(200, 255, 60, 0.4);
     }
     &.c {
       transform: rotate(240deg);
-      background: rgba(50, 200, 255, var(--cop));
+      background: rgb(252, 124, 36, 0.5);
     }
   }
 }
