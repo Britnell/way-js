@@ -23,52 +23,6 @@
     <!-- <script src="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/languages/xml.min.js"></script> -->
   </head>
 
-  <script>
-    window.pageprops = {
-      version: "0.1.0",
-      codex: {
-        "counter-ex": `
-      <!-- Html -->
-      <div id="app">
-        <x-counter></x-counter>
-      </div>
-      `,
-        "form-ex": `
-        <script>  
-        // in module
-        import * as v from "valibot";
-        way.form(
-          "login",
-          {
-            name: v.pipe(v.string(), v.minLength(1, "Name is required")),
-            password: v.pipe(
-              v.string(),
-              v.minLength(4, "Password is too short"),
-              v.maxLength(10, "Password is too long"),
-              v.regex(/\d/, "Password must include at least one digit")
-            ),
-          },
-          () => {
-            const data = way.signal(null);
-            const name = way.signal("");
-
-            return {
-              name,
-              data,
-              onsubmit: (ev: CustomEvent) => {
-                console.log(ev.detail);
-                data.value = ev.detail;
-              },
-            };
-          }
-        );
-        <\/script>  
-      
-      `,
-      },
-    };
-  </script>
-
   <body>
     <div id="app" x-load>
       <header class="content-grid">
@@ -78,7 +32,7 @@
             <ul class="flex gap-4">
               <!-- TODO -->
               <!-- <li><a href="/guide" class="underline">Guide</a></li> -->
-              <li><a href="demo" class="underline">Demos</a></li>
+              <li><a href="/way-js/demo" class="underline">Demos</a></li>
             </ul>
           </nav>
         </div>
@@ -465,6 +419,52 @@
     </style>
     <script>
       hljs.highlightAll();
+    </script>
+
+    <script>
+      window.pageprops = {
+        version: "0.1.0",
+        codex: {
+          "counter-ex": `
+      <!-- Html -->
+      <div id="app">
+        <x-counter></x-counter>
+      </div>
+      `,
+          "form-ex": `
+        <script>  
+        // in module
+        import * as v from "valibot";
+        way.form(
+          "login",
+          {
+            name: v.pipe(v.string(), v.minLength(1, "Name is required")),
+            password: v.pipe(
+              v.string(),
+              v.minLength(4, "Password is too short"),
+              v.maxLength(10, "Password is too long"),
+              v.regex(/\d/, "Password must include at least one digit")
+            ),
+          },
+          () => {
+            const data = way.signal(null);
+            const name = way.signal("");
+
+            return {
+              name,
+              data,
+              onsubmit: (ev: CustomEvent) => {
+                console.log(ev.detail);
+                data.value = ev.detail;
+              },
+            };
+          }
+        );
+        <\/script>  
+      
+      `,
+        },
+      };
     </script>
   </body>
 </html>
