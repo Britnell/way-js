@@ -1,6 +1,6 @@
 import way from "../src/way";
 import * as v from "valibot";
-import "./turbo";
+import "../src/turbo";
 
 way.form(
   "login",
