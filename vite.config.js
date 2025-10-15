@@ -6,5 +6,12 @@ export default defineConfig({
   base: "/way-js/",
   build: {
     outDir: "dist",
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        demo: "demo.html",
+        todo: "todo.html",
+      },
+    },
   },
 });
