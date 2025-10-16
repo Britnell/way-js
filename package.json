@@ -1,14 +1,14 @@
 {
   "name": "wayy",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A reactive web framework with Alpine.js-like directives",
   "type": "module",
-  "main": "./pages/way.ts",
-  "types": "./pages/way.ts",
+  "main": "./src/way.ts",
+  "types": "./src/way.ts",
   "exports": {
     ".": {
-      "types": "./pages/way.ts",
-      "import": "./pages/way.ts"
+      "types": "./src/way.ts",
+      "import": "./src/way.ts"
     },
     "./dist": {
       "import": "./way.min.js"
@@ -18,7 +18,7 @@
     }
   },
   "files": [
-    "pages/way.ts",
+    "src/",
     "way.min.js",
     "public/way-inline.js"
   ],
