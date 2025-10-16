@@ -139,8 +139,50 @@
         WHYYY another framework you ask? Well I might argue if this even counts
         a js framework, but anyway, our js frameworks are so bloated, we need to
         get back closer to html, web standards and browser api - as such, I LOVE
-        ALPINE.
+        ALPINE. But i think there is plenty of space on the spectrum of client
+        side interactivity. Alpine = server render everything but lets you
+        easily sprinkle in reactivity, but I think there is space inbetween for
+        when we need something more complex and composable, yet dont want to
+        have to reach for a full js framework.
       </p>
+
+      <div class="sparange">
+        <div class="flex justify-between px-10">
+          <span class="mark">alpine</span>
+          <span class="mark">react</span>
+        </div>
+        <div class="line"></div>
+      </div>
+      <style>
+        .sparange {
+          padding: 0.8rem;
+          background: white;
+          --w: 2px;
+          --c: var(--color-slate-700);
+
+          .mark {
+            color: var(--c);
+            font-weight: bold;
+
+            &::after {
+              content: "";
+              display: block;
+              background: var(--c);
+              width: var(--w);
+              height: 1rem;
+              position: relative;
+              left: 50%;
+            }
+          }
+          .line {
+            background: var(--c);
+            height: var(--w);
+            position: relative;
+            bottom: 0.5rem;
+          }
+          /*  */
+        }
+      </style>
 
       <h3>Alpine.js</h3>
       <p>
