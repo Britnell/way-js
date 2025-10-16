@@ -139,50 +139,8 @@
         WHYYY another framework you ask? Well I might argue if this even counts
         a js framework, but anyway, our js frameworks are so bloated, we need to
         get back closer to html, web standards and browser api - as such, I LOVE
-        ALPINE. But i think there is plenty of space on the spectrum of client
-        side interactivity. Alpine = server render everything but lets you
-        easily sprinkle in reactivity, but I think there is space inbetween for
-        when we need something more complex and composable, yet dont want to
-        have to reach for a full js framework.
+        ALPINE.
       </p>
-
-      <div class="sparange">
-        <div class="flex justify-between px-10">
-          <span class="mark">alpine</span>
-          <span class="mark">react</span>
-        </div>
-        <div class="line"></div>
-      </div>
-      <style>
-        .sparange {
-          padding: 0.8rem;
-          background: white;
-          --w: 2px;
-          --c: var(--color-slate-700);
-
-          .mark {
-            color: var(--c);
-            font-weight: bold;
-
-            &::after {
-              content: "";
-              display: block;
-              background: var(--c);
-              width: var(--w);
-              height: 1rem;
-              position: relative;
-              left: 50%;
-            }
-          }
-          .line {
-            background: var(--c);
-            height: var(--w);
-            position: relative;
-            bottom: 0.5rem;
-          }
-          /*  */
-        }
-      </style>
 
       <h3>Alpine.js</h3>
       <p>
@@ -195,20 +153,20 @@
         think thats beautifully simple, and obviously super fast and efficient.
         <br />
         But in reality, we just do a lot of things on the client now, sadly not
-        every company will just switch to htmx overnight. So we have some task
-        to do client side, build any larger logic and doing EVERYTHING in html
-        attributes x-data="{...}" will get cramped. So in reality you will
-        always use Alpine.data('counter',()=>({ x: 123})).
+        every company will just switch to htmx overnight. So we have some logic
+        to implement client side. But build any larger logic and doing
+        EVERYTHING in html attributes x-data="{...}" will get cramped. So in
+        reality you will always use `Alpine.data('counter',()=>({ x: 123}))`.
       </p>
-      <h3>Components</h3>
       <p>
         Which is great, this is a beautiful way to work to me. But let things
         get a big bigger, and there is no easy way for re-usable logic (someone
         will correct me on this). For all the flaws of React, its so nice
         building and thinking in components, let me put the logic and markup for
         one part in a re-usable piece.
-
-        <br />
+      </p>
+      <h3>Components</h3>
+      <p>
         and YES, i know thats not what alpine is intended for, i read somewhere
         that components were intentionally not added as this was supposed to be
         done through server-side templating. But its 2025 and here we are. I
@@ -223,15 +181,36 @@
       </p>
       <h3>Rebuild</h3>
       <p>
-        So here we are, i thought I'd rebuild alpine with signals, because
-        fine-grained reactivity is perfect for these specific dom updates, and
-        see where it goes. And I'm surprisignly happy with the result. I think
-        all these pieces fit together really well and the result is small but
-        surprisignly powerful.
+        So here we are, i thought I'd rebuild alpine with signals and
+        web-components, in perfect harmony. because fine-grained reactivity is
+        perfect for these specific dom updates, and see where it goes. And I'm
+        surprisignly happy with the result. I think all these pieces fit
+        together really well and the result is small but surprisignly powerful.
         <br />
         I also like the idea of building the NEXT framework on top of all the
         powerful new APIs coming to browsers, with View Transitions, native
         signals etc.
+      </p>
+
+      <div class="spa-diag">
+        <div class="flex justify-between px-10">
+          <span class="mark">alpine</span>
+          <span class="mark">react</span>
+        </div>
+        <div class="line" aria-label="x axis"></div>
+        <div class="flex justify-between px-12">
+          <span class="">MPA</span>
+          <span class="">SPA</span>
+        </div>
+      </div>
+
+      <h3>SPA or MPA</h3>
+      <p>
+        So between a full SSR + alpine and a react SPA I think there is space to
+        fill in this spectrum (yes similar area to livewire i guess), for when
+        we need something more complex and composable, yet don't want to have to
+        reach for a full js framework. Everything is still just html, so server
+        render everything and sprinkle in an SPA where you need one.
       </p>
     </article>
 

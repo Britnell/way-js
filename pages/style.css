@@ -87,6 +87,34 @@ html {
   }
 }
 
+.spa-diag {
+  padding: 0.8rem;
+  background: white;
+  --w: 2px;
+  --c: var(--color-slate-700);
+  color: var(--c);
+  font-weight: bold;
+
+  .mark {
+    &::after {
+      content: "";
+      display: block;
+      background: var(--c);
+      width: var(--w);
+      height: 1rem;
+      position: relative;
+      left: 50%;
+    }
+  }
+  .line {
+    background: var(--c);
+    height: var(--w);
+    position: relative;
+    bottom: 0.5rem;
+  }
+  /*  */
+}
+
 /* CSS Kevin content grid  */
 
 .content-grid {
