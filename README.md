@@ -8,13 +8,13 @@ A reactive web framework combining the best of HTML, Signals, and Web Components
 
 ## usage
 
-### Basic
+### Basic usage
 
 ```html
 <head>
   ...
-  <script src="/way-inline.js"></script>
   <script type="module" src="/main.ts"></script>
+  <script src="/way-inline.js"></script>
 </head>
 <body>
   <div id="app">
@@ -49,6 +49,7 @@ A reactive web framework combining the best of HTML, Signals, and Web Components
 </script>
 ```
 
+- to work with typescript and write larger logic in ts modules, import the lib in your main script
 - write components in ts module or in inline scripts
 - in order to use way.comp in inline < script tags, also load 'way-inline.js'
 - define logic with way.comp() and setup function
@@ -134,6 +135,23 @@ jsut like vue / alpine `x-for`
   <div x-text="item.name"></div>
 </template>
 ```
+
+### x-load
+
+the first loaded html before hydration can look janky :
+
+- web components will be empty
+- and text {x} interpolation will not be done yet
+
+to avoid this you can put `x-load` on your app root, or further up in the html (or on multiple elements). use css to hide these,
+
+```
+[x-load] {
+  display: none;
+}
+```
+
+then during hydration wayy will unhide all these elements with `style="display: block;"`. so no grid of flex on these.
 
 ### Bind a signal to an input
 
