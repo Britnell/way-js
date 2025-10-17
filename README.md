@@ -109,7 +109,7 @@ it's more handy for day-to-day stuffs were hiding and showing
 #### x-if
 
 must be used with template tags, and only adds the elements to the dom when condition is true.
-use this for elements you dont want to render or even logic that might break when an element not defined or so
+use this for elements you dont want to render or even logic that might break when an element not defined or so.
 
 ```html
 <p x-show="list.value.length===0">List is empty!</p>
