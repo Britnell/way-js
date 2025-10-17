@@ -6,7 +6,9 @@ A reactive web framework combining the best of HTML, Signals, and Web Components
 - [git](https://github.com/Britnell/way-js)
 - [npm](https://www.npmjs.com/package/wayy)
 
-## usage
+## Get-started
+
+[Vite-way-starter](https://github.com/Britnell/way-vite-starter/tree/main)
 
 ### Basic usage
 
@@ -50,8 +52,7 @@ A reactive web framework combining the best of HTML, Signals, and Web Components
 ```
 
 - to work with typescript and write larger logic in ts modules, import the lib in your main script
-- write components in ts module or in inline scripts
-- in order to use way.comp in inline < script tags, also load 'way-inline.js'
+- in order to use way.comp in inline script tags, also load 'way-inline.js' (found in npm package)
 - define logic with way.comp() and setup function
 - use on html element with x-comp. everything returned but the comp setup function will be available to use in dynamic attributes
 
