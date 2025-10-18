@@ -60,11 +60,12 @@
       usage via npm install and module import just import the package in your
       main script.
     </p>
-    <div class="demo my-8" x-comp="demo">
+    <div x-load class="demo my-8" x-comp="demo">
       x = {count}
       <button @click="add()">+1</button>
     </div>
 
+    <style>
       [x-load] {
         display: none;
       }
