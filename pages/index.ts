@@ -32,5 +32,3 @@ way.store("theme", () => {
   const color = way.signal("red");
   return { color };
 });
-
-way.render(document.body, window.pageprops);

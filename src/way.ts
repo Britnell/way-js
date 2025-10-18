@@ -711,6 +711,11 @@ declare global {
 if (typeof window !== "undefined") {
   window.way = way;
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  render(document.body, window.pageprops);
+});
+
 export default way;
 
 //  *** helpers

@@ -26,5 +26,3 @@ way.store("theme", () => {
   const color = way.signal("#a0a0c0");
   return { color };
 });
-
-way.render(document.body, window.pageprops);

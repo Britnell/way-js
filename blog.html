@@ -5,8 +5,10 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + TS</title>
-    <script src="/way-inline.js"></script>
     <link rel="stylesheet" href="/pages/style.css" />
+    <script src="/way-inline.js"></script>
+    <script type="module" src="src/way.ts"></script>
+    <script type="module" src="pages/blog.ts"></script>
   </head>
 
   <body class="content-grid lg:ml-[200px]">
@@ -33,6 +35,7 @@
     <h1 class="text-3xl font-bold my-10">Blog</h1>
 
     <aside
+      x-comp="menu"
       class="hidden lg:block fixed left-0 top-0 bottom-0 w-[200px] px-2 py-4 bg-slate-900"
     >
       <h2 class="font-bold mb-4">Posts</h2>
@@ -42,7 +45,12 @@
         <li><a class="hover:underline" href="#why"># WHYYYY</a></li>
       </ul>
     </aside>
-    <article id="01">
+    <script>
+      way.comp("menu", ({ el }) => {
+        console.log("menu inline comp", el);
+      });
+    </script>
+    <article id="01" x-comp="post">
       <div class="x flex justify-between items-center mb-3">
         <h2>
           <a href="#01" class="hover:underline">#</a>

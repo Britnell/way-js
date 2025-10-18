@@ -5,7 +5,7 @@ import terser from "@rollup/plugin-terser";
 export default defineConfig({
   input: "src/way.ts",
   output: {
-    file: "way.min.js",
+    file: "src/way.min.js",
     format: "iife",
     name: "wayjs",
     sourcemap: false,
