@@ -11,29 +11,45 @@
   </head>
 
   <body class="content-grid">
-    <script>
-      window.pageprops = { name: "Tommy" };
-    </script>
-
-    <header class="flex gap-4 py-2">
-      <a href="/way-js/" class="mr-auto">Way js</a>
-      <a href="/way-js/" class="underline">home</a>
-      <a href="/way-js/blog" class="underline">blog</a>
-      <a href="/way-js/demo" class="">demos</a>
-      <a href="/way-js/todo" class="underline">todo</a>
-      <a
-        href="https://github.com/Britnell/way-js"
-        class="underline"
-        target="_blank"
-        >git</a
-      >
-      <a
-        href="https://www.npmjs.com/package/wayy"
-        class="underline"
-        target="_blank"
-        >npm</a
-      >
+    <header class="flex justify-between items-center">
+      <a href="/way-js/" class="">Way js</a>
+      <nav>
+        <ul class="flex gap-4 py-2">
+          <li>
+            <a href="/way-js/" class="underline">home</a>
+          </li>
+          <li>
+            <a href="/way-js/blog" class="underline">blog</a>
+          </li>
+          <li>
+            <a href="/way-js/demo" class="">demos</a>
+          </li>
+          <li>
+            <a
+              href="https://github.com/Britnell/way-js"
+              class="underline"
+              target="_blank"
+              >git
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://www.npmjs.com/package/wayy"
+              class="underline"
+              target="_blank"
+              >npm
+            </a>
+          </li>
+        </ul>
+      </nav>
     </header>
+
+    <div class="flex gap-3">
+      <span> Examples: </span>
+      <a href="/way-js/demo" class="">demo</a>
+      <a href="/way-js/todo" class="underline">todo</a>
+      <a href="/way-js/script" class="underline">script</a>
+    </div>
 
     <h1 class="text-3xl font-bold my-10">Tests / demos</h1>
     <p>To look at the source, just inspect the page!</p>

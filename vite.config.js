@@ -10,8 +10,9 @@ export default defineConfig({
       input: {
         main: "index.html",
         demo: "demo.html",
-        todo: "todo.html",
         blog: "blog.html",
+        todo: "todo.html",
+        script: "script.html",
       },
     },
   },

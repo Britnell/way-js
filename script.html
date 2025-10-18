@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+    <link rel="stylesheet" href="/pages/style.css" />
+    <script src="/way-inline.js"></script>
+    <script type="module" src="/way.min.js"></script>
+    <script type="module" src="src/script.js"></script>
+  </head>
+
+  <body class="content-grid">
+    <header class="flex justify-between items-center">
+      <a href="/way-js/" class="">Way js</a>
+      <nav>
+        <ul class="flex gap-4 py-2">
+          <li>
+            <a href="/way-js/" class="underline">home</a>
+          </li>
+          <li>
+            <a href="/way-js/blog" class="underline">blog</a>
+          </li>
+          <li>
+            <a href="/way-js/demo" class="">demos</a>
+          </li>
+          <li>
+            <a
+              href="https://github.com/Britnell/way-js"
+              class="underline"
+              target="_blank"
+              >git
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://www.npmjs.com/package/wayy"
+              class="underline"
+              target="_blank"
+              >npm
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="flex gap-3">
+      <span> Examples: </span>
+      <a href="/way-js/demo" class="underline">demo</a>
+      <a href="/way-js/todo" class="underline">todo</a>
+      <a href="/way-js/script" class=" ">script</a>
+    </div>
+
+    <main>
+      <h1 class="text-3xl font-bold my-10">Usage with script tag only</h1>
+      <p>
+        This page loads way.js via script tag, no npm or bundler needed! You can
+        still write components inline or in a script module
+      </p>
+
+      <h2 class="text-xl font-bold my-8">Components are flexible</h2>
+
+      <p>1. components can be used jsut for logic, without a template.</p>
+
+      <div class="demo my-8" x-comp="countdown">
+        <p>Countdown! : {count}</p>
+        <button @click="restart()">+1</button>
+        <p x-show="count.value===0">Liftoff!</p>
+      </div>
+
+      <p>
+        2. if a component has no setup function, it can be used just for
+        templating & slots, and all props will be returned as context
+        `way.comp("x-dialog")`
+      </p>
+
+      <div class="demo my-8" x-comp="{show: false}">
+        <button @click="show.value = !show.value">show dialog</button>
+        <p>show = {show.value}</p>
+        <x-dialog x-props="{ show }">
+          <p>a simple reusable dialog</p>
+          <p>yes i know this is not accessible</p>
+        </x-dialog>
+      </div>
+
+      <!-- Dialog comp -->
+      <script>
+        way.comp("x-dialog");
+      </script>
+      <template id="x-dialog">
+        <div
+          x-show="show"
+          class="absolute left-2/5 bg-slate-900 p-4 border shadow-lg shadow-black"
+        >
+          <p>dialog</p>
+          <slot></slot>
+          <button @click="show.value = false">close</button>
+        </div>
+      </template>
+
+      <h2 class="text-xl font-bold my-8">npm install</h2>
+
+      <p>
+        usage via npm install and module import just look at any of the other
+        pages, just `import 'wayy'` in your main index.ts script
+      </p>
+    </main>
+
+    <style>
+      [x-load] {
+        display: none;
+      }
+    </style>
+  </body>
+</html>
