@@ -1,6 +1,7 @@
 import { defineConfig } from "rollup";
 import typescript from "@rollup/plugin-typescript";
 import terser from "@rollup/plugin-terser";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
 
 export default defineConfig({
   input: "src/way.ts",
@@ -10,6 +11,6 @@ export default defineConfig({
     name: "wayjs",
     sourcemap: false,
   },
-  plugins: [typescript(), terser()],
+  plugins: [nodeResolve(), typescript(), terser()],
   external: [],
 });
