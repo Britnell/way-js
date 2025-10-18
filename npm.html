@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+    <link rel="stylesheet" href="/pages/style.css" />
+    <script src="/way-inline.js"></script>
+    <script type="module" src="/pages/npm.ts"></script>
+  </head>
+
+  <body class="content-grid">
+    <header class="flex justify-between items-center">
+      <a href="/way-js/" class="">Way js</a>
+      <nav>
+        <ul class="flex gap-4 py-2">
+          <li>
+            <a href="/way-js/" class="underline">home</a>
+          </li>
+          <li>
+            <a href="/way-js/blog" class="underline">blog</a>
+          </li>
+          <li>
+            <a href="/way-js/demo" class="">demos</a>
+          </li>
+          <li>
+            <a
+              href="https://github.com/Britnell/way-js"
+              class="underline"
+              target="_blank"
+              >git
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://www.npmjs.com/package/wayy"
+              class="underline"
+              target="_blank"
+              >npm
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="flex gap-3">
+      <span> Examples: </span>
+      <a href="/way-js/demo" class="underline">demo</a>
+      <a href="/way-js/todo" class="underline">todo</a>
+      <a href="/way-js/script" class="underline">script</a>
+      <a href="/way-js/npm" class="">npm</a>
+    </div>
+
+    <h1 class="text-3xl font-bold my-10">
+      Usage with typescript and npm package
+    </h1>
+
+    <p>
+      usage via npm install and module import just import the package in your
+      main script.
+    </p>
+    <div class="demo my-8" x-comp="demo">
+      x = {count}
+      <button @click="add()">+1</button>
+    </div>
+
+      [x-load] {
+        display: none;
+      }
+    </style>
+  </body>
+</html>

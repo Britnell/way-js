@@ -13,6 +13,7 @@ export default defineConfig({
         blog: "blog.html",
         todo: "todo.html",
         script: "script.html",
+        npm: "npm.html",
       },
     },
   },
