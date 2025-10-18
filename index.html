@@ -421,7 +421,7 @@
       way.comp("syn-tax", ({ props }) => {
         const id = props.id;
         const el = document.getElementById(id);
-        const text = el.innerHTML.trim();
+        const text = el?.innerHTML.trim();
         return { text, ...props };
       });
     </script>
@@ -444,7 +444,7 @@
 
     <script>
       window.pageprops = {
-        version: "0.1.0",
+        version: "0.1.3",
         codex: {
           "counter-ex": `
       <!-- Html -->

@@ -1,0 +1,54 @@
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Test</title>
+        </head>
+        <body>
+          <div id="app"></div>
+      
+          <script>
+            window.pageprops = {
+              codex: {
+                "form-ex": `
+                  <script>  
+                  // in module
+                  import * as v from "valibot";
+                  way.form(
+                    "login",
+                    {
+                      name: v.pipe(v.string(), v.minLength(1, "Name is required")),
+                      password: v.pipe(
+                        v.string(),
+                        v.minLength(4, "Password is too short"),
+                        v.maxLength(10, "Password is too long"),
+                        v.regex(/\d/, "Password must include at least one digit")
+                      ),
+                    },
+                    () => {
+                      const data = way.signal(null);
+                      const name = way.signal("");
+      
+                      return {
+                        name,
+                        data,
+                        onsubmit: (ev: CustomEvent) => {
+                          console.log(ev.detail);
+                          data.value = ev.detail;
+                        },
+                      };
+                    }
+                  );
+                  <\/script>  
+                `,
+              },
+            };
+      
+            const template = document.createElement("template");
+            template.innerHTML = `<pre><code>${window.pageprops.codex["form-ex"]}</code></pre>`;
+            document.getElementById("app").appendChild(template.content);
+          </script>
+        </body>
+      </html>
+      
