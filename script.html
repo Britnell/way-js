@@ -84,6 +84,12 @@
           <p>yes i know this is not accessible</p>
         </x-dialog>
       </div>
+      <p class="my-20">
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Facere
+        explicabo maxime numquam inventore ducimus molestias dicta fugiat
+        accusantium corporis provident necessitatibus in iste, eum porro alias
+        blanditiis voluptate! Molestias, nobis.
+      </p>
 
       <!-- Dialog comp -->
       <script>
@@ -92,7 +98,7 @@
       <template id="x-dialog">
         <div
           x-show="show"
-          class="absolute left-2/5 bg-slate-900 p-4 border shadow-lg shadow-black"
+          class="fixed left-2/5 top-2/5 bg-slate-900 p-4 border shadow-lg shadow-black"
         >
           <p>dialog</p>
           <slot></slot>

@@ -6,9 +6,8 @@ A reactive web framework combining the best of HTML, Signals, and Web Components
 - [git](https://github.com/Britnell/way-js)
 - [npm](https://www.npmjs.com/package/wayy)
 
-## Get-started
-
-[Vite-way-starter](https://github.com/Britnell/way-vite-starter/tree/main)
+<!-- ## Get-started -->
+<!-- [Vite-way-starter](https://github.com/Britnell/way-vite-starter/tree/main) -->
 
 ### Basic usage
 
