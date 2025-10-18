@@ -1,7 +1,5 @@
 const way = window.way;
 
-console.log(way);
-
 way.comp("countdown", () => {
   const count = way.signal(10);
   let int;
