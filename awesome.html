@@ -7,7 +7,17 @@
     <title>Vite + TS</title>
     <link rel="stylesheet" href="/pages/style.css" />
     <script src="/way-inline.js"></script>
-    <script type="module" src="/pages/npm.ts"></script>
+    <script type="module" src="/way.min.js"></script>
+    <!-- <script type="module" src="src/script.js"></script> -->
+
+    <!-- <link
+      rel="stylesheet"
+      href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/webawesome.css"
+    /> -->
+    <script
+      type="module"
+      src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"
+    ></script>
   </head>
 
   <body class="content-grid">
@@ -48,23 +58,24 @@
       <span> Examples: </span>
       <a href="/way-js/demo" class="underline">demo</a>
       <a href="/way-js/todo" class="underline">todo</a>
-      <a href="/way-js/script" class="underline">script</a>
-      <a href="/way-js/npm" class="">npm</a>
-      <a href="/way-js/quiet" class="underline">quiet</a>
+      <a href="/way-js/script" class=" ">script</a>
+      <a href="/way-js/npm" class="underline">npm</a>
     </div>
 
-    <h1 class="text-3xl font-bold my-10">
-      Usage with typescript and npm package
-    </h1>
+    <main x-load>
+      <h1>web awesome components</h1>
 
-    <p>
-      usage via npm install and module import just import the package in your
-      main script.
-    </p>
-    <div x-load class="demo my-8" x-comp="demo">
-      x = {count}
-      <button @click="add()">+1</button>
-    </div>
+      <div x-comp="{sel: ''}">
+        <p>selected {sel}</p>
+
+        <wa-dropdown @wa-select="sel.value = ( $event.detail.item.value)">
+          <wa-button slot="trigger" with-caret>Dropdown</wa-button>
+          <wa-dropdown-item value="Aa"> Aa </wa-dropdown-item>
+          <wa-dropdown-item value="Bb"> Bb </wa-dropdown-item>
+          <wa-dropdown-item value="Cc"> Cc </wa-dropdown-item>
+        </wa-dropdown>
+      </div>
+    </main>
 
     <style>
       [x-load] {

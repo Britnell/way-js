@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+    <link rel="stylesheet" href="/pages/style.css" />
+    <script src="/way-inline.js"></script>
+    <script type="module" src="/way.min.js"></script>
+    <!-- <script type="module" src="src/script.js"></script> -->
+
+    <!-- Quiet theme + autoloader -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@quietui/quiet-browser@1.3.0/dist/themes/quiet.css"
+    />
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@quietui/quiet-browser@1.3.0/dist/quiet.loader.js"
+    ></script>
+
+    <!-- <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@quietui/quiet-browser@1.3.0/dist/themes/restyle.css"
+    /> -->
+  </head>
+
+  <body class="content-grid">
+    <header class="flex justify-between items-center">
+      <a href="/way-js/" class="">Way js</a>
+      <nav>
+        <ul class="flex gap-4 py-2">
+          <li>
+            <a href="/way-js/" class="underline">home</a>
+          </li>
+          <li>
+            <a href="/way-js/blog" class="underline">blog</a>
+          </li>
+          <li>
+            <a href="/way-js/demo" class="">demos</a>
+          </li>
+          <li>
+            <a
+              href="https://github.com/Britnell/way-js"
+              class="underline"
+              target="_blank"
+              >git
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://www.npmjs.com/package/wayy"
+              class="underline"
+              target="_blank"
+              >npm
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="flex gap-3 bg-slate-900 px-2 py-1 rounded">
+      <span> Examples: </span>
+      <a href="/way-js/demo" class="underline">demo</a>
+      <a href="/way-js/todo" class="underline">todo</a>
+      <a href="/way-js/script" class="underline">script</a>
+      <a href="/way-js/npm" class="underline">npm</a>
+
+      <a href="/way-js/quiet" class="">quiet</a>
+    </div>
+
+    <main x-load>
+      <h1>Quiet UI components</h1>
+      <a href="https://quietui.org/">quietui.org</a>
+
+      <style>
+        main {
+          --quiet-paper-color: transparent;
+          --quiet-text-body: white;
+          --quiet-neutral-fill-softer: var(--color-slate-600);
+          --quiet-neutral-text-on-soft: white;
+
+          quiet-combobox::part(dropdown) {
+            background: var(--color-slate-700);
+            color: white;
+          }
+        }
+      </style>
+      <div x-comp="{sel: ''}">
+        <p>selected: "{sel}"</p>
+        <quiet-combobox
+          label="Select a cat breed"
+          description="Type to search or select from the list"
+          placeholder="Search breeds"
+          with-clear
+          @quiet-change="sel.value = ($event.target.value)"
+        >
+          <quiet-combobox-item value="persian">Persian</quiet-combobox-item>
+          <quiet-combobox-item value="siamese">Siamese</quiet-combobox-item>
+          <quiet-combobox-item value="tabby">Tabby</quiet-combobox-item>
+          <quiet-combobox-item value="ragdoll">Ragdoll</quiet-combobox-item>
+          <quiet-combobox-item value="bengal">Bengal</quiet-combobox-item>
+          <quiet-combobox-item value="sphynx">Sphynx</quiet-combobox-item>
+          <quiet-combobox-item value="calico">Calico</quiet-combobox-item>
+          <quiet-combobox-item value="russian"
+            >Russian Blue</quiet-combobox-item
+          >
+        </quiet-combobox>
+      </div>
+    </main>
+
+    <style>
+      [x-load] {
+        display: none;
+      }
+    </style>
+  </body>
+</html>
