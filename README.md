@@ -299,3 +299,4 @@ the usual :
 - [ ] host way.min on unpckg or so
 - [ ] rewrite x-for
 - [ ] x-form directive as separate script / plugin
+- [ ] named slots
