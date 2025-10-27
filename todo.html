@@ -44,15 +44,8 @@
       </nav>
     </header>
 
-    <div class="flex gap-3 bg-slate-900 px-2 py-1 rounded">
-      <span> Examples: </span>
-      <a href="/way-js/demo" class="underline">demo</a>
-      <a href="/way-js/todo" class=" ">todo</a>
-      <a href="/way-js/script" class="underline">script</a>
-      <a href="/way-js/npm" class="underline">npm</a>
-      <a href="/way-js/quiet" class="underline">quiet</a>
-      <a href="/way-js/filecomp" class="underline">file</a>
-    </div>
+    <demo-menu x-props="{page:'todo'}"></demo-menu>
+    <include src="./pages/demomenu.html"></include>
 
     <h1 class="text-3xl font-bold my-10">Example Todo app</h1>
     <div x-comp="todo">

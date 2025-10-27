@@ -60,15 +60,8 @@
       </nav>
     </header>
 
-    <div class="flex gap-3 bg-slate-900 px-2 py-1 rounded">
-      <span> Examples: </span>
-      <a href="/way-js/demo" class="underline">demo</a>
-      <a href="/way-js/todo" class="underline">todo</a>
-      <a href="/way-js/script" class="underline">script</a>
-      <a href="/way-js/npm" class="underline">npm</a>
-      <a href="/way-js/quiet" class="">quiet</a>
-      <a href="/way-js/filecomp" class="underline">file</a>
-    </div>
+    <demo-menu x-props="{page:'quiet'}"></demo-menu>
+    <include src="./pages/demomenu.html"></include>
 
     <main x-load>
       <h1>Quiet UI components</h1>

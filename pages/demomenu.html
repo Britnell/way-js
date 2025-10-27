@@ -1,0 +1,23 @@
+<template id="demo-menu">
+  <div class="flex gap-3 bg-slate-900 px-2 py-1 rounded">
+    <span> Examples: </span>
+    <template x-for="p in pages">
+      <a
+        :href="`/way-js/${p}`"
+        :class="
+      p === page ? '':' underline'"
+        >{p}</a
+      >
+    </template>
+  </div>
+</template>
+<script>
+  way.comp("demo-menu", ({ props }) => {
+    const pages = ["demo", "todo", "script", "npm", "quiet", "filecomp"];
+
+    return {
+      ...props,
+      pages,
+    };
+  });
+</script>
