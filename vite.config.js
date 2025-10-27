@@ -1,8 +1,9 @@
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
+import includeHtml from "vite-plugin-include-html";
 
 export default defineConfig({
-  plugins: [tailwindcss()],
+  plugins: [tailwindcss(), includeHtml()],
   base: "/way-js/",
   build: {
     outDir: "dist",
@@ -15,6 +16,7 @@ export default defineConfig({
         script: "script.html",
         quiet: "quiet.html",
         npm: "npm.html",
+        filecomp: "filecomp.html",
       },
     },
   },
