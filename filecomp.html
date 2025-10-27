@@ -7,6 +7,7 @@
     <title>Vite + TS</title>
     <link rel="stylesheet" href="/pages/style.css" />
     <script src="/way-inline.js"></script>
+    <script type="module" src="/way.min.js"></script>
   </head>
 
   <body class="content-grid">
@@ -51,6 +52,7 @@
       <a href="/way-js/npm" class="">npm</a>
       <a href="/way-js/quiet" class="underline">quiet</a>
     </div>
+    <include src="./pages/comp.html"></include>
 
     <h1 class="text-3xl font-bold my-10">SFC</h1>
 
@@ -63,7 +65,6 @@
         <x-card x-props="{title:'Card 3', text: 'lorem ipsum'}"></x-card>
       </div>
     </div>
-    <include src="./pages/comp.html"></include>
     <style>
       [x-load] {
         display: none;
