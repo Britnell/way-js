@@ -1,4 +1,5 @@
-import { signal, effect, computed } from "./signal";
+// import { signal, effect, computed } from "./signal";
+import { signal, effect, computed } from "@preact/signals-core";
 import { safeParse } from "valibot";
 
 const components: Record<string, any> = {};
