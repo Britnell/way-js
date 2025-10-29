@@ -77,6 +77,7 @@
         <x-dialog x-props="{ show }">
           <p>a simple reusable dialog</p>
           <p>yes i know this is not accessible</p>
+          <button slot="buttons" @click="alert('asdasd')">alert</button>
         </x-dialog>
       </div>
       <p class="my-20">
@@ -95,9 +96,11 @@
           x-show="show"
           class="fixed left-2/5 top-2/5 bg-slate-900 p-4 border shadow-lg shadow-black"
         >
-          <p>dialog</p>
           <slot></slot>
-          <button @click="show.value = false">close</button>
+          <div class="flex">
+            <slot name="buttons"></slot>
+            <button class="ml-auto" @click="show.value = false">close</button>
+          </div>
         </div>
       </template>
     </main>

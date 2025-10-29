@@ -787,19 +787,33 @@ class wayComponent extends HTMLElement {
   }
 
   connectedCallback() {
-    const slotFragment = document.createDocumentFragment();
+    const slots: Record<string, DocumentFragment> = {};
+
     while (this.firstChild) {
-      slotFragment.appendChild(this.firstChild);
+      const child = this.firstChild;
+      const slotName =
+        (child instanceof HTMLElement && child.getAttribute("slot")) ||
+        "default";
+      if (!slots[slotName]) {
+        slots[slotName] = document.createDocumentFragment();
+      }
+      slots[slotName].appendChild(child);
     }
 
-    const content = this.template.content.cloneNode(true) as DocumentFragment;
-    const slot = content.querySelector("slot");
+    const templateContent = this.template.content.cloneNode(
+      true
+    ) as DocumentFragment;
 
-    if (slot) {
-      slot.replaceWith(slotFragment);
+    const templateSlots = Array.from(templateContent.querySelectorAll("slot"));
+    for (const slotElement of templateSlots) {
+      const name = slotElement.getAttribute("name") || "default";
+      const fragment = slots[name];
+      if (fragment) {
+        slotElement.replaceWith(fragment);
+      }
     }
 
-    this.appendChild(content);
+    this.appendChild(templateContent);
 
     if (this._data?.onMounted) {
       this._data.onMounted();

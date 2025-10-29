@@ -10,7 +10,7 @@
     <script type="module" src="/pages/demo.ts"></script>
   </head>
 
-  <body class="content-grid">
+  <body class="content-grid mb-20">
     <header class="flex justify-between items-center">
       <a href="/way-js/" class="">Way js</a>
       <nav>
@@ -114,6 +114,14 @@
           <input id="col" type="color" x-model="theme.color" />
           <p>{theme.color}</p>
         </div>
+
+        <div>
+          <x-card>
+            <span slot="heading">title</span>
+            <p>lorem ipsum</p>
+            <button slot="tags">alert</button>
+          </x-card>
+        </div>
       </div>
     </main>
 
@@ -186,12 +194,21 @@
       });
     </script>
 
-    <template id="card">
+    <template id="x-card">
       <div style="border: 1px solid #ccc; padding: 16px; margin: 16px 0">
-        <h3>Card</h3>
+        <h3>
+          <slot name="heading"></slot>
+        </h3>
         <slot></slot>
+        <div class="border p-2">
+          <slot name="tags"></slot>
+          <button>x</button>
+        </div>
       </div>
     </template>
+    <script>
+      way.comp("x-card");
+    </script>
     <!-- 
   <div x-temp="card">
     <p>This is the content that will be slotted into the card.</p>
