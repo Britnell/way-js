@@ -1,6 +1,6 @@
 {
   "name": "wayy",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A reactive web framework with Alpine.js-like directives",
   "type": "module",
   "main": "./src/way.ts",

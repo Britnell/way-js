@@ -20,7 +20,9 @@ pnpm-lock.yaml
 
 # Development assets
 public/
+pages/
 index.html
+*.html
 
 # Git
 .git/
