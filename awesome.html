@@ -66,16 +66,33 @@
     <main x-load>
       <h1>web awesome components</h1>
 
-      <div x-comp="{sel: ''}">
-        <p>selected {sel}</p>
+      <style>
+        wa-button::part(base) {
+          padding: 4px 8px;
+          border: 1px solid white;
+          border-radius: 0.5rem;
+        }
+        wa-dropdown::part(menu) {
+          background: var(--color-slate-700);
+          min-width: 7rem;
+          border-radius: 0.2rem;
+          padding: 2px;
+        }
+        wa-dropdown-item::part(label) {
+          padding: 0 0.3rem;
+        }
+        wa-dropdown-item::part(label):hover {
+          background: var(--color-slate-600);
+          border-radius: 0.2rem;
+        }
+      </style>
 
-        <wa-dropdown @wa-select="sel.value = ( $event.detail.item.value)">
-          <wa-button slot="trigger" with-caret>Dropdown</wa-button>
-          <wa-dropdown-item value="Aa"> Aa </wa-dropdown-item>
-          <wa-dropdown-item value="Bb"> Bb </wa-dropdown-item>
-          <wa-dropdown-item value="Cc"> Cc </wa-dropdown-item>
-        </wa-dropdown>
-      </div>
+      <wa-dropdown @wa-select="sel.value = ( $event.detail.item.value)">
+        <wa-button slot="trigger" with-caret>Dropdown</wa-button>
+        <wa-dropdown-item value="Aa"> Aa </wa-dropdown-item>
+        <wa-dropdown-item value="Bb"> Bb </wa-dropdown-item>
+        <wa-dropdown-item value="Cc"> Cc </wa-dropdown-item>
+      </wa-dropdown>
     </main>
 
     <style>
