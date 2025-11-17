@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -109,7 +109,7 @@
         </form>
 
         <div>
-          <h2>Themes</h2>
+          <h2>Stores</h2>
           <label for="col">change theme col</label>
           <input id="col" type="color" x-model="theme.color" />
           <p>{theme.color}</p>
@@ -194,29 +194,14 @@
       });
     </script>
 
-    <template id="x-card">
-      <div style="border: 1px solid #ccc; padding: 16px; margin: 16px 0">
-        <h3>
-          <slot name="heading"></slot>
-        </h3>
-        <slot></slot>
-        <div class="border p-2">
-          <slot name="tags"></slot>
-          <button>x</button>
-        </div>
-      </div>
-    </template>
-    <script>
-      way.comp("x-card");
-    </script>
-    <!-- 
-  <div x-temp="card">
-    <p>This is the content that will be slotted into the card.</p>
-  </div> -->
-
     <style>
       [x-load] {
         display: none;
+      }
+
+      h2,
+      h3 {
+        font-weight: bold;
       }
     </style>
   </body>

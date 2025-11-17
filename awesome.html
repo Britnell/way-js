@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,18 +7,18 @@
     <title>Vite + TS</title>
     <link rel="stylesheet" href="/pages/style.css" />
     <script src="/way-inline.js"></script>
-    <script type="module" src="/way.min.js"></script>
-    <!-- <script type="module" src="src/script.js"></script> -->
+    <!-- <script type="module" src="/way.min.js"></script> -->
+    <script type="module" src="pages/awesome.ts"></script>
 
     <!-- <link
       rel="stylesheet"
       href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/webawesome.css"
     /> -->
-    <script
-      type="module"
-      src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"
-    ></script>
-  </head>
+  <!--   <script -->
+  <!--     type="module" -->
+  <!--     src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js" -->
+  <!--   ></script> -->
+  <!-- </head> -->
 
   <body class="content-grid">
     <header class="flex justify-between items-center">
@@ -54,14 +54,8 @@
       </nav>
     </header>
 
-    <div class="flex gap-3 bg-slate-900 px-2 py-1 rounded">
-      <span> Examples: </span>
-      <a href="/way-js/demo" class="underline">demo</a>
-      <a href="/way-js/todo" class="underline">todo</a>
-      <a href="/way-js/script" class=" ">script</a>
-      <a href="/way-js/npm" class="underline">npm</a>
-      <a href="/way-js/filecomp" class="underline">file</a>
-    </div>
+    <demo-menu x-props="{page:'awesome'}"></demo-menu>
+    <include src="./pages/demomenu.html"></include>
 
     <main x-load>
       <h1>web awesome components</h1>
@@ -81,18 +75,28 @@
         wa-dropdown-item::part(label) {
           padding: 0 0.3rem;
         }
+        wa-dropdown-item::part(label):focus-visible,
         wa-dropdown-item::part(label):hover {
           background: var(--color-slate-600);
           border-radius: 0.2rem;
         }
       </style>
 
+
+        <div x-comp="{sel: ''} ">
+          
+
+
       <wa-dropdown @wa-select="sel.value = ( $event.detail.item.value)">
         <wa-button slot="trigger" with-caret>Dropdown</wa-button>
-        <wa-dropdown-item value="Aa"> Aa </wa-dropdown-item>
-        <wa-dropdown-item value="Bb"> Bb </wa-dropdown-item>
-        <wa-dropdown-item value="Cc"> Cc </wa-dropdown-item>
+        <wa-dropdown-item value="copy">copy</wa-dropdown-item>
+        <wa-dropdown-item value="edit">edit</wa-dropdown-item>
+        <wa-dropdown-item value="save">save</wa-dropdown-item>
       </wa-dropdown>
+
+        <p>
+          selected "{sel.value}"</p>
+        </div>
     </main>
 
     <style>

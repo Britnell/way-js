@@ -15,6 +15,7 @@ export default defineConfig({
         todo: "todo.html",
         script: "script.html",
         quiet: "quiet.html",
+        awesome: "awesome.html",
         npm: "npm.html",
         filecomp: "filecomp.html",
       },
