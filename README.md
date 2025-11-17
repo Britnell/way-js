@@ -199,7 +199,7 @@ way.form(
       v.string(),
       v.minLength(4, "Password is too short"),
       v.maxLength(10, "Password is too long"),
-      v.regex(/\d/, "Password must include at least one digit")
+      v.regex(/\d/, "Password must include at least one digit"),
     ),
   },
   () => {
@@ -214,7 +214,7 @@ way.form(
         data.value = ev.detail;
       },
     };
-  }
+  },
 );
 ```
 
@@ -300,3 +300,6 @@ the usual :
 - [ ] rewrite x-for
 - [ ] x-form directive as separate script / plugin
 - [ ] named slots
+- [ ] turbo links script
+- [ ] vue style class {} and [] directives
+- [ ] change templating from {} to be compatible with astro and use $ instead
