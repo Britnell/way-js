@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -52,8 +52,8 @@
       <p>Because that's always the example</p>
 
       <ul class="flex flex-col gap-2 mb-4">
-        <template x-for="todo in list.value">
-          <li :key="todo.id">
+        <template x-for="todo in list.value" x-key="todo.id">
+          <li>
             <input
               type="checkbox"
               :checked="todo.done"
@@ -93,14 +93,14 @@
         const oninput = (ev, item) => {
           const val = ev.target.value;
           list.value = list.value.map((it) =>
-            it.id === item.id ? { ...it, name: val } : it
+            it.id === item.id ? { ...it, name: val } : it,
           );
         };
 
         const oncheck = (ev, item) => {
           const val = ev.target.checked;
           list.value = list.value.map((it) =>
-            it.id === item.id ? { ...it, done: val } : it
+            it.id === item.id ? { ...it, done: val } : it,
           );
         };
 

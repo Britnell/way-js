@@ -35,7 +35,7 @@ const directives: Record<
     const field = objectGet(data, expression);
     if (!isSignal(field)) {
       console.error(
-        `[x-model] Expression "${expression}" does not resolve to a signal. x-model requires a signal.`
+        `[x-model] Expression "${expression}" does not resolve to a signal. x-model requires a signal.`,
       );
       return;
     }
@@ -73,7 +73,7 @@ const directives: Record<
     }
 
     const templateContent = template.content.cloneNode(
-      true
+      true,
     ) as DocumentFragment;
     const slot = templateContent.querySelector("slot");
 
@@ -142,35 +142,110 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
   templateEl.parentNode!.insertBefore(wrapper, templateEl);
 
   const [itemVar, indexVar, arrayExpr] = parseForExpression(expression);
+  const keyAttr = templateEl.getAttribute("x-key");
+
+  // Store element references and their cleanup functions
+  const elementCleanup = new Map<string, () => void>();
 
   effect(() => {
     const rawResult = evaluateExpression(arrayExpr, data);
     const unwrappedArray = isSignal(rawResult) ? rawResult.value : rawResult;
 
-    wrapper.innerHTML = "";
+    if (!Array.isArray(unwrappedArray)) {
+      // Clean up all existing elements
+      elementCleanup.forEach(cleanup => cleanup());
+      elementCleanup.clear();
+      wrapper.innerHTML = "";
+      return;
+    }
 
-    if (Array.isArray(unwrappedArray)) {
-      for (let index = 0; index < unwrappedArray.length; index++) {
-        const item = unwrappedArray[index];
+    // Get new keys from data
+    const newItems = unwrappedArray.map((item, index) => ({
+      item,
+      index,
+      key: keyAttr ? evaluateExpression(keyAttr, { ...data, [itemVar]: item }) : `index-${index}`,
+    }));
+
+    const newKeys = newItems.map((item) => item.key);
+
+    // Create elementByKey map from current elements
+    const elementByKey = new Map();
+    Array.from(wrapper.children).forEach((el) => {
+      const key = el.getAttribute("data-key");
+      if (key) elementByKey.set(key, el);
+    });
+
+    // Remove elements that are no longer needed
+    elementByKey.forEach((element, key) => {
+      if (!newKeys.includes(key)) {
+        // Clean up effects for this element
+        const cleanup = elementCleanup.get(key);
+        if (cleanup) cleanup();
+        elementCleanup.delete(key);
+        element.remove();
+        elementByKey.delete(key);
+      }
+    });
+
+    // Batch DOM operations
+    const fragment = document.createDocumentFragment();
+
+    // Add or move elements to match new order
+    newItems.forEach((newItem) => {
+      const existingElement = elementByKey.get(newItem.key);
+
+      if (existingElement) {
+        // Update existing element's data context
         const itemScope = createItemContext(
           data,
           itemVar,
           indexVar,
-          item,
-          index
+          newItem.item,
+          newItem.index,
+        );
+        
+        // Update the element's data context for reactivity
+        existingElement._data = itemScope;
+        
+        // Move element to fragment in correct order
+        fragment.appendChild(existingElement);
+      } else {
+        // Create new element
+        const itemScope = createItemContext(
+          data,
+          itemVar,
+          indexVar,
+          newItem.item,
+          newItem.index,
         );
 
-        const fragment = templateEl.content.cloneNode(true) as DocumentFragment;
-        for (const node of Array.from(fragment.childNodes)) {
+        const templateFragment = templateEl.content.cloneNode(true) as DocumentFragment;
+        const children = Array.from(templateFragment.childNodes);
+
+        // Find the root element to attach the key
+        let rootElement = null;
+        for (const node of children) {
           if (node instanceof Element) {
+            rootElement = node;
             hydrate(node, itemScope);
           } else if (node instanceof Text) {
             hydrateBindings(node, itemScope);
           }
         }
-        wrapper.appendChild(fragment);
+
+        // Attach key to the root element
+        if (rootElement) {
+          rootElement.setAttribute("data-key", newItem.key);
+        }
+
+        // Add to fragment
+        fragment.appendChild(templateFragment);
       }
-    }
+    });
+
+    // Replace all children at once
+    wrapper.innerHTML = "";
+    wrapper.appendChild(fragment);
   });
 }
 
@@ -230,7 +305,7 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 
     if (activeTemplate) {
       const fragment = activeTemplate.content.cloneNode(
-        true
+        true,
       ) as DocumentFragment;
       const children = Array.from(fragment.children);
 
@@ -297,7 +372,7 @@ function hydrateData(element: Element, context: any): any {
       } catch (e) {
         console.error(
           `Failed to evaluate x-comp "${dataAttr}" as inline object`,
-          e
+          e,
         );
         return context;
       }
@@ -317,7 +392,7 @@ function hydrateData(element: Element, context: any): any {
           elementData = { ...elementData, ...componentData };
         } else {
           console.warn(
-            `Component "${componentName}" not found in x-comp "${dataAttr}"`
+            `Component "${componentName}" not found in x-comp "${dataAttr}"`,
           );
         }
       }
@@ -372,7 +447,7 @@ function hydrateBindings(node: Element | Text, context: any): void {
 
   // @events, :properties
   const specialAttrs = Array.from(node.attributes).filter(
-    (attr) => attr.name.startsWith("@") || attr.name.startsWith(":")
+    (attr) => attr.name.startsWith("@") || attr.name.startsWith(":"),
   );
   specialAttrs.forEach((attr) => {
     const expression = attr.value;
@@ -407,7 +482,7 @@ function bindTextInterpolation(node: Text, context: any) {
           } catch (e) {
             console.error(
               `Template interpolation error for "${expression}":`,
-              e
+              e,
             );
             return part;
           }
@@ -422,7 +497,7 @@ function bindProperty(
   element: Element,
   propName: string,
   expression: string,
-  context: any
+  context: any,
 ) {
   effect(() => {
     const value = evaluateExpression(expression, context);
@@ -500,13 +575,13 @@ function bindEvent(
   element: Element,
   eventName: string,
   expression: string,
-  context: any
+  context: any,
 ) {
   const { event: baseEvent, modifiers } = parseEventModifiers(eventName);
 
   // Find emit function from nearest web component parent
   const findEmit = (
-    el: Element
+    el: Element,
   ): ((eventName: string, ...args: any[]) => void) | null => {
     if (el?._data) {
       return createEmit(el);
@@ -550,7 +625,7 @@ function form(
   setup?: (context: {
     el: Element;
     emit: (eventName: string, arg?: any) => void;
-  }) => any
+  }) => any,
 ) {
   validationSchemas[name] = {
     fields,
@@ -564,7 +639,7 @@ function comp<T = any>(
     props: T;
     el: Element;
     emit: (eventName: string, arg?: any) => void;
-  }) => any
+  }) => any,
 ) {
   components[tag] = setup || (({ props }: { props: T }) => props);
   const template = document.getElementById(tag) as HTMLTemplateElement;
@@ -574,7 +649,7 @@ function comp<T = any>(
       registeredWebComponents.add(tag);
     } else {
       console.error(
-        `Web component "${tag}" has a hyphen in its name but no matching template found. The component will not be registered.`
+        `Web component "${tag}" has a hyphen in its name but no matching template found. The component will not be registered.`,
       );
     }
   }
@@ -630,7 +705,7 @@ function parseProps(el: Element, parentData: object) {
 
 function validateField(
   inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
-  formConfig: any
+  formConfig: any,
 ): void {
   const inputName = inputEl.name;
   if (!inputName) return;
@@ -734,7 +809,7 @@ function evaluateExpression(expression: string, data: any) {
   try {
     const result = new Function(
       "data",
-      `with(data) { return (${expression}) }`
+      `with(data) { return (${expression}) }`,
     )(data);
     // Auto-unwrap signals
     return isSignal(result) ? result.value : result;
@@ -744,7 +819,7 @@ function evaluateExpression(expression: string, data: any) {
 }
 
 function getInputValue(
-  inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
 ): any {
   if (inputEl instanceof HTMLInputElement) {
     if (inputEl.type === "checkbox") {
@@ -763,7 +838,7 @@ function getInputValue(
 
 function setInputValue(
   inputEl: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
-  value: any
+  value: any,
 ): void {
   if (inputEl instanceof HTMLInputElement) {
     if (inputEl.type === "checkbox") {
@@ -801,7 +876,7 @@ class wayComponent extends HTMLElement {
     }
 
     const templateContent = this.template.content.cloneNode(
-      true
+      true,
     ) as DocumentFragment;
 
     const templateSlots = Array.from(templateContent.querySelectorAll("slot"));
@@ -837,7 +912,7 @@ function createWebComponent(tag: string, template: HTMLTemplateElement) {
 }
 
 function parseForExpression(
-  expression: string
+  expression: string,
 ): [string, string | null, string] {
   const withIndex = expression.match(/^\((\w+),\s*(\w+)\)\s+in\s+(.+)$/);
   if (withIndex) {
@@ -857,7 +932,7 @@ function createItemContext(
   itemVar: string,
   indexVar: string | null,
   itemValue: any,
-  index: number
+  index: number,
 ): any {
   const context: any = {
     ...baseContext,
@@ -876,7 +951,7 @@ function createItemContext(
 function traverseDOM(
   root: Element,
   initialContext: any = {},
-  callback: (node: Element | Text, context: any) => any
+  callback: (node: Element | Text, context: any) => any,
 ): void {
   function traverseNode(node: Element | Text, currentContext: any): void {
     if (node instanceof Element) {
@@ -905,7 +980,7 @@ async function waitForWebComponents(names: Set<string>): Promise<void> {
   const potentialTags = Array.from(names).filter((tag) => tag.includes("-"));
   if (potentialTags.length > 0) {
     const definitionPromises = potentialTags.map((tag) =>
-      customElements.whenDefined(tag).catch(() => null)
+      customElements.whenDefined(tag).catch(() => null),
     );
     await Promise.all(definitionPromises);
   }
@@ -917,7 +992,7 @@ function createEmit(component: Element) {
       new CustomEvent(eventName, {
         detail: arg,
         bubbles: true,
-      })
+      }),
     );
   };
 }
