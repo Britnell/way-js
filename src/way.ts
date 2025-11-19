@@ -144,73 +144,52 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
   const [itemVar, indexVar, arrayExpr] = parseForExpression(expression);
   const keyAttr = templateEl.getAttribute("x-key");
 
-  // Store element references and their cleanup functions
-  const elementCleanup = new Map<string, () => void>();
+  let previousData = new Map<string, any>();
 
   effect(() => {
     const rawResult = evaluateExpression(arrayExpr, data);
     const unwrappedArray = isSignal(rawResult) ? rawResult.value : rawResult;
 
     if (!Array.isArray(unwrappedArray)) {
-      // Clean up all existing elements
-      elementCleanup.forEach(cleanup => cleanup());
-      elementCleanup.clear();
       wrapper.innerHTML = "";
+      previousData.clear();
       return;
     }
 
-    // Get new keys from data
     const newItems = unwrappedArray.map((item, index) => ({
       item,
       index,
-      key: keyAttr ? evaluateExpression(keyAttr, { ...data, [itemVar]: item }) : `index-${index}`,
+      key: keyAttr
+        ? evaluateExpression(keyAttr, { ...data, [itemVar]: item })
+        : `index-${index}`,
     }));
 
-    const newKeys = newItems.map((item) => item.key);
+    const newKeys = new Set(newItems.map((item) => item.key));
+    const currentElements = new Map<string, Element>();
+    const nextData = new Map<string, any>();
 
-    // Create elementByKey map from current elements
-    const elementByKey = new Map();
+    // Build map of current elements
     Array.from(wrapper.children).forEach((el) => {
       const key = el.getAttribute("data-key");
-      if (key) elementByKey.set(key, el);
-    });
-
-    // Remove elements that are no longer needed
-    elementByKey.forEach((element, key) => {
-      if (!newKeys.includes(key)) {
-        // Clean up effects for this element
-        const cleanup = elementCleanup.get(key);
-        if (cleanup) cleanup();
-        elementCleanup.delete(key);
-        element.remove();
-        elementByKey.delete(key);
+      if (key) {
+        currentElements.set(key, el);
       }
     });
 
-    // Batch DOM operations
     const fragment = document.createDocumentFragment();
 
-    // Add or move elements to match new order
     newItems.forEach((newItem) => {
-      const existingElement = elementByKey.get(newItem.key);
+      const key = newItem.key;
+      const oldData = previousData.get(key);
+      const currentEl = currentElements.get(key);
 
-      if (existingElement) {
-        // Update existing element's data context
-        const itemScope = createItemContext(
-          data,
-          itemVar,
-          indexVar,
-          newItem.item,
-          newItem.index,
-        );
-        
-        // Update the element's data context for reactivity
-        existingElement._data = itemScope;
-        
-        // Move element to fragment in correct order
-        fragment.appendChild(existingElement);
+      nextData.set(key, newItem.item);
+
+      // If element exists and its data has not changed, reuse it
+      if (currentEl && oldData === newItem.item) {
+        fragment.appendChild(currentEl);
       } else {
-        // Create new element
+        // Otherwise, create a new element (for new items or changed data)
         const itemScope = createItemContext(
           data,
           itemVar,
@@ -219,33 +198,28 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
           newItem.index,
         );
 
-        const templateFragment = templateEl.content.cloneNode(true) as DocumentFragment;
-        const children = Array.from(templateFragment.childNodes);
+        const templateFragment =
+          templateEl.content.cloneNode(true) as DocumentFragment;
+        let rootElement: Element | null = null;
 
-        // Find the root element to attach the key
-        let rootElement = null;
-        for (const node of children) {
+        for (const node of Array.from(templateFragment.childNodes)) {
           if (node instanceof Element) {
-            rootElement = node;
+            if (!rootElement) rootElement = node;
             hydrate(node, itemScope);
           } else if (node instanceof Text) {
             hydrateBindings(node, itemScope);
           }
         }
 
-        // Attach key to the root element
         if (rootElement) {
-          rootElement.setAttribute("data-key", newItem.key);
+          rootElement.setAttribute("data-key", key);
         }
-
-        // Add to fragment
         fragment.appendChild(templateFragment);
       }
     });
 
-    // Replace all children at once
-    wrapper.innerHTML = "";
-    wrapper.appendChild(fragment);
+    previousData = nextData;
+    wrapper.replaceChildren(fragment);
   });
 }
 
