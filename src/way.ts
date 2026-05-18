@@ -40,10 +40,6 @@ const directives: Record<
       return;
     }
 
-    // Set initial value after next tick to fix select element timing issue
-    setTimeout(() => {
-      setInputValue(inputEl, field.value);
-    }, 0);
     effectOn(inputEl, () => {
       setInputValue(inputEl, field.value);
     });
@@ -323,25 +319,33 @@ async function render(root: Element, initial?: any) {
 }
 
 function hydrate(root: Element = document.body, initialContext: any = { $store: stores }) {
-  traverseDOM(root, initialContext, (node, ctx) => {
-    let newContext = { ...ctx };
-
-    if (node instanceof Element) {
-      // * data
-      newContext = hydrateData(node, newContext);
-
-      // * components
-      const componentContext = hydrateWebComponent(node, newContext);
-      if (componentContext !== newContext) {
-        newContext = componentContext;
-      }
+  // Two-phase walk: context flows top-down, directives bind bottom-up.
+  // Binding directives after children are in place lets x-model on <select>
+  // see options produced by x-for/x-if inside it.
+  function walk(node: Element | Text, ctx: any): void {
+    if (node instanceof Text) {
+      hydrateBindings(node, ctx);
+      return;
     }
 
-    // * bindings
-    hydrateBindings(node, newContext);
+    if (!(node instanceof Element)) return;
 
-    return newContext;
-  });
+    const dontparse = ["SCRIPT", "STYLE"].includes(node.tagName);
+    const componentTemplate = node.tagName === "TEMPLATE" && node.id;
+    if (dontparse || componentTemplate) return;
+
+    let newCtx = hydrateData(node, ctx);
+    const componentCtx = hydrateWebComponent(node, newCtx);
+    if (componentCtx !== newCtx) newCtx = componentCtx;
+
+    for (const child of Array.from(node.childNodes)) {
+      walk(child as Element | Text, newCtx);
+    }
+
+    hydrateBindings(node, newCtx);
+  }
+
+  walk(root, initialContext);
 }
 
 function hydrateData(element: Element, context: any): any {
@@ -1009,34 +1013,6 @@ function createItemContext(
   }
 
   return context;
-}
-
-function traverseDOM(
-  root: Element,
-  initialContext: any = {},
-  callback: (node: Element | Text, context: any) => any,
-): void {
-  function traverseNode(node: Element | Text, currentContext: any): void {
-    if (node instanceof Element) {
-      const dontparse = ["SCRIPT", "STYLE"].includes(node.tagName);
-      const componentTemplate = node.tagName === "TEMPLATE" && node.id;
-      if (dontparse || componentTemplate) {
-        return;
-      }
-
-      const newContext = callback(node, currentContext);
-
-      const childNodes = Array.from(node.childNodes);
-      for (const child of childNodes) {
-        traverseNode(child as Element | Text, newContext);
-      }
-    } else if (node instanceof Text) {
-      callback(node, currentContext);
-    }
-  }
-
-  // Start traversal from the root element
-  traverseNode(root, initialContext);
 }
 
 async function waitForWebComponents(names: Set<string>): Promise<void> {

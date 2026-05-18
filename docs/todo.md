@@ -62,11 +62,3 @@ Verify intended behaviour and document, or isolate the form submit event so it d
 
 ---
 
-## x-model
-
-### `setTimeout(0)` for select element initial value is a race
-**File:** `src/way.ts` — `x-model` directive (~line 44)
-
-The timeout is a workaround for select elements where `<option>` children aren't in the DOM yet. If options are themselves dynamically rendered (via x-for), the timeout may still fire before they're ready, leaving the select unset.
-
-Fix: set the select value in a `requestAnimationFrame` or after the next effect flush, or ensure x-for children are hydrated before x-model resolves.
