@@ -314,16 +314,16 @@ async function render(root: Element, initial?: any) {
   document.dispatchEvent(new CustomEvent("way:init"));
   await waitForWebComponents(registeredWebComponents);
 
-  hydrate(root, initial);
+  const rootContext = {
+    ...window.pageprops,
+    ...initial,
+    $store: stores,
+  };
+  hydrate(root, rootContext);
 }
 
-function hydrate(root: Element = document.body, initialContext = {}) {
-  const contextWithStores = {
-    ...stores,
-    ...window.pageprops,
-    ...initialContext,
-  };
-  traverseDOM(root, contextWithStores, (node, ctx) => {
+function hydrate(root: Element = document.body, initialContext: any = { $store: stores }) {
+  traverseDOM(root, initialContext, (node, ctx) => {
     let newContext = { ...ctx };
 
     if (node instanceof Element) {

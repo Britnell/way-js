@@ -254,8 +254,9 @@ way.store("user", () => {
 });
 ```
 
-currently need to use theme variables via
-`<p>userid : {user.id}</p>
+Stores are exposed under the `$store` namespace in templates, so they never collide with component-local data:
+
+`<p>userid : {$store.user.id}</p>`
 
 ## MPA
 

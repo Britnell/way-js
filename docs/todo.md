@@ -75,24 +75,6 @@ Fix: set the select value in a `requestAnimationFrame` or after the next effect 
 
 ## API / Developer Experience
 
-### No namespace for stores — name collisions with component locals
-**File:** `src/way.ts` — `hydrate` (~line 308), `store` (~line 592)
-
-Stores are spread into the root context as flat keys: `{...stores, ...initialContext}`. A component returning a key with the same name silently shadows the store (or vice versa). There is no way to access a store if it is shadowed.
-
-Fix: expose stores under a dedicated namespace, e.g. `$store`, so templates use `{$store.user.id}` and collisions are impossible.
-
----
-
-### Stores re-merged at every nested `hydrate` call
-**File:** `src/way.ts` — `hydrate` (~line 308)
-
-Every call to `hydrate` (including recursive calls from `ifDirective` and `forLoopDirective`) spreads `stores` and `window.pageprops` into a fresh context object. In an x-for with many items this allocates a new merged object per item per render.
-
-Fix: merge stores once at the top-level `render` call and pass the merged root context down; nested `hydrate` calls should accept it directly without re-merging.
-
----
-
 ### `x-load` forces `display: block`, breaking flex/grid containers
 **File:** `src/way.ts` — `x-load` directive (~line 58), README
 
