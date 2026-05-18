@@ -1,140 +1,148 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
-    <script src="/way-inline.js"></script>
-    <link rel="stylesheet" href="/pages/style.css" />
-    <script type="module" src="/pages/todo.ts"></script>
-  </head>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Vite + TS</title>
+        <script src="/way-inline.js"></script>
+        <link rel="stylesheet" href="/pages/style.css" />
+        <script type="module" src="/pages/todo.ts"></script>
+    </head>
 
-  <body class="content-grid">
-    <header class="flex justify-between items-center">
-      <a href="/way-js/" class="">Way js</a>
-      <nav>
-        <ul class="flex gap-4 py-2">
-          <li>
-            <a href="/way-js/" class="underline">home</a>
-          </li>
-          <li>
-            <a href="/way-js/blog" class="underline">blog</a>
-          </li>
-          <li>
-            <a href="/way-js/demo" class="">demos</a>
-          </li>
-          <li>
-            <a
-              href="https://github.com/Britnell/way-js"
-              class="underline"
-              target="_blank"
-              >git
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://www.npmjs.com/package/wayy"
-              class="underline"
-              target="_blank"
-              >npm
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </header>
+    <body class="content-grid">
+        <header class="flex justify-between items-center">
+            <a href="/way-js/" class="">Way js</a>
+            <nav>
+                <ul class="flex gap-4 py-2">
+                    <li>
+                        <a href="/way-js/" class="underline">home</a>
+                    </li>
+                    <li>
+                        <a href="/way-js/blog" class="underline">blog</a>
+                    </li>
+                    <li>
+                        <a href="/way-js/demo" class="">demos</a>
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/Britnell/way-js"
+                            class="underline"
+                            target="_blank"
+                            >git
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="https://www.npmjs.com/package/wayy"
+                            class="underline"
+                            target="_blank"
+                            >npm
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </header>
 
-    <demo-menu x-props="{page:'todo'}"></demo-menu>
-    <include src="./pages/demomenu.html"></include>
+        <demo-menu x-props="{page:'todo'}"></demo-menu>
+        <include src="./pages/demomenu.html"></include>
 
-    <h1 class="text-3xl font-bold my-10">Example Todo app</h1>
-    <div x-comp="todo">
-      <p>Because that's always the example</p>
+        <h1 class="text-3xl font-bold my-10">Example Todo app</h1>
+        <div x-comp="todo">
+            <p>Because that's always the example</p>
 
-      <ul class="flex flex-col gap-2 mb-4">
-        <template x-for="todo in list.value" x-key="todo.id">
-          <li>
-            <input
-              type="checkbox"
-              :checked="todo.done"
-              @input="oncheck($event,todo)"
-            />
-            <input :value="todo.name" @change="oninput($event,todo)" />
-            <!-- {todo.name} -->
+            <ul class="flex flex-col gap-2 mb-4">
+                <template x-for="todo in list.value" x-key="todo.id">
+                    <li>
+                        <input
+                            type="checkbox"
+                            :checked="todo.done"
+                            @input="oncheck($event,todo)"
+                        />
+                        <input
+                            :value="todo.name"
+                            @change="oninput($event,todo)"
+                        />
+                        <!-- {todo.name} -->
 
-            <button @click="removeTodo(todo)">x</button>
-          </li>
-        </template>
-      </ul>
-      <button @click="create()">new</button>
-    </div>
-    <script>
-      way.comp("todo", () => {
-        const key = "todo";
+                        <button @click="removeTodo(todo)">x</button>
+                    </li>
+                </template>
+            </ul>
+            <button @click="create()">new</button>
+        </div>
+        <script>
+            way.comp("todo", () => {
+                const key = "todo";
 
-        let initial = [];
-        try {
-          const str = localStorage.getItem(key);
-          if (!str) throw new Error("x");
-          const x = JSON.parse(str);
-          if (Array.isArray(x)) {
-            initial = x;
-          }
-        } catch {
-          initial = [
-            {
-              id: 0,
-              name: "one",
-              done: true,
-            },
-          ];
-        }
+                let initial = [];
+                try {
+                    const str = localStorage.getItem(key);
+                    if (!str) throw new Error("x");
+                    const x = JSON.parse(str);
+                    if (Array.isArray(x)) {
+                        initial = x;
+                    }
+                } catch {
+                    initial = [
+                        {
+                            id: 0,
+                            name: "one",
+                            done: true,
+                        },
+                    ];
+                }
 
-        const list = way.signal(initial);
+                const list = way.signal(initial);
 
-        const oninput = (ev, item) => {
-          const val = ev.target.value;
-          list.value = list.value.map((it) =>
-            it.id === item.id ? { ...it, name: val } : it,
-          );
-        };
+                const oninput = (ev, item) => {
+                    const val = ev.target.value;
+                    list.value = list.value.map((it) =>
+                        it.id === item.id ? { ...it, name: val } : it,
+                    );
+                };
 
-        const oncheck = (ev, item) => {
-          const val = ev.target.checked;
-          list.value = list.value.map((it) =>
-            it.id === item.id ? { ...it, done: val } : it,
-          );
-        };
+                const oncheck = (ev, item) => {
+                    const val = ev.target.checked;
+                    list.value = list.value.map((it) =>
+                        it.id === item.id ? { ...it, done: val } : it,
+                    );
+                };
 
-        way.effect(() => {
-          if (list.value?.length) {
-            localStorage.setItem(key, JSON.stringify(list.value));
-          }
-        });
+                way.effect(() => {
+                    if (list.value?.length) {
+                        localStorage.setItem(key, JSON.stringify(list.value));
+                    }
+                });
 
-        const create = () => {
-          const ids = list.value.map((it) => it.id).sort((a, b) => b - a);
-          const lastid = (ids[0] ?? 0) + 1;
-          list.value = [...list.value, { id: lastid, name: "", done: false }];
-        };
+                const create = () => {
+                    const ids = list.value
+                        .map((it) => it.id)
+                        .sort((a, b) => b - a);
+                    const lastid = (ids[0] ?? 0) + 1;
+                    list.value = [
+                        ...list.value,
+                        { id: lastid, name: "", done: false },
+                    ];
+                };
 
-        const removeTodo = (item) => {
-          console.log(item);
-          list.value = list.value.filter((it) => it.id !== item.id);
-        };
-        return {
-          list,
-          oninput,
-          oncheck,
-          removeTodo,
-          create,
-        };
-      });
-    </script>
-    <style>
-      [x-load] {
-        display: none;
-      }
-    </style>
-  </body>
+                const removeTodo = (item) => {
+                    console.log(item);
+                    list.value = list.value.filter((it) => it.id !== item.id);
+                };
+                return {
+                    list,
+                    oninput,
+                    oncheck,
+                    removeTodo,
+                    create,
+                };
+            });
+        </script>
+        <style>
+            [x-load] {
+                display: none;
+            }
+        </style>
+    </body>
 </html>

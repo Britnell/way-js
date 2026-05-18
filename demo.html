@@ -1,208 +1,219 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
-    <script src="/way-inline.js"></script>
-    <link rel="stylesheet" href="/pages/style.css" />
-    <script type="module" src="/pages/demo.ts"></script>
-  </head>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Vite + TS</title>
+        <script src="/way-inline.js"></script>
+        <link rel="stylesheet" href="/pages/style.css" />
+        <script type="module" src="/pages/demo.ts"></script>
+    </head>
 
-  <body class="content-grid mb-20">
-    <header class="flex justify-between items-center">
-      <a href="/way-js/" class="">Way js</a>
-      <nav>
-        <ul class="flex gap-4 py-2">
-          <li>
-            <a href="/way-js/" class="underline">home</a>
-          </li>
-          <li>
-            <a href="/way-js/blog" class="underline">blog</a>
-          </li>
-          <li>
-            <a href="/way-js/demo" class="">demos</a>
-          </li>
-          <li>
-            <a
-              href="https://github.com/Britnell/way-js"
-              class="underline"
-              target="_blank"
-              >git
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://www.npmjs.com/package/wayy"
-              class="underline"
-              target="_blank"
-              >npm
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </header>
+    <body class="content-grid mb-20">
+        <header class="flex justify-between items-center">
+            <a href="/way-js/" class="">Way js</a>
+            <nav>
+                <ul class="flex gap-4 py-2">
+                    <li>
+                        <a href="/way-js/" class="underline">home</a>
+                    </li>
+                    <li>
+                        <a href="/way-js/blog" class="underline">blog</a>
+                    </li>
+                    <li>
+                        <a href="/way-js/demo" class="">demos</a>
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/Britnell/way-js"
+                            class="underline"
+                            target="_blank"
+                            >git
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="https://www.npmjs.com/package/wayy"
+                            class="underline"
+                            target="_blank"
+                            >npm
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </header>
 
-    <demo-menu x-props="{page:'demo'}"></demo-menu>
-    <include src="./pages/demomenu.html"></include>
+        <demo-menu x-props="{page:'demo'}"></demo-menu>
+        <include src="./pages/demomenu.html"></include>
 
-    <h1 class="text-3xl font-bold my-10">Tests / demos</h1>
-    <p>To look at the source, just inspect the page!</p>
+        <h1 class="text-3xl font-bold my-10">Tests / demos</h1>
+        <p>To look at the source, just inspect the page!</p>
 
-    <main id="app" x-load>
-      <div class="demo-grid">
-        <div x-comp="counter">
-          <h3>counter</h3>
-          <p :style="{'--x': count}">count A : {count} x 2 = {double}</p>
-          <button @click="incr()">+</button>
-          <button @click="decr()">-</button>
+        <main id="app" x-load>
+            <div class="demo-grid">
+                <div x-comp="counter">
+                    <h3>counter</h3>
+                    <p :style="{'--x': count}">
+                        count A : {count} x 2 = {double}
+                    </p>
+                    <button @click="incr()">+</button>
+                    <button @click="decr()">-</button>
 
-          <ul
-            class="for-list"
-            :style="{'font-size': `${Math.max(6,28-count.value*0.5)}px`}"
-          >
-            <template x-for="(x,i) in Array(count.value).fill(0)">
-              <li :key="i" :class="">{i+1}</li>
-            </template>
-          </ul>
-        </div>
+                    <ul
+                        class="for-list"
+                        :style="{'font-size': `${Math.max(6,28-count.value*0.5)}px`}"
+                    >
+                        <template x-for="(x,i) in Array(count.value).fill(0)">
+                            <li :key="i" :class="">{i+1}</li>
+                        </template>
+                    </ul>
+                </div>
 
-        <div x-comp="counter">
-          <h3>reuse for another counter</h3>
-          <p>Counter B : {count}</p>
-          <button @click="incr()">+1</button>
-        </div>
+                <div x-comp="counter">
+                    <h3>reuse for another counter</h3>
+                    <p>Counter B : {count}</p>
+                    <button @click="incr()">+1</button>
+                </div>
 
-        <my-clock x-props="{seconds:true}"></my-clock>
+                <my-clock x-props="{seconds:true}"></my-clock>
 
-        <div x-comp="counter">
-          <h3>Component props</h3>
-          <p>
-            pass in other signals into components via props. also you can use
-            components as web-components with templating or also jsut use their
-            state with x-comp
-          </p>
-          <p>Counter C : {count}</p>
-          <button @click="incr()">+1</button>
-          <count-down x-props="{start: count}"></count-down>
-          <div x-comp="count-down" x-props="{start: count}">
-            <p>data only countdown = {countdown}</p>
-          </div>
-        </div>
+                <div x-comp="counter">
+                    <h3>Component props</h3>
+                    <p>
+                        pass in other signals into components via props. also
+                        you can use components as web-components with templating
+                        or also jsut use their state with x-comp
+                    </p>
+                    <p>Counter C : {count}</p>
+                    <button @click="incr()">+1</button>
+                    <count-down x-props="{start: count}"></count-down>
+                    <div x-comp="count-down" x-props="{start: count}">
+                        <p>data only countdown = {countdown}</p>
+                    </div>
+                </div>
 
-        <form x-form="login" @onsubmit="onsubmit($event)">
-          <h3>Forms</h3>
-          <p>Hi "{name}"</p>
-          <label>
-            Name:
-            <input x-model="name" name="name" aria-describedby="nameerror" />
-          </label>
-          <p class="text-red-900" id="nameerror"></p>
+                <form x-form="login" @onsubmit="onsubmit($event)">
+                    <h3>Forms</h3>
+                    <p>Hi "{name}"</p>
+                    <label>
+                        Name:
+                        <input
+                            x-model="name"
+                            name="name"
+                            aria-describedby="nameerror"
+                        />
+                    </label>
+                    <p class="text-red-900" id="nameerror"></p>
 
-          <label>
-            password:
-            <input name="password" aria-describedby="passworderror" />
-          </label>
-          <p class="text-red-900" id="passworderror"></p>
-          <button>Submit</button>
-        </form>
+                    <label>
+                        password:
+                        <input
+                            name="password"
+                            aria-describedby="passworderror"
+                        />
+                    </label>
+                    <p class="text-red-900" id="passworderror"></p>
+                    <button>Submit</button>
+                </form>
 
-        <div>
-          <h2>Stores</h2>
-          <label for="col">change theme col</label>
-          <input id="col" type="color" x-model="theme.color" />
-          <p>{theme.color}</p>
-        </div>
+                <div>
+                    <h2>Stores</h2>
+                    <label for="col">change theme col</label>
+                    <input id="col" type="color" x-model="theme.color" />
+                    <p>{theme.color}</p>
+                </div>
 
-        <div>
-          <x-card>
-            <span slot="heading">title</span>
-            <p>lorem ipsum</p>
-            <button slot="tags">alert</button>
-          </x-card>
-        </div>
-      </div>
-    </main>
+                <div>
+                    <x-card>
+                        <span slot="heading">title</span>
+                        <p>lorem ipsum</p>
+                        <button slot="tags" @click="console.log('alarm!')">
+                            alert
+                        </button>
+                    </x-card>
+                </div>
+            </div>
+        </main>
 
-    <script>
-      way.comp("counter", () => {
-        const count = way.signal(1);
-        const double = way.computed(() => count.value * 2);
-        way.effect(() => {
-          console.log(` the count is ${count.value}`);
-        });
-        const incr = () => count.value++;
-        const decr = () => count.value--;
-        return { count, double, incr, decr };
-      });
-    </script>
+        <script>
+            way.comp("counter", () => {
+                const count = way.signal(1);
+                const double = way.computed(() => count.value * 2);
+                way.effect(() => {
+                    console.log(` the count is ${count.value}`);
+                });
+                const incr = () => count.value++;
+                const decr = () => count.value--;
+                return { count, double, incr, decr };
+            });
+        </script>
 
-    <template id="my-clock">
-      <p :style="{color: theme.color.value}">The time is {time}</p>
-    </template>
-    <script>
-      way.comp("my-clock", ({ props }) => {
-        const time = way.signal(gettime());
+        <template id="my-clock">
+            <p :style="{color: theme.color.value}">The time is {time}</p>
+        </template>
+        <script>
+            way.comp("my-clock", ({ props }) => {
+                const time = way.signal(gettime());
 
-        function gettime() {
-          const d = new Date();
-          const h = d.getHours().toString();
-          const m = d.getMinutes().toString().padStart(2, "0");
-          const s = d.getSeconds().toString().padStart(2, "0");
-          let t = `${h}:${m}`;
-          if (props.seconds) t += `:${s}`;
-          return t;
-        }
+                function gettime() {
+                    const d = new Date();
+                    const h = d.getHours().toString();
+                    const m = d.getMinutes().toString().padStart(2, "0");
+                    const s = d.getSeconds().toString().padStart(2, "0");
+                    let t = `${h}:${m}`;
+                    if (props.seconds) t += `:${s}`;
+                    return t;
+                }
 
-        setInterval(() => {
-          time.value = gettime();
-        }, 1000);
-        return {
-          time,
-        };
-      });
-    </script>
+                setInterval(() => {
+                    time.value = gettime();
+                }, 1000);
+                return {
+                    time,
+                };
+            });
+        </script>
 
-    <template id="count-down">
-      <p>countdown! : {countdown}</p>
-    </template>
+        <template id="count-down">
+            <p>countdown! : {countdown}</p>
+        </template>
 
-    <script>
-      way.comp("count-down", ({ props }) => {
-        const start = props.start;
-        const countdown = way.signal(start.value);
-        let intvl;
+        <script>
+            way.comp("count-down", ({ props }) => {
+                const start = props.start;
+                const countdown = way.signal(start.value);
+                let intvl;
 
-        const runcountdown = () => {
-          if (intvl) clearInterval(intvl);
-          countdown.value = start.value;
-          intvl = setInterval(() => {
-            if (countdown.value > 0) {
-              countdown.value -= 1;
-            } else {
-              clearInterval(intvl);
+                const runcountdown = () => {
+                    if (intvl) clearInterval(intvl);
+                    countdown.value = start.value;
+                    intvl = setInterval(() => {
+                        if (countdown.value > 0) {
+                            countdown.value -= 1;
+                        } else {
+                            clearInterval(intvl);
+                        }
+                    }, 500);
+                };
+
+                way.effect(() => {
+                    runcountdown();
+                });
+
+                return { countdown };
+            });
+        </script>
+
+        <style>
+            [x-load] {
+                display: none;
             }
-          }, 500);
-        };
 
-        way.effect(() => {
-          runcountdown();
-        });
-
-        return { countdown };
-      });
-    </script>
-
-    <style>
-      [x-load] {
-        display: none;
-      }
-
-      h2,
-      h3 {
-        font-weight: bold;
-      }
-    </style>
-  </body>
+            h2,
+            h3 {
+                font-weight: bold;
+            }
+        </style>
+    </body>
 </html>
