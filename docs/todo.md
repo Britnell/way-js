@@ -2,16 +2,6 @@
 
 ---
 
-### Double-hydration when `way.render()` called manually
-**File:** `src/way.ts` — auto-render at line 765, also exported `render` API
-
-`render(document.body, ...)` is automatically invoked on `DOMContentLoaded`. The README also instructs users to call `way.render(document.body)` from their `main.ts`. Both paths run `hydrate` on the same tree, so every `effect()` call in every directive is registered twice — event handlers double-fire, x-model has two conflicting writers, x-text renders twice, etc.
-
-Fix: either remove the auto-render, remove the manual-render instruction from docs, or guard with a flag so hydration only runs once.
-
-
----
-
 ### Event modifier `.outside` is broken
 **File:** `src/way.ts` — `eventModifiers.outside` (~line 523)
 

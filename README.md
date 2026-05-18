@@ -45,8 +45,6 @@ A reactive web framework combining the best of HTML, Signals, and Web Components
   import way from "wayy";
 
   way.comp('other',()=>{...})
-
-  way.render(document.body);
 </script>
 ```
 
@@ -280,7 +278,7 @@ Create a global store.
 
 ### way.render(root, initial?)
 
-Hydrate the DOM and render the app
+Hydrate the DOM and render the app. Called automatically on `DOMContentLoaded` — you do not need to call this manually.
 
 ### way.form(name, fields, onSubmit?)
 

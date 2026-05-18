@@ -546,13 +546,15 @@ const eventModifiers: Record<
   stop: (_element, event) => {
     event.stopPropagation();
   },
-  outside: (element, event) => {
-    if (!event.target) return true;
-    // Skip execution if click is inside
-    if (element.contains(event.target as Node)) {
-      return true;
-    }
-  },
+  // outside: (element, event) => {
+  // TODO - reimplement
+  // clicks outside dont bubble up
+  //   if (!event.target) return true;
+  //   // Skip execution if click is inside
+  //   if (element.contains(event.target as Node)) {
+  //     return true;
+  //   }
+  // },
   self: (element, event) => {
     // Skip execution if target is not the element itself
     if (event.target !== element) {
