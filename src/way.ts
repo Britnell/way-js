@@ -348,6 +348,13 @@ function hydrateData(element: Element, context: any): any {
   const dataAttr = element.getAttribute("x-comp");
   const formAttr = element.getAttribute("x-form");
 
+  if (dataAttr && element.tagName.includes("-")) {
+    console.error(
+      `x-comp cannot be used on a web component element (<${element.tagName.toLowerCase()}>). Use either a web component tag or x-comp, not both.`,
+    );
+    return context;
+  }
+
   let elementData: any = {};
 
   if (dataAttr) {

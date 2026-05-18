@@ -9,23 +9,6 @@
 
 Fix: either remove the auto-render, remove the manual-render instruction from docs, or guard with a flag so hydration only runs once.
 
----
-
-### No guard against combining `x-comp` and web component tag — setup runs twice
-**File:** `src/way.ts` — `hydrateData` (~line 335) and `hydrateWebComponent` (~line 393)
-
-The codebase uses the two patterns as alternatives: `<x-counter>` (web component, no `x-comp`) or `<div x-comp="count-down">` (logic-only, no web component tag). No example combines them. However if a user writes `<x-counter x-comp="x-counter">`, both `hydrateData` and `hydrateWebComponent` will match and call the setup function — `_data` gets overwritten, signals are duplicated, side effects run twice.
-
-Fix: add a defensive check in `hydrateWebComponent` to skip if `element._data` is already populated, and warn in the console that the two patterns should not be combined.
-
----
-
-### `x-show` with `x-else` claims unrelated siblings
-**File:** `src/way.ts` — `x-show` directive (~line 19)
-
-The `x-show` handler grabs `el.nextElementSibling` and toggles its display if it has `x-else`. This is positional — any immediately following element with `x-else` is affected, including `<template x-else>` elements belonging to a different `x-if` chain that happen to follow the `x-show` element. This causes unintended show/hide of unrelated DOM.
-
-Fix: use a distinct attribute for x-show's else branch (e.g. `x-show-else`), or add a marker on the pair during hydration.
 
 ---
 
