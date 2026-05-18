@@ -857,6 +857,7 @@ function evaluateExpression(expression: string, data: any) {
     const result = fn(data);
     return isSignal(result) ? result.value : result;
   } catch (e) {
+    console.warn(`evaluateExpression failed for: "${expression}"`, e);
     return null;
   }
 }
