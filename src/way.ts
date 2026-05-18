@@ -12,12 +12,12 @@ const directives: Record<
   (el: Element, expression: string, data: any) => void
 > = {
   "x-text": (el, expression, data) => {
-    effect(() => {
+    effectOn(el, () => {
       el.textContent = evaluateExpression(expression, data);
     });
   },
   "x-show": (el, expression, data) => {
-    effect(() => {
+    effectOn(el, () => {
       const shouldShow = evaluateExpression(expression, data);
       (el as HTMLElement).style.display = shouldShow ? "" : "none";
       // x-else
@@ -44,7 +44,7 @@ const directives: Record<
     setTimeout(() => {
       setInputValue(inputEl, field.value);
     }, 0);
-    effect(() => {
+    effectOn(inputEl, () => {
       setInputValue(inputEl, field.value);
     });
 
@@ -146,10 +146,11 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
 
   let previousData = new Map<string, any>();
 
-  effect(() => {
+  effectOn(wrapper, () => {
     const forList = evaluateExpression(arrayExpr, data);
 
     if (!Array.isArray(forList)) {
+      disposeDescendants(wrapper);
       wrapper.innerHTML = "";
       previousData.clear();
       return;
@@ -171,7 +172,10 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
 
     const newKeys = new Set(newItems.map((i) => i.key));
     currentElements.forEach((el, key) => {
-      if (!newKeys.has(key)) el.remove();
+      if (!newKeys.has(key)) {
+        disposeSubtree(el);
+        el.remove();
+      }
     });
 
     const fragment = document.createDocumentFragment();
@@ -219,6 +223,9 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
     });
 
     previousData = nextData;
+    // Any element still in wrapper at this point is being replaced
+    // (obsoletes already removed above, reused ones moved into fragment).
+    Array.from(wrapper.children).forEach((el) => disposeSubtree(el));
     wrapper.replaceChildren(fragment);
   });
 }
@@ -261,7 +268,7 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 
   let lastActiveTemplate: HTMLTemplateElement | null = null;
 
-  effect(() => {
+  effectOn(wrapper, () => {
     let activeTemplate: HTMLTemplateElement | null = null;
 
     for (const { template, expression } of chain) {
@@ -275,6 +282,7 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
       return;
     }
 
+    disposeDescendants(wrapper);
     wrapper.innerHTML = "";
 
     if (activeTemplate) {
@@ -298,7 +306,11 @@ function ifDirective(templateEl: Element, expression: string, data: any) {
 
 //  * Hydration
 
+let _hydrated = false;
+
 async function render(root: Element, initial?: any) {
+  if (_hydrated) return;
+  _hydrated = true;
   document.dispatchEvent(new CustomEvent("way:init"));
   await waitForWebComponents(registeredWebComponents);
 
@@ -453,7 +465,7 @@ function bindTextInterpolation(node: Text, context: any) {
 
   const parts = txt.split(/(\{[^{}]*\})/g);
 
-  effect(() => {
+  effectOn(node, () => {
     node.textContent = parts
       .map((part) => {
         if (part.startsWith("{") && part.endsWith("}")) {
@@ -481,7 +493,7 @@ function bindProperty(
   expression: string,
   context: any,
 ) {
-  effect(() => {
+  effectOn(element, () => {
     const value = evaluateExpression(expression, context);
 
     if (propName === "class") {
@@ -757,6 +769,9 @@ declare global {
   interface Element {
     _data?: any;
   }
+  interface Node {
+    __effects?: (() => void)[];
+  }
 }
 
 declare global {
@@ -777,6 +792,36 @@ document.addEventListener("DOMContentLoaded", () => {
 export default way;
 
 //  *** helpers
+
+function effectOn(node: Element | Text, fn: () => void): void {
+  const dispose = effect(fn);
+  if (!node.__effects) node.__effects = [];
+  node.__effects.push(dispose);
+}
+
+function disposeNode(node: Node): void {
+  const effects = node.__effects;
+  if (!effects) return;
+  for (const dispose of effects) dispose();
+  node.__effects = undefined;
+}
+
+function disposeDescendants(root: Node): void {
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+  );
+  let current: Node | null = walker.nextNode();
+  while (current) {
+    disposeNode(current);
+    current = walker.nextNode();
+  }
+}
+
+function disposeSubtree(root: Node): void {
+  disposeNode(root);
+  disposeDescendants(root);
+}
 
 function objectGet(obj: any, path: string): any {
   const keys = path.split(".");

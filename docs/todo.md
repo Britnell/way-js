@@ -47,35 +47,6 @@ Fix: remove the early-return; let the empty/null case fall through and clear `cl
 
 ---
 
-## Memory Leaks
-
-### Effects are never disposed (general)
-**File:** `src/way.ts` — every `effect(() => ...)` call site
-
-`@preact/signals-core`'s `effect()` returns a dispose function. Way discards this return value everywhere. When x-if swaps branches or x-for removes items, the DOM nodes are removed but all `effect`s they created remain subscribed to their signals indefinitely. On a page with frequent re-renders this grows without bound.
-
-Fix: wrap `effect(fn)` in a helper that stores the dispose function on the element (e.g. `element.__effects = []`). When clearing a subtree (`wrapper.innerHTML = ""`, `el.remove()`, etc.), walk the subtree and call all stored dispose functions first.
-
----
-
-### x-if does not dispose effects from removed branch
-**File:** `src/way.ts` — `ifDirective` (~line 278)
-
-`wrapper.innerHTML = ""` removes the DOM but does not dispose any effects set up during hydration of the previous branch. Every conditional flip leaks all effects from the outgoing branch.
-
-Blocked by / same fix as: **Effects are never disposed (general)**.
-
----
-
-### x-for does not dispose effects from removed/replaced items
-**File:** `src/way.ts` — `forLoopDirective` (~line 173)
-
-`el.remove()` and `wrapper.replaceChildren(fragment)` remove DOM without disposing child effects. List churn (sorting, filtering, updating items) continuously leaks effects.
-
-Blocked by / same fix as: **Effects are never disposed (general)**.
-
----
-
 ## Reactivity / Evaluator
 
 ### `evaluateExpression` silently swallows all errors
