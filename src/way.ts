@@ -147,16 +147,15 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
   let previousData = new Map<string, any>();
 
   effect(() => {
-    const rawResult = evaluateExpression(arrayExpr, data);
-    const unwrappedArray = isSignal(rawResult) ? rawResult.value : rawResult;
+    const forList = evaluateExpression(arrayExpr, data);
 
-    if (!Array.isArray(unwrappedArray)) {
+    if (!Array.isArray(forList)) {
       wrapper.innerHTML = "";
       previousData.clear();
       return;
     }
 
-    const newItems = unwrappedArray.map((item, index) => ({
+    const newItems = forList.map((item, index) => ({
       item,
       index,
       key: keyAttr
@@ -164,19 +163,19 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
         : `index-${index}`,
     }));
 
-    const newKeys = new Set(newItems.map((item) => item.key));
     const currentElements = new Map<string, Element>();
-    const nextData = new Map<string, any>();
-
-    // Build map of current elements
     Array.from(wrapper.children).forEach((el) => {
       const key = el.getAttribute("data-key");
-      if (key) {
-        currentElements.set(key, el);
-      }
+      if (key) currentElements.set(key, el);
+    });
+
+    const newKeys = new Set(newItems.map((i) => i.key));
+    currentElements.forEach((el, key) => {
+      if (!newKeys.has(key)) el.remove();
     });
 
     const fragment = document.createDocumentFragment();
+    const nextData = new Map<string, any>();
 
     newItems.forEach((newItem) => {
       const key = newItem.key;
@@ -198,8 +197,9 @@ function forLoopDirective(templateEl: Element, expression: string, data: any) {
           newItem.index,
         );
 
-        const templateFragment =
-          templateEl.content.cloneNode(true) as DocumentFragment;
+        const templateFragment = templateEl.content.cloneNode(
+          true,
+        ) as DocumentFragment;
         let rootElement: Element | null = null;
 
         for (const node of Array.from(templateFragment.childNodes)) {
