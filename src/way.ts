@@ -387,6 +387,10 @@ function hydrateData(element: Element, context: any): any {
 
   element._data = elementData;
 
+  if (element._data?.onMounted) {
+    element._data.onMounted();
+  }
+
   return { ...context, ...element._data };
 }
 
@@ -399,6 +403,10 @@ function hydrateWebComponent(element: Element, context: any): any {
   const props = parseProps(element, context);
   const emit = createEmit(element);
   element._data = components[componentName]({ props, el: element, emit });
+
+  if (element._data?.onMounted) {
+    element._data.onMounted();
+  }
 
   return { ...context, ...element._data };
 }
@@ -863,10 +871,6 @@ class wayComponent extends HTMLElement {
     }
 
     this.appendChild(templateContent);
-
-    if (this._data?.onMounted) {
-      this._data.onMounted();
-    }
   }
 
   disconnectedCallback() {

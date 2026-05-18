@@ -1,15 +1,4 @@
-# Todo
-
-## Bugs
-
-### `onMounted` never fires
-**File:** `src/way.ts` — `wayComponent.connectedCallback` (~line 867), `hydrateWebComponent` (~line 393)
-
-`connectedCallback` checks `this._data?.onMounted()` immediately when the element upgrades and connects to the DOM. However `_data` is only set later when `hydrateWebComponent` runs during `way.render()`. Because the custom element upgrades before `render` runs, `_data` is always `undefined` at the time `connectedCallback` fires, so `onMounted` is never called.
-
-Fix: call `onMounted` inside `hydrateWebComponent` after assigning `_data`, or restructure so setup runs inside the web component lifecycle.
-
----
+# Todos
 
 ### README shows `@click="handleClick"` but framework only supports invocation form
 **File:** `src/way.ts` — `bindEvent` (~line 568); README event handling section

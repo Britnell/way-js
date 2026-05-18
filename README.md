@@ -297,9 +297,6 @@ the usual :
 # TODOS
 
 - [ ] host way.min on unpckg or so
-- [ ] rewrite x-for
-- [ ] x-form directive as separate script / plugin
 - [ ] named slots
-- [ ] turbo links script
 - [ ] vue style class {} and [] directives
 - [ ] change templating from {} to be compatible with astro and use $ instead
