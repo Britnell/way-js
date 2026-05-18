@@ -1,5 +1,5 @@
 // import { signal, effect, computed } from "./signal";
-import { signal, effect, computed } from "@preact/signals-core";
+import { signal, effect, computed, Signal } from "@preact/signals-core";
 import { safeParse } from "valibot";
 
 const components: Record<string, any> = {};
@@ -56,7 +56,7 @@ const directives: Record<
   "x-if": ifDirective,
   "x-for": forLoopDirective,
   "x-load": (el, _expression, _data) => {
-    (el as HTMLElement).style.display = "block";
+    el.removeAttribute("x-load");
   },
   "x-temp": (el, expression, _data) => {
     const templateId = expression;
@@ -687,13 +687,8 @@ function comp<T = any>(
   }
 }
 
-function isSignal(val: any): boolean {
-  return !!(
-    val &&
-    typeof val === "object" &&
-    typeof val.peek === "function" &&
-    "value" in val
-  );
+function isSignal(val: any): val is Signal {
+  return val instanceof Signal;
 }
 
 function makeObjectReactive(obj: any): any {

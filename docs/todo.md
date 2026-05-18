@@ -70,23 +70,3 @@ Verify intended behaviour and document, or isolate the form submit event so it d
 The timeout is a workaround for select elements where `<option>` children aren't in the DOM yet. If options are themselves dynamically rendered (via x-for), the timeout may still fire before they're ready, leaving the select unset.
 
 Fix: set the select value in a `requestAnimationFrame` or after the next effect flush, or ensure x-for children are hydrated before x-model resolves.
-
----
-
-## API / Developer Experience
-
-### `x-load` forces `display: block`, breaking flex/grid containers
-**File:** `src/way.ts` — `x-load` directive (~line 58), README
-
-`x-load` unhides elements with `style.display = "block"`, overriding any CSS `display` value the element should have (flex, grid, inline, etc.). The README warns about this but it remains a footgun.
-
-Fix: instead of setting `display`, remove the `x-load` attribute from the element. The CSS rule `[x-load] { display: none }` then stops applying and the element returns to its natural display value.
-
----
-
-### `isSignal` duck-typing can false-positive on user objects
-**File:** `src/way.ts` — `isSignal` (~line 632)
-
-The check `typeof val.peek === 'function' && 'value' in val` will match any user object that happens to have a `peek` method and a `value` property — for example a range object, a promise wrapper, etc.
-
-Fix: import and use `instanceof Signal` from `@preact/signals-core` if the export is available, or add a known symbol brand to the check.
