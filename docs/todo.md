@@ -2,24 +2,6 @@
 
 ---
 
-### Event modifier `.outside` is broken
-**File:** `src/way.ts` — `eventModifiers.outside` (~line 523)
-
-The `outside` modifier registers the listener on the *element itself*. A click outside the element never reaches the element via bubbling, so the handler never fires. The modifier checks `element.contains(event.target)` but that check is never reached because outside clicks don't trigger the element's listener.
-
-Fix: register `.outside` as a `document`-level listener and filter to run the handler only when the click target is outside `element`. Remember to remove the document listener on element disconnect.
-
----
-
-### `:class` binding doesn't clear old classes when expression becomes falsy
-**File:** `src/way.ts` — `bindProperty` (~line 479)
-
-When `propName === 'class'` and `!value`, the function returns early without doing anything. If the expression previously set classes and now evaluates to `null`/`""`, the old classes remain on the element.
-
-Fix: remove the early-return; let the empty/null case fall through and clear `className`.
-
----
-
 ## Reactivity / Evaluator
 
 ### `evaluateExpression` silently swallows all errors

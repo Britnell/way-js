@@ -505,6 +505,7 @@ function bindProperty(
 
     if (propName === "class") {
       if (!value) {
+        (element as HTMLElement).className = "";
         return;
       }
       if (typeof value === "string") {
