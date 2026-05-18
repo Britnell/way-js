@@ -311,14 +311,14 @@ async function render(root: Element, initial?: any) {
   await waitForWebComponents(registeredWebComponents);
 
   const rootContext = {
+    ...stores,
     ...window.pageprops,
     ...initial,
-    $store: stores,
   };
   hydrate(root, rootContext);
 }
 
-function hydrate(root: Element = document.body, initialContext: any = { $store: stores }) {
+function hydrate(root: Element = document.body, initialContext: any = { ...stores }) {
   // Two-phase walk: context flows top-down, directives bind bottom-up.
   // Binding directives after children are in place lets x-model on <select>
   // see options produced by x-for/x-if inside it.
@@ -554,7 +554,7 @@ function bindProperty(
     } else if (propName === "style") {
       if (typeof value === "string") {
         (element as HTMLElement).style.cssText = value;
-      } else if (typeof value === "object") {
+      } else if (value && typeof value === "object") {
         Object.entries(value).forEach(([key, val]) => {
           (element as HTMLElement).style.setProperty(key, String(val));
         });
