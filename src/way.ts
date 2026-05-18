@@ -842,13 +842,19 @@ function objectGet(obj: any, path: string): any {
   return field;
 }
 
+const expressionCache = new Map<string, (data: any) => any>();
+
 function evaluateExpression(expression: string, data: any) {
   try {
-    const result = new Function(
-      "data",
-      `with(data) { return (${expression}) }`,
-    )(data);
-    // Auto-unwrap signals
+    let fn = expressionCache.get(expression);
+    if (!fn) {
+      fn = new Function(
+        "data",
+        `with(data) { return (${expression}) }`,
+      ) as (data: any) => any;
+      expressionCache.set(expression, fn);
+    }
+    const result = fn(data);
     return isSignal(result) ? result.value : result;
   } catch (e) {
     return null;
