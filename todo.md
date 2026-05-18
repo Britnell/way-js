@@ -11,12 +11,12 @@ Fix: call `onMounted` inside `hydrateWebComponent` after assigning `_data`, or r
 
 ---
 
-### `@click="handleClick"` (function reference) does nothing
-**File:** `src/way.ts` — `bindEvent` (~line 568)
+### README shows `@click="handleClick"` but framework only supports invocation form
+**File:** `src/way.ts` — `bindEvent` (~line 568); README event handling section
 
-`bindEvent` calls `evaluateExpression(expression, eventContext)` which evaluates the expression and returns the result — but if the expression is a function reference (e.g. `handleClick`), the function is read but never called. Only `@click="handleClick()"` (an invocation expression) works. The README example shows `<button @click="handleClick">` which is silently broken.
+All actual examples in the codebase use the invocation form: `@click="incr()"`, `@click="oncheck($event, todo)"`, `@click="count.value++"`. The framework evaluates event attribute values as expressions and discards any returned function — a bare function reference like `handleClick` is read but never called. The README example `<button @click="handleClick">` silently does nothing.
 
-Fix: check if `evaluateExpression` returns a function and, if so, call it with the event: `const result = evaluate(...); if (typeof result === 'function') result(event);`
+Fix: either update the README to only show invocation-style, or additionally detect when the expression returns a function and call it with the event (`if (typeof result === 'function') result(event)`) to match Vue/Alpine behaviour.
 
 ---
 
@@ -29,12 +29,12 @@ Fix: either remove the auto-render, remove the manual-render instruction from do
 
 ---
 
-### Setup function runs twice when `x-comp` is on a web component tag
+### No guard against combining `x-comp` and web component tag — setup runs twice
 **File:** `src/way.ts` — `hydrateData` (~line 335) and `hydrateWebComponent` (~line 393)
 
-When `<x-counter x-comp="x-counter">` is used (or when a web component element also carries `x-comp` with the same name), both `hydrateData` and `hydrateWebComponent` match and call the setup function. `_data` is overwritten by the second call, signals are duplicated, and any side effects in setup run twice.
+The codebase uses the two patterns as alternatives: `<x-counter>` (web component, no `x-comp`) or `<div x-comp="count-down">` (logic-only, no web component tag). No example combines them. However if a user writes `<x-counter x-comp="x-counter">`, both `hydrateData` and `hydrateWebComponent` will match and call the setup function — `_data` gets overwritten, signals are duplicated, side effects run twice.
 
-Fix: in `hydrateWebComponent`, skip if `element._data` is already populated by `hydrateData`, or remove `hydrateWebComponent` entirely and handle web components purely via `x-comp`.
+Fix: add a defensive check in `hydrateWebComponent` to skip if `element._data` is already populated, and warn in the console that the two patterns should not be combined.
 
 ---
 
@@ -152,12 +152,12 @@ Fix: warn in console when `x-key` is absent on a non-primitive list, and documen
 
 ---
 
-### In-place object mutation does not trigger x-for re-render
-**File:** `src/way.ts` — `forLoopDirective` (~line 188)
+### Document the immutable update contract for x-for lists
+**File:** `src/way.ts` — `forLoopDirective` (~line 188); README x-for section
 
-The reuse check is `oldData === newItem.item` (reference equality). If list items are plain objects inside a signal array and a property is mutated in place, the array signal hasn't changed, items haven't changed reference, so the effect doesn't re-run and the DOM is never updated.
+The framework requires immutable list updates to trigger re-renders — the `todo.html` example consistently uses `list.value = list.value.map(...)` and `list.value = [...list.value, newItem]`. This works because the x-for effect re-runs when the array signal's value changes. In-place mutation (e.g. `list.value.push(x)` or `list.value[0].name = 'x'`) does not reassign the signal and so the DOM never updates.
 
-Fix: document that list items must be replaced immutably (`list.value = list.value.map(...)`) or make list items signals themselves.
+Fix: document this contract explicitly in the README x-for section with a correct and an incorrect example. No code change needed.
 
 ---
 
@@ -209,15 +209,6 @@ Fix: expose stores under a dedicated namespace, e.g. `$store`, so templates use 
 Every call to `hydrate` (including recursive calls from `ifDirective` and `forLoopDirective`) spreads `stores` and `window.pageprops` into a fresh context object. In an x-for with many items this allocates a new merged object per item per render.
 
 Fix: merge stores once at the top-level `render` call and pass the merged root context down; nested `hydrate` calls should accept it directly without re-merging.
-
----
-
-### `:style` only accepts kebab-case property names
-**File:** `src/way.ts` — `bindProperty` (~line 497)
-
-`element.style.setProperty(key, val)` requires CSS kebab-case (`'font-size'`). Vue users expect camelCase (`fontSize`) to also work.
-
-Fix: convert camelCase keys to kebab-case before calling `setProperty`, e.g. `key.replace(/[A-Z]/g, c => '-' + c.toLowerCase())`.
 
 ---
 
