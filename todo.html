@@ -61,6 +61,8 @@
             />
             <input :value="todo.name" @change="oninput($event,todo)" />
             <!-- {todo.name} -->
+
+            <button @click="removeTodo(todo)">x</button>
           </li>
         </template>
       </ul>
@@ -115,10 +117,16 @@
           const lastid = (ids[0] ?? 0) + 1;
           list.value = [...list.value, { id: lastid, name: "", done: false }];
         };
+
+        const removeTodo = (item) => {
+          console.log(item);
+          list.value = list.value.filter((it) => it.id !== item.id);
+        };
         return {
           list,
           oninput,
           oncheck,
+          removeTodo,
           create,
         };
       });
