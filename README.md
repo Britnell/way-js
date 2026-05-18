@@ -166,8 +166,8 @@ Binds the input.value to the signal. This handles different input types like che
 listen for dom events or custom events, just like in vue.
 
 ```html
-<button @click="handleClick">Click me</button>
-<button @click.outside="handleOutsideClick">Click outside</button>
+<button @click="handleClick()">Click me</button>
+<button @click.outside="handleOutsideClick()">Click outside</button>
 ```
 
 Component setup functions receive an emit helper to emit custom events with event.detail

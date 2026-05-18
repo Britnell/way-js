@@ -1,12 +1,5 @@
 # Todos
 
-### README shows `@click="handleClick"` but framework only supports invocation form
-**File:** `src/way.ts` — `bindEvent` (~line 568); README event handling section
-
-All actual examples in the codebase use the invocation form: `@click="incr()"`, `@click="oncheck($event, todo)"`, `@click="count.value++"`. The framework evaluates event attribute values as expressions and discards any returned function — a bare function reference like `handleClick` is read but never called. The README example `<button @click="handleClick">` silently does nothing.
-
-Fix: either update the README to only show invocation-style, or additionally detect when the expression returns a function and call it with the event (`if (typeof result === 'function') result(event)`) to match Vue/Alpine behaviour.
-
 ---
 
 ### Double-hydration when `way.render()` called manually
