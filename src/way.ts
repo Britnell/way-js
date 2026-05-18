@@ -464,13 +464,41 @@ function hydrateBindings(node: Element | Text, context: any): void {
   });
 }
 
+// Brace-depth aware split. Does not understand string/regex/comments inside
+// expressions — a `}` in a string literal will close the group early.
+function splitTemplateParts(txt: string): string[] {
+  const parts: string[] = [];
+  let i = 0;
+  while (i < txt.length) {
+    const open = txt.indexOf("{", i);
+    if (open === -1) {
+      parts.push(txt.slice(i));
+      break;
+    }
+    if (open > i) parts.push(txt.slice(i, open));
+    let depth = 1;
+    let j = open + 1;
+    while (j < txt.length && depth > 0) {
+      if (txt[j] === "{") depth++;
+      else if (txt[j] === "}") depth--;
+      j++;
+    }
+    if (depth > 0) {
+      console.warn(`Unmatched '{' in template: "${txt}"`);
+    }
+    parts.push(txt.slice(open, j));
+    i = j;
+  }
+  return parts;
+}
+
 function bindTextInterpolation(node: Text, context: any) {
   const txt = node.textContent;
   if (!txt?.trim() || !txt.includes("{")) {
     return;
   }
 
-  const parts = txt.split(/(\{[^{}]*\})/g);
+  const parts = splitTemplateParts(txt);
 
   effectOn(node, () => {
     node.textContent = parts

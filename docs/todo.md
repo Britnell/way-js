@@ -4,33 +4,6 @@
 
 ## Reactivity / Evaluator
 
-### `evaluateExpression` silently swallows all errors
-**File:** `src/way.ts` — `evaluateExpression` (~line 782)
-
-The catch block returns `null` for any error. A typo in a template expression (`{item.nme}`, missing method, etc.) silently produces `null` and downstream bindings misbehave with no console output. The only place an error is logged is in `bindTextInterpolation`, but that catch path is also unreachable because `evaluateExpression` already swallowed the error.
-
-Fix: at minimum `console.warn` the expression and error in the catch. Consider a dev/prod split or a flag.
-
----
-
-### `new Function` expression evaluator is uncached and blocks JIT
-**File:** `src/way.ts` — `evaluateExpression` (~line 783)
-
-A new `Function` object is constructed on every single expression evaluation. `with(data)` also prevents JIT optimisation in V8. Under a large x-for list that re-renders on signal change, this is the hot path.
-
-Fix: cache compiled functions in a `Map<string, Function>` keyed by expression string. The JIT concern requires dropping `with` in favour of explicit parameter destructuring, which is a larger change.
-
----
-
-### Text interpolation regex breaks on nested braces
-**File:** `src/way.ts` — `bindTextInterpolation` (~line 446)
-
-The split regex `/(\{[^{}]*\})/g` only matches single-level braces. Expressions like `{ {a:1}.a }`, `{ items[0]?.['k'] }`, or ternaries with object literals silently break — the regex either misparses or skips the expression.
-
-Fix: replace with a character-level scanner that tracks brace depth, or change the interpolation syntax (README TODO already notes `${...}`).
-
----
-
 ### Signal auto-unwrap is top-level only, creating an inconsistency
 **File:** `src/way.ts` — `evaluateExpression` (~line 789)
 
